@@ -742,7 +742,6 @@ def generate_html(properties_data, traffic_data, leases_data):
                 </div>
                 <div>
                     <h1 class="text-2xl font-bold text-slate-900 dark:text-white">SNS Daily Report</h1>
-                    <p class="text-slate-500 dark:text-slate-400 text-sm">Updated: <span class="font-semibold text-slate-700 dark:text-slate-300">{time_only}</span></p>
                 </div>
             </div>
             <div class="flex items-center space-x-3">
@@ -760,9 +759,9 @@ def generate_html(properties_data, traffic_data, leases_data):
                 </div>
                 <!-- Date Display -->
                 <div>
-                    <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Date</label>
+                    <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">&nbsp;</label>
                     <div class="h-11 py-2.5 px-4 bg-slate-100 dark:bg-slate-700 rounded-xl border-2 border-slate-200 dark:border-slate-600 flex items-center">
-                        <span class="font-semibold text-slate-700 dark:text-slate-200 text-sm">{today_str}</span>
+                        <span id="refresh-timestamp" class="font-semibold text-slate-700 dark:text-slate-200 text-sm">{today_str}</span>
                     </div>
                 </div>
                 <!-- Refresh Button -->
@@ -854,9 +853,8 @@ def generate_html(properties_data, traffic_data, leases_data):
 
         <!-- Footer -->
         <div class="bg-slate-100 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
-            <div class="flex items-center justify-between text-xs">
+            <div class="flex items-center justify-center text-xs">
                 <span class="text-slate-500 dark:text-slate-400">Data Source: <span class="font-medium text-slate-700 dark:text-slate-300">ResMan API</span></span>
-                <span class="text-slate-500 dark:text-slate-400">Last Updated: <span id="refresh-timestamp" class="font-medium text-slate-700 dark:text-slate-300">{timestamp}</span></span>
             </div>
         </div>
     </div>
