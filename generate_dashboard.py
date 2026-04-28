@@ -746,8 +746,8 @@ def generate_html(properties_data, traffic_data, leases_data):
                 </div>
             </div>
             <div class="flex items-center space-x-3">
-                <!-- Property Dropdown - Custom Styled -->
-                <div class="relative">
+                <!-- Property Dropdown - Hidden until individual property pages are ready -->
+                <div class="relative hidden">
                     <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Property</label>
                     <div class="relative">
                         <select id="propertyFilter" onchange="updateDashboard()" class="block w-64 h-11 rounded-xl border-2 border-slate-200 dark:border-slate-600 py-2.5 pl-4 pr-10 bg-white dark:bg-slate-700 text-slate-900 dark:text-white font-medium cursor-pointer text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all">
