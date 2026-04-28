@@ -2,83 +2,86 @@
 Vercel Serverless Function - Trigger GitHub Actions workflow
 Endpoint: POST /api/refresh
 """
+from http.server import BaseHTTPRequestHandler
 import os
 import json
-from http.client import HTTPSConnection
+import urllib.request
+import urllib.error
 
-def handler(request):
-    # Only allow POST
-    if request.method != "POST":
-        return {
-            "statusCode": 405,
-            "body": json.dumps({"error": "Method not allowed"})
-        }
 
-    # Get GitHub token from environment
-    github_token = os.environ.get("GITHUB_TOKEN")
-    if not github_token:
-        return {
-            "statusCode": 500,
-            "body": json.dumps({"error": "GitHub token not configured"})
-        }
+class handler(BaseHTTPRequestHandler):
+    def do_OPTIONS(self):
+        self.send_response(200)
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'POST, OPTIONS')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+        self.end_headers()
 
-    # Trigger GitHub Actions workflow
-    try:
-        conn = HTTPSConnection("api.github.com")
-        headers = {
-            "Authorization": f"Bearer {github_token}",
-            "Accept": "application/vnd.github.v3+json",
-            "User-Agent": "SNS-Dashboard-Refresh",
-            "Content-Type": "application/json"
-        }
+    def do_POST(self):
+        # Get GitHub token from environment
+        github_token = os.environ.get("GITHUB_TOKEN")
 
-        # Trigger workflow_dispatch event
-        body = json.dumps({"ref": "main"})
-        conn.request(
-            "POST",
-            "/repos/ymi-flowing/sns-daily-report/actions/workflows/refresh.yml/dispatches",
-            body=body,
-            headers=headers
-        )
+        if not github_token:
+            self.send_response(500)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(json.dumps({"success": False, "error": "GitHub token not configured"}).encode())
+            return
 
-        response = conn.getresponse()
-        status = response.status
+        try:
+            # Trigger GitHub Actions workflow
+            url = "https://api.github.com/repos/ymi-flowing/sns-daily-report/actions/workflows/refresh.yml/dispatches"
+            data = json.dumps({"ref": "main"}).encode('utf-8')
 
-        if status == 204:
-            return {
-                "statusCode": 200,
-                "headers": {
-                    "Access-Control-Allow-Origin": "*",
-                    "Content-Type": "application/json"
-                },
-                "body": json.dumps({
-                    "success": True,
-                    "message": "Refresh workflow triggered successfully"
-                })
-            }
-        else:
-            error_body = response.read().decode()
-            return {
-                "statusCode": status,
-                "headers": {
-                    "Access-Control-Allow-Origin": "*",
-                    "Content-Type": "application/json"
-                },
-                "body": json.dumps({
+            req = urllib.request.Request(url, data=data, method='POST')
+            req.add_header('Authorization', f'Bearer {github_token}')
+            req.add_header('Accept', 'application/vnd.github.v3+json')
+            req.add_header('User-Agent', 'SNS-Dashboard-Refresh')
+            req.add_header('Content-Type', 'application/json')
+
+            try:
+                response = urllib.request.urlopen(req)
+                status = response.status
+            except urllib.error.HTTPError as e:
+                status = e.code
+                error_body = e.read().decode()
+
+                self.send_response(status)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                self.wfile.write(json.dumps({
                     "success": False,
                     "error": f"GitHub API returned {status}: {error_body}"
-                })
-            }
+                }).encode())
+                return
 
-    except Exception as e:
-        return {
-            "statusCode": 500,
-            "headers": {
-                "Access-Control-Allow-Origin": "*",
-                "Content-Type": "application/json"
-            },
-            "body": json.dumps({
+            if status == 204:
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                self.wfile.write(json.dumps({
+                    "success": True,
+                    "message": "Refresh workflow triggered successfully"
+                }).encode())
+            else:
+                self.send_response(status)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                self.wfile.write(json.dumps({
+                    "success": False,
+                    "error": f"GitHub API returned {status}"
+                }).encode())
+
+        except Exception as e:
+            self.send_response(500)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(json.dumps({
                 "success": False,
                 "error": str(e)
-            })
-        }
+            }).encode())
