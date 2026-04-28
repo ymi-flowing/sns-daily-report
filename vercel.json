@@ -1,15 +1,7 @@
 {
-  "framework": null,
-  "buildCommand": "",
-  "outputDirectory": ".",
   "rewrites": [
     { "source": "/", "destination": "/dashboard_live.html" }
   ],
-  "functions": {
-    "api/refresh.py": {
-      "runtime": "python3.12"
-    }
-  },
   "headers": [
     {
       "source": "/api/(.*)",
