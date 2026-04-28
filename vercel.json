@@ -1,10 +1,13 @@
 {
+  "buildCommand": "",
+  "outputDirectory": ".",
+  "framework": null,
   "rewrites": [
     { "source": "/", "destination": "/dashboard_live.html" }
   ],
   "headers": [
     {
-      "source": "/api/(.*)",
+      "source": "/api",
       "headers": [
         { "key": "Access-Control-Allow-Origin", "value": "*" },
         { "key": "Access-Control-Allow-Methods", "value": "POST, OPTIONS" }

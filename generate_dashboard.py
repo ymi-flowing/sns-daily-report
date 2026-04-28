@@ -1547,7 +1547,7 @@ def generate_html(properties_data, traffic_data, leases_data):
             spinner.classList.remove('hidden');
 
             try {{
-                const response = await fetch('https://sns-daily-report.vercel.app/api/refresh', {{
+                const response = await fetch('/api', {{
                     method: 'POST'
                 }});
                 const data = await response.json();
