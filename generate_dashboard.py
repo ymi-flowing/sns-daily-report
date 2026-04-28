@@ -728,9 +728,21 @@ def generate_html(properties_data, traffic_data, leases_data):
                 justify-content: center;
             }}
             .mobile-controls {{
-                flex-wrap: wrap !important;
+                flex-wrap: nowrap !important;
                 justify-content: center !important;
-                gap: 8px !important;
+                gap: 6px !important;
+            }}
+            /* Hide labels on mobile */
+            .mobile-controls label {{
+                display: none !important;
+            }}
+            /* Compact timestamp on mobile */
+            .mobile-controls .h-11 {{
+                height: auto !important;
+                padding: 8px 10px !important;
+            }}
+            .mobile-controls #refresh-timestamp {{
+                font-size: 11px !important;
             }}
 
             /* KPI Grid - 2 columns */
