@@ -553,7 +553,7 @@ def generate_html(properties_data, traffic_data, leases_data):
     from zoneinfo import ZoneInfo
     florida_tz = ZoneInfo("America/New_York")
     today = datetime.now(florida_tz)
-    today_str = today.strftime("%B %d, %Y")
+    today_str = today.strftime("%B %d, %Y at %I:%M %p ET")
     month_str = today.strftime("%B %Y")
     timestamp = today.strftime("%B %d, %Y at %I:%M %p ET")
     time_only = today.strftime("%I:%M %p ET")
@@ -1577,93 +1577,231 @@ def generate_html(properties_data, traffic_data, leases_data):
             }});
         }}
 
-        // Refresh data function - triggers GitHub Actions via Vercel proxy
-        async function refreshData() {{
+        // Refresh state management using localStorage
+        const REFRESH_KEY = 'sns_refresh_state';
+        const REFRESH_TIMEOUT = 6 * 60 * 1000; // 6 minutes max
+
+        function getRefreshState() {{
+            try {{
+                const state = localStorage.getItem(REFRESH_KEY);
+                return state ? JSON.parse(state) : null;
+            }} catch (e) {{
+                return null;
+            }}
+        }}
+
+        function setRefreshState(originalTimestamp) {{
+            localStorage.setItem(REFRESH_KEY, JSON.stringify({{
+                startedAt: Date.now(),
+                originalTimestamp: originalTimestamp,
+                attempts: 0
+            }}));
+        }}
+
+        function clearRefreshState() {{
+            localStorage.removeItem(REFRESH_KEY);
+        }}
+
+        function updateRefreshAttempts(attempts) {{
+            const state = getRefreshState();
+            if (state) {{
+                state.attempts = attempts;
+                localStorage.setItem(REFRESH_KEY, JSON.stringify(state));
+            }}
+        }}
+
+        function showLoadingOverlay() {{
+            const overlay = document.getElementById('refresh-overlay');
             const btn = document.getElementById('refresh-btn');
             const icon = document.getElementById('refresh-icon');
             const spinner = document.getElementById('refresh-spinner');
-            const overlay = document.getElementById('refresh-overlay');
-            const statusEl = document.getElementById('refresh-status');
-            const progressEl = document.getElementById('refresh-progress');
-            const timeEl = document.getElementById('refresh-time');
 
-            // Get current timestamp to detect changes
-            const currentTimestamp = document.querySelector('[id="refresh-timestamp"]')?.textContent || '{timestamp}';
-
-            // Show loading overlay
             overlay.classList.remove('hidden');
             overlay.classList.add('flex');
             btn.disabled = true;
             icon.classList.add('hidden');
             spinner.classList.remove('hidden');
+        }}
+
+        function hideLoadingOverlay() {{
+            const overlay = document.getElementById('refresh-overlay');
+            const btn = document.getElementById('refresh-btn');
+            const icon = document.getElementById('refresh-icon');
+            const spinner = document.getElementById('refresh-spinner');
+
+            overlay.classList.add('hidden');
+            overlay.classList.remove('flex');
+            btn.disabled = false;
+            icon.classList.remove('hidden');
+            spinner.classList.add('hidden');
+        }}
+
+        function getCurrentTimestamp() {{
+            return document.getElementById('refresh-timestamp')?.textContent?.trim() || '';
+        }}
+
+        // Poll for changes - runs until timestamp changes or timeout
+        function startPolling(originalTimestamp, initialAttempts = 0) {{
+            const statusEl = document.getElementById('refresh-status');
+            const progressEl = document.getElementById('refresh-progress');
+            const timeEl = document.getElementById('refresh-time');
+
+            const maxAttempts = 24;  // 24 attempts * 15 seconds = 6 minutes max
+            const pollInterval = 15000;  // 15 seconds
+            let attempts = initialAttempts;
+
+            const poll = async () => {{
+                attempts++;
+                updateRefreshAttempts(attempts);
+
+                const progress = Math.min(10 + (attempts / maxAttempts) * 85, 95);
+                progressEl.style.width = progress + '%';
+                statusEl.textContent = `Waiting for new data... (${{attempts}}/${{maxAttempts}})`;
+                timeEl.textContent = `Checking every 15 seconds`;
+
+                try {{
+                    // Fetch the page with aggressive cache-busting
+                    const cacheBuster = Date.now() + '_' + Math.random();
+                    const pageResponse = await fetch(window.location.pathname + '?nocache=' + cacheBuster, {{
+                        cache: 'no-store',
+                        headers: {{
+                            'Cache-Control': 'no-cache, no-store, must-revalidate',
+                            'Pragma': 'no-cache'
+                        }}
+                    }});
+                    const html = await pageResponse.text();
+
+                    // Check if timestamp has changed
+                    const match = html.match(/id="refresh-timestamp"[^>]*>([^<]+)</);
+                    const newTimestamp = match ? match[1].trim() : '';
+
+                    console.log('Polling: original="' + originalTimestamp + '", new="' + newTimestamp + '"');
+
+                    if (newTimestamp && newTimestamp !== originalTimestamp) {{
+                        // Success! New data is available
+                        clearRefreshState();
+                        statusEl.textContent = 'New data loaded! Refreshing page...';
+                        progressEl.style.width = '100%';
+                        setTimeout(() => {{
+                            window.location.reload(true);
+                        }}, 800);
+                        return;
+                    }}
+                }} catch (e) {{
+                    console.log('Poll error:', e);
+                    statusEl.textContent = `Checking... (network retry)`;
+                }}
+
+                // Check if we should continue
+                const state = getRefreshState();
+                if (!state) {{
+                    // State was cleared (maybe by another tab) - stop polling
+                    hideLoadingOverlay();
+                    return;
+                }}
+
+                // Check timeout
+                if (Date.now() - state.startedAt > REFRESH_TIMEOUT) {{
+                    statusEl.textContent = 'Taking longer than expected...';
+                    timeEl.innerHTML = '<button onclick="window.location.reload(true)" class="text-blue-500 hover:text-blue-600 underline font-medium">Click to reload page</button>';
+                    progressEl.style.width = '100%';
+                    return;
+                }}
+
+                if (attempts < maxAttempts) {{
+                    setTimeout(poll, pollInterval);
+                }} else {{
+                    statusEl.textContent = 'Still waiting for update...';
+                    timeEl.innerHTML = '<button onclick="window.location.reload(true)" class="text-blue-500 hover:text-blue-600 underline font-medium">Click to reload page</button>';
+                    progressEl.style.width = '100%';
+                }}
+            }};
+
+            // Start polling
+            setTimeout(poll, pollInterval);
+        }}
+
+        // Refresh data function - triggers GitHub Actions via Vercel proxy
+        async function refreshData() {{
+            const statusEl = document.getElementById('refresh-status');
+            const progressEl = document.getElementById('refresh-progress');
+            const timeEl = document.getElementById('refresh-time');
+
+            // Get current timestamp before refresh
+            const originalTimestamp = getCurrentTimestamp();
+
+            // Show loading overlay immediately
+            showLoadingOverlay();
+            statusEl.textContent = 'Triggering data refresh...';
+            progressEl.style.width = '5%';
+            timeEl.textContent = 'Starting...';
 
             try {{
-                statusEl.textContent = 'Triggering data refresh...';
-                progressEl.style.width = '10%';
+                // Save state to localStorage so it persists across page loads
+                setRefreshState(originalTimestamp);
 
                 const response = await fetch('/api', {{
                     method: 'POST'
                 }});
-                const data = await response.json();
+
+                let data;
+                try {{
+                    data = await response.json();
+                }} catch (e) {{
+                    throw new Error('Invalid response from server');
+                }}
 
                 if (!data.success) {{
                     throw new Error(data.error || 'Failed to trigger refresh');
                 }}
 
-                // Start polling for changes
-                statusEl.textContent = 'Waiting for GitHub Actions to complete...';
-                progressEl.style.width = '20%';
-                timeEl.textContent = 'This usually takes 2-3 minutes';
+                // API call successful - now wait for GitHub Actions to complete
+                statusEl.textContent = 'Refresh triggered! Waiting for GitHub Actions...';
+                progressEl.style.width = '10%';
+                timeEl.textContent = 'This typically takes 2-3 minutes';
 
-                const maxAttempts = 20;  // 20 attempts * 15 seconds = 5 minutes max
-                const pollInterval = 15000;  // 15 seconds
-                let attempts = 0;
-
-                const pollForChanges = async () => {{
-                    attempts++;
-                    const progress = 20 + (attempts / maxAttempts) * 70;
-                    progressEl.style.width = progress + '%';
-                    statusEl.textContent = `Checking for updates... (attempt ${{attempts}}/${{maxAttempts}})`;
-
-                    try {{
-                        // Fetch the page with cache-busting
-                        const pageResponse = await fetch(window.location.href + '?_=' + Date.now(), {{
-                            cache: 'no-store'
-                        }});
-                        const html = await pageResponse.text();
-
-                        // Check if timestamp has changed
-                        const match = html.match(/id="refresh-timestamp">([^<]+)</);
-                        if (match && match[1] !== currentTimestamp) {{
-                            statusEl.textContent = 'Update complete! Reloading...';
-                            progressEl.style.width = '100%';
-                            setTimeout(() => window.location.reload(), 500);
-                            return;
-                        }}
-                    }} catch (e) {{
-                        console.log('Poll error:', e);
-                    }}
-
-                    if (attempts < maxAttempts) {{
-                        setTimeout(pollForChanges, pollInterval);
-                    }} else {{
-                        // Timeout - give option to reload manually
-                        statusEl.textContent = 'Taking longer than expected...';
-                        timeEl.innerHTML = '<button onclick="window.location.reload()" class="text-blue-500 hover:text-blue-600 underline">Click to reload manually</button>';
-                        progressEl.style.width = '100%';
-                    }}
-                }};
-
-                // Start polling after initial delay (give GitHub Actions time to start)
-                setTimeout(pollForChanges, 10000);
+                // Start polling after a short delay
+                setTimeout(() => startPolling(originalTimestamp, 0), 5000);
 
             }} catch (err) {{
-                overlay.classList.add('hidden');
-                overlay.classList.remove('flex');
-                alert('Could not trigger refresh. Error: ' + err.message);
-                btn.disabled = false;
-                icon.classList.remove('hidden');
-                spinner.classList.add('hidden');
+                clearRefreshState();
+                hideLoadingOverlay();
+                alert('Could not trigger refresh: ' + err.message);
+            }}
+        }}
+
+        // Check on page load if a refresh is in progress
+        function checkPendingRefresh() {{
+            const state = getRefreshState();
+            if (!state) return;
+
+            const currentTimestamp = getCurrentTimestamp();
+            const elapsed = Date.now() - state.startedAt;
+
+            // If timestamp has changed, refresh is complete
+            if (currentTimestamp !== state.originalTimestamp) {{
+                clearRefreshState();
+                return;
+            }}
+
+            // If refresh started recently (within timeout), resume polling
+            if (elapsed < REFRESH_TIMEOUT) {{
+                console.log('Resuming refresh polling (elapsed: ' + Math.round(elapsed/1000) + 's)');
+                showLoadingOverlay();
+
+                const statusEl = document.getElementById('refresh-status');
+                const progressEl = document.getElementById('refresh-progress');
+                const timeEl = document.getElementById('refresh-time');
+
+                statusEl.textContent = 'Refresh in progress...';
+                progressEl.style.width = (10 + (elapsed / REFRESH_TIMEOUT) * 80) + '%';
+                timeEl.textContent = 'Waiting for new data';
+
+                // Resume polling
+                startPolling(state.originalTimestamp, state.attempts || 0);
+            }} else {{
+                // Timeout exceeded - clear state
+                clearRefreshState();
             }}
         }}
 
@@ -1673,6 +1811,9 @@ def generate_html(properties_data, traffic_data, leases_data):
             renderExpiringTable();
             renderRenovationTable();
             updateDashboard();
+
+            // Check if there's a pending refresh
+            checkPendingRefresh();
         }});
     </script>
 </body>
