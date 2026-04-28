@@ -716,6 +716,22 @@ def generate_html(properties_data, traffic_data, leases_data):
     </style>
 </head>
 <body class="bg-slate-50 dark:bg-slate-900 p-6 font-sans text-slate-800 dark:text-slate-100 transition-colors duration-200">
+    <!-- Loading Overlay -->
+    <div id="refresh-overlay" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 hidden items-center justify-center">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl p-8 shadow-2xl max-w-sm mx-4 text-center">
+            <div class="relative w-16 h-16 mx-auto mb-4">
+                <div class="absolute inset-0 rounded-full border-4 border-slate-200 dark:border-slate-700"></div>
+                <div class="absolute inset-0 rounded-full border-4 border-blue-500 border-t-transparent animate-spin"></div>
+            </div>
+            <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-2">Refreshing Dashboard</h3>
+            <p id="refresh-status" class="text-sm text-slate-500 dark:text-slate-400">Triggering data refresh...</p>
+            <div class="mt-4 bg-slate-100 dark:bg-slate-700 rounded-full h-2 overflow-hidden">
+                <div id="refresh-progress" class="bg-blue-500 h-full transition-all duration-500" style="width: 5%"></div>
+            </div>
+            <p id="refresh-time" class="text-xs text-slate-400 dark:text-slate-500 mt-2">Estimated: ~3 minutes</p>
+        </div>
+    </div>
+
     <div class="max-w-7xl mx-auto space-y-5">
 
         <!-- Header -->
@@ -840,7 +856,7 @@ def generate_html(properties_data, traffic_data, leases_data):
         <div class="bg-slate-100 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
             <div class="flex items-center justify-between text-xs">
                 <span class="text-slate-500 dark:text-slate-400">Data Source: <span class="font-medium text-slate-700 dark:text-slate-300">ResMan API</span></span>
-                <span class="text-slate-500 dark:text-slate-400">Last Updated: <span class="font-medium text-slate-700 dark:text-slate-300">{timestamp}</span></span>
+                <span class="text-slate-500 dark:text-slate-400">Last Updated: <span id="refresh-timestamp" class="font-medium text-slate-700 dark:text-slate-300">{timestamp}</span></span>
             </div>
         </div>
     </div>
@@ -1566,27 +1582,85 @@ def generate_html(properties_data, traffic_data, leases_data):
             const btn = document.getElementById('refresh-btn');
             const icon = document.getElementById('refresh-icon');
             const spinner = document.getElementById('refresh-spinner');
+            const overlay = document.getElementById('refresh-overlay');
+            const statusEl = document.getElementById('refresh-status');
+            const progressEl = document.getElementById('refresh-progress');
+            const timeEl = document.getElementById('refresh-time');
 
-            // Show loading state
+            // Get current timestamp to detect changes
+            const currentTimestamp = document.querySelector('[id="refresh-timestamp"]')?.textContent || '{timestamp}';
+
+            // Show loading overlay
+            overlay.classList.remove('hidden');
+            overlay.classList.add('flex');
             btn.disabled = true;
             icon.classList.add('hidden');
             spinner.classList.remove('hidden');
 
             try {{
+                statusEl.textContent = 'Triggering data refresh...';
+                progressEl.style.width = '10%';
+
                 const response = await fetch('/api', {{
                     method: 'POST'
                 }});
                 const data = await response.json();
 
-                if (data.success) {{
-                    alert('Refresh triggered! The dashboard will update in ~3-4 minutes. Please reload the page after that.');
-                }} else {{
-                    alert('Refresh failed: ' + (data.error || 'Unknown error'));
+                if (!data.success) {{
+                    throw new Error(data.error || 'Failed to trigger refresh');
                 }}
+
+                // Start polling for changes
+                statusEl.textContent = 'Waiting for GitHub Actions to complete...';
+                progressEl.style.width = '20%';
+                timeEl.textContent = 'This usually takes 2-3 minutes';
+
+                const maxAttempts = 20;  // 20 attempts * 15 seconds = 5 minutes max
+                const pollInterval = 15000;  // 15 seconds
+                let attempts = 0;
+
+                const pollForChanges = async () => {{
+                    attempts++;
+                    const progress = 20 + (attempts / maxAttempts) * 70;
+                    progressEl.style.width = progress + '%';
+                    statusEl.textContent = `Checking for updates... (attempt ${{attempts}}/${{maxAttempts}})`;
+
+                    try {{
+                        // Fetch the page with cache-busting
+                        const pageResponse = await fetch(window.location.href + '?_=' + Date.now(), {{
+                            cache: 'no-store'
+                        }});
+                        const html = await pageResponse.text();
+
+                        // Check if timestamp has changed
+                        const match = html.match(/id="refresh-timestamp">([^<]+)</);
+                        if (match && match[1] !== currentTimestamp) {{
+                            statusEl.textContent = 'Update complete! Reloading...';
+                            progressEl.style.width = '100%';
+                            setTimeout(() => window.location.reload(), 500);
+                            return;
+                        }}
+                    }} catch (e) {{
+                        console.log('Poll error:', e);
+                    }}
+
+                    if (attempts < maxAttempts) {{
+                        setTimeout(pollForChanges, pollInterval);
+                    }} else {{
+                        // Timeout - give option to reload manually
+                        statusEl.textContent = 'Taking longer than expected...';
+                        timeEl.innerHTML = '<button onclick="window.location.reload()" class="text-blue-500 hover:text-blue-600 underline">Click to reload manually</button>';
+                        progressEl.style.width = '100%';
+                    }}
+                }};
+
+                // Start polling after initial delay (give GitHub Actions time to start)
+                setTimeout(pollForChanges, 10000);
+
             }} catch (err) {{
+                overlay.classList.add('hidden');
+                overlay.classList.remove('flex');
                 alert('Could not trigger refresh. Error: ' + err.message);
-            }} finally {{
-                // Reset button
                 btn.disabled = false;
                 icon.classList.remove('hidden');
                 spinner.classList.add('hidden');
