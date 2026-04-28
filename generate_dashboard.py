@@ -549,10 +549,14 @@ def get_property_data(property_id, property_name):
 
 def generate_html(properties_data, traffic_data, leases_data):
     """Generate HTML dashboard"""
-    today = datetime.now()
+    # Use Florida time (Eastern Time)
+    from zoneinfo import ZoneInfo
+    florida_tz = ZoneInfo("America/New_York")
+    today = datetime.now(florida_tz)
     today_str = today.strftime("%B %d, %Y")
     month_str = today.strftime("%B %Y")
-    timestamp = today.strftime("%B %d, %Y at %I:%M %p")
+    timestamp = today.strftime("%B %d, %Y at %I:%M %p ET")
+    time_only = today.strftime("%I:%M %p ET")
 
     # Build property options (add "All Properties" first)
     property_options = '<option value="ALL">All Properties (Portfolio Total)</option>\n'
@@ -628,11 +632,24 @@ def generate_html(properties_data, traffic_data, leases_data):
     </script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        .sns-select {{
-            background-image: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(147, 197, 253, 0.05) 100%);
+        /* Custom Select Dropdown */
+        select {{
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: none;
         }}
-        .dark .sns-select {{
-            background-image: linear-gradient(135deg, rgba(30, 58, 138, 0.2) 0%, rgba(59, 130, 246, 0.1) 100%);
+        select::-ms-expand {{
+            display: none;
+        }}
+        select option {{
+            padding: 12px;
+            background: white;
+            color: #1e293b;
+        }}
+        .dark select option {{
+            background: #334155;
+            color: white;
         }}
         .fancy-scroll {{
             scrollbar-width: thin;
@@ -709,34 +726,43 @@ def generate_html(properties_data, traffic_data, leases_data):
                 </div>
                 <div>
                     <h1 class="text-2xl font-bold text-slate-900 dark:text-white">SNS Daily Report</h1>
-                    <p class="text-slate-500 dark:text-slate-400 text-sm">Unit Status Dashboard</p>
+                    <p class="text-slate-500 dark:text-slate-400 text-sm">Updated: <span class="font-semibold text-slate-700 dark:text-slate-300">{time_only}</span></p>
                 </div>
             </div>
-            <div class="flex items-center space-x-4">
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Property</label>
-                    <select id="propertyFilter" onchange="updateDashboard()" class="sns-select block w-72 rounded-xl border-2 border-slate-200 dark:border-slate-600 py-2.5 pl-4 pr-10 bg-white dark:bg-slate-700 text-slate-900 dark:text-white appearance-none font-medium cursor-pointer text-sm">
-                        {property_options}
-                    </select>
+            <div class="flex items-center space-x-3">
+                <!-- Property Dropdown - Custom Styled -->
+                <div class="relative">
+                    <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Property</label>
+                    <div class="relative">
+                        <select id="propertyFilter" onchange="updateDashboard()" class="block w-64 h-11 rounded-xl border-2 border-slate-200 dark:border-slate-600 py-2.5 pl-4 pr-10 bg-white dark:bg-slate-700 text-slate-900 dark:text-white font-medium cursor-pointer text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all">
+                            {property_options}
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                            <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                    </div>
                 </div>
+                <!-- Date Display -->
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Date</label>
-                    <div class="py-2.5 px-4 bg-slate-100 dark:bg-slate-700 rounded-xl">
+                    <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Date</label>
+                    <div class="h-11 py-2.5 px-4 bg-slate-100 dark:bg-slate-700 rounded-xl border-2 border-slate-200 dark:border-slate-600 flex items-center">
                         <span class="font-semibold text-slate-700 dark:text-slate-200 text-sm">{today_str}</span>
                     </div>
                 </div>
+                <!-- Refresh Button -->
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">&nbsp;</label>
-                    <button id="refresh-btn" onclick="refreshData()" class="p-3 rounded-2xl bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-800/50 transition-all outline-none focus:ring-2 focus:ring-blue-400 shadow-sm border-2 border-blue-200 dark:border-blue-700" title="Refresh Data">
+                    <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">&nbsp;</label>
+                    <button id="refresh-btn" onclick="refreshData()" class="h-11 w-11 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 transition-all outline-none focus:ring-2 focus:ring-blue-400 border-2 border-slate-200 dark:border-slate-600 flex items-center justify-center" title="Refresh Data (~3 min)">
                         <svg id="refresh-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                         <svg id="refresh-spinner" class="w-5 h-5 hidden animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                     </button>
                 </div>
+                <!-- Theme Toggle -->
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">&nbsp;</label>
-                    <button id="theme-toggle" class="p-3 rounded-2xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 transition-all outline-none focus:ring-2 focus:ring-blue-400 shadow-sm border-2 border-slate-200 dark:border-slate-600">
-                        <svg id="theme-toggle-dark-icon" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
-                        <svg id="theme-toggle-light-icon" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
+                    <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">&nbsp;</label>
+                    <button id="theme-toggle" class="h-11 w-11 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 transition-all outline-none focus:ring-2 focus:ring-blue-400 border-2 border-slate-200 dark:border-slate-600 flex items-center justify-center">
+                        <svg id="theme-toggle-dark-icon" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+                        <svg id="theme-toggle-light-icon" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
                     </button>
                 </div>
             </div>
