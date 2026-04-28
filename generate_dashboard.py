@@ -713,6 +713,79 @@ def generate_html(properties_data, traffic_data, leases_data):
             color: #e2e8f0;
             border-color: #475569;
         }}
+
+        /* Mobile Responsive Styles */
+        @media (max-width: 768px) {{
+            body {{ padding: 12px !important; }}
+
+            /* Header - stack vertically */
+            .mobile-header {{
+                flex-direction: column !important;
+                gap: 12px !important;
+                text-align: center;
+            }}
+            .mobile-header > div:first-child {{
+                justify-content: center;
+            }}
+            .mobile-controls {{
+                flex-wrap: wrap !important;
+                justify-content: center !important;
+                gap: 8px !important;
+            }}
+
+            /* KPI Grid - 2 columns */
+            #kpi-section {{
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 8px !important;
+            }}
+
+            /* Tables - tighter padding */
+            table th, table td {{
+                padding: 4px 6px !important;
+                font-size: 10px !important;
+            }}
+
+            /* Table scroll indicator */
+            .table-scroll-container {{
+                position: relative;
+            }}
+            .table-scroll-container::after {{
+                content: '';
+                position: absolute;
+                right: 0;
+                top: 0;
+                bottom: 0;
+                width: 20px;
+                background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8));
+                pointer-events: none;
+            }}
+            .dark .table-scroll-container::after {{
+                background: linear-gradient(90deg, transparent, rgba(30,41,59,0.8));
+            }}
+
+            /* Charts - stack vertically */
+            #charts-section {{
+                grid-template-columns: 1fr !important;
+            }}
+
+            /* Unit lists - stack vertically */
+            #unit-lists-section {{
+                grid-template-columns: 1fr !important;
+            }}
+
+            /* Reduce gaps and padding */
+            .max-w-7xl.space-y-5 > * + * {{
+                margin-top: 12px !important;
+            }}
+            .p-5 {{ padding: 12px !important; }}
+            .p-4 {{ padding: 10px !important; }}
+            .gap-5 {{ gap: 12px !important; }}
+            .gap-3 {{ gap: 8px !important; }}
+
+            /* Section titles smaller */
+            .text-lg {{ font-size: 14px !important; }}
+            .text-2xl {{ font-size: 18px !important; }}
+        }}
     </style>
 </head>
 <body class="bg-slate-50 dark:bg-slate-900 p-6 font-sans text-slate-800 dark:text-slate-100 transition-colors duration-200">
@@ -735,7 +808,7 @@ def generate_html(properties_data, traffic_data, leases_data):
     <div class="max-w-7xl mx-auto space-y-5">
 
         <!-- Header -->
-        <div class="flex justify-between items-center bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
+        <div class="mobile-header flex justify-between items-center bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl flex items-center justify-center">
                     <span class="text-white font-bold text-lg">S</span>
@@ -744,7 +817,7 @@ def generate_html(properties_data, traffic_data, leases_data):
                     <h1 class="text-2xl font-bold text-slate-900 dark:text-white">SNS Daily Report</h1>
                 </div>
             </div>
-            <div class="flex items-center space-x-3">
+            <div class="mobile-controls flex items-center space-x-3">
                 <!-- Property Dropdown - Hidden until individual property pages are ready -->
                 <div class="relative hidden">
                     <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Property</label>

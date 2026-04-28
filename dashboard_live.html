@@ -93,6 +93,79 @@
             color: #e2e8f0;
             border-color: #475569;
         }
+
+        /* Mobile Responsive Styles */
+        @media (max-width: 768px) {
+            body { padding: 12px !important; }
+
+            /* Header - stack vertically */
+            .mobile-header {
+                flex-direction: column !important;
+                gap: 12px !important;
+                text-align: center;
+            }
+            .mobile-header > div:first-child {
+                justify-content: center;
+            }
+            .mobile-controls {
+                flex-wrap: wrap !important;
+                justify-content: center !important;
+                gap: 8px !important;
+            }
+
+            /* KPI Grid - 2 columns */
+            #kpi-section {
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 8px !important;
+            }
+
+            /* Tables - tighter padding */
+            table th, table td {
+                padding: 4px 6px !important;
+                font-size: 10px !important;
+            }
+
+            /* Table scroll indicator */
+            .table-scroll-container {
+                position: relative;
+            }
+            .table-scroll-container::after {
+                content: '';
+                position: absolute;
+                right: 0;
+                top: 0;
+                bottom: 0;
+                width: 20px;
+                background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8));
+                pointer-events: none;
+            }
+            .dark .table-scroll-container::after {
+                background: linear-gradient(90deg, transparent, rgba(30,41,59,0.8));
+            }
+
+            /* Charts - stack vertically */
+            #charts-section {
+                grid-template-columns: 1fr !important;
+            }
+
+            /* Unit lists - stack vertically */
+            #unit-lists-section {
+                grid-template-columns: 1fr !important;
+            }
+
+            /* Reduce gaps and padding */
+            .max-w-7xl.space-y-5 > * + * {
+                margin-top: 12px !important;
+            }
+            .p-5 { padding: 12px !important; }
+            .p-4 { padding: 10px !important; }
+            .gap-5 { gap: 12px !important; }
+            .gap-3 { gap: 8px !important; }
+
+            /* Section titles smaller */
+            .text-lg { font-size: 14px !important; }
+            .text-2xl { font-size: 18px !important; }
+        }
     </style>
 </head>
 <body class="bg-slate-50 dark:bg-slate-900 p-6 font-sans text-slate-800 dark:text-slate-100 transition-colors duration-200">
@@ -115,7 +188,7 @@
     <div class="max-w-7xl mx-auto space-y-5">
 
         <!-- Header -->
-        <div class="flex justify-between items-center bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
+        <div class="mobile-header flex justify-between items-center bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl flex items-center justify-center">
                     <span class="text-white font-bold text-lg">S</span>
@@ -124,7 +197,7 @@
                     <h1 class="text-2xl font-bold text-slate-900 dark:text-white">SNS Daily Report</h1>
                 </div>
             </div>
-            <div class="flex items-center space-x-3">
+            <div class="mobile-controls flex items-center space-x-3">
                 <!-- Property Dropdown - Hidden until individual property pages are ready -->
                 <div class="relative hidden">
                     <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Property</label>
@@ -153,7 +226,7 @@
                 <div>
                     <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">&nbsp;</label>
                     <div class="h-11 py-2.5 px-4 bg-slate-100 dark:bg-slate-700 rounded-xl border-2 border-slate-200 dark:border-slate-600 flex items-center">
-                        <span id="refresh-timestamp" class="font-semibold text-slate-700 dark:text-slate-200 text-sm">April 28, 2026 at 04:07 PM ET</span>
+                        <span id="refresh-timestamp" class="font-semibold text-slate-700 dark:text-slate-200 text-sm">April 28, 2026 at 04:23 PM ET</span>
                     </div>
                 </div>
                 <!-- Refresh Button -->
@@ -3088,9 +3161,9 @@
     },
     "occupancy_rate": 90.04,
     "eviction_units": [
+      "1006",
       "202",
-      "901",
-      "1006"
+      "901"
     ],
     "name": "The Morgan At Ocala Apartments",
     "property_id": "96487e71-e553-4e8e-add8-39c10c64b24c",
@@ -3415,15 +3488,15 @@
     },
     "occupancy_rate": 95.61,
     "eviction_units": [
-      "39B1",
-      "61A2",
       "15B1",
-      "09C2",
-      "29B2",
       "05A2",
       "15C2",
       "41C2",
-      "19C2"
+      "61A2",
+      "19C2",
+      "09C2",
+      "39B1",
+      "29B2"
     ],
     "name": "The Village at Eastpointe Apartments",
     "property_id": "0e550e45-c21d-4481-b583-65a428f17198",
@@ -3577,10 +3650,10 @@
     "occupancy_rate": 94.17,
     "eviction_units": [
       "5528B",
-      "5532D",
       "5544B",
+      "5560D",
       "5530A",
-      "5560D"
+      "5532D"
     ],
     "name": "Marbella Park",
     "property_id": "277900f2-eba0-4ef7-808f-8864f406b370",
@@ -4062,10 +4135,10 @@
     },
     "occupancy_rate": 92.12,
     "eviction_units": [
+      "T162",
       "T145",
       "T016",
-      "C003",
-      "T162"
+      "C003"
     ],
     "name": "The Villas at Ortega",
     "property_id": "87e6d232-bbd8-443b-bd43-8992c83aa58c",
@@ -5155,8 +5228,8 @@
     },
     "occupancy_rate": 93.2,
     "eviction_units": [
-      "109",
-      "067"
+      "067",
+      "109"
     ],
     "name": "Arbor Place Apartments",
     "property_id": "20089ddf-61c5-40e6-aeb7-f1de18985f39",
