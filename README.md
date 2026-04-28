@@ -2,15 +2,20 @@
 
 Real-time property management dashboard for SNS portfolio using ResMan API and Google Sheets integration.
 
+**Live Dashboard:** [https://sns-daily-report.vercel.app](https://sns-daily-report.vercel.app)
+
 **Last Updated:** April 28, 2026
 
 ## Quick Start
 
+**View Live:**
+Visit [sns-daily-report.vercel.app](https://sns-daily-report.vercel.app)
+
+**Local Development:**
 ```bash
 cd "C:\Users\ymosh\ROI\SNS Daily Report"
 python generate_dashboard.py
 ```
-
 Then open `dashboard_live.html` in a browser.
 
 ---
@@ -30,8 +35,12 @@ This dashboard provides a unified view of:
 | `generate_dashboard.py` | Main script - fetches data and generates HTML |
 | `dashboard_live.html` | Generated dashboard (open in browser) |
 | `SNS_STYLEGUIDE.md` | SNS design system documentation |
-| `Cardentials.txt` | API credentials (keep secure) |
-| `archive/` | Exploration scripts, debug tools, and raw data from development |
+| `Cardentials.txt` | API credentials (keep secure, in .gitignore) |
+| `archive/` | Exploration scripts, debug tools, raw data from development |
+| `.github/workflows/refresh.yml` | GitHub Actions - auto-refresh every 4 hours |
+| `api/index.py` | Vercel serverless function - triggers manual refresh |
+| `vercel.json` | Vercel deployment configuration |
+| `requirements.txt` | Python dependencies |
 
 ---
 
@@ -205,34 +214,56 @@ Shows unit renovation breakdown per property.
 
 ## Features
 
-- Dark/light mode toggle
-- Property filter dropdown
+- **Live hosting** on Vercel with auto-refresh every 4 hours
+- **Manual refresh** button with loading animation and auto-reload
+- **Mobile responsive** - works on phones and tablets
+- **Dark/light mode** toggle (persists in browser)
 - Region-grouped columns (Tampa, Orlando, Jacksonville, Ft. Lauderdale)
 - Tooltip explanations on metrics (hover over ?)
 - Color-coded occupancy rates (green 95%+, amber 90-95%, red <90%)
 - Collapsible expiring leases with renewal % preview
-- Responsive tables with sticky first column
-- Clickable property headers to filter
+- Responsive tables with horizontal scroll on mobile
+- Florida timezone (ET) for all timestamps
 
 ---
 
 ## Recent Changes
 
 ### April 28, 2026
+- **Deployed:** Live dashboard on Vercel with auto-refresh every 4 hours
+- **Added:** Manual refresh button with loading overlay and auto-reload
+- **Added:** Mobile responsive design (works on phones/tablets)
+- **Added:** Dark/light mode toggle
 - **Fixed:** JSON serialization bug (`eviction_units` set -> list)
 - **Fixed:** EAST off-market count (was showing 23, now correctly shows 14)
 - **Renamed:** "Available for Rent" -> "Rentable Units"
-- **Verified:** Off-market calculation matches ResMan system
+- **UI:** Streamlined timestamp display (single location in header)
+- **UI:** Hidden property dropdown (pending individual property pages)
 
 ---
 
-## Deployment Options (Future)
+## Deployment
 
-1. **SharePoint/OneDrive** - Simple file sharing
-2. **GitHub Pages** - Free static hosting
-3. **Internal Web Server (IIS)** - Private, auto-updates via Task Scheduler
-4. **Azure Static Web Apps** - Cloud, private, scalable
-5. **Python Web Server** - Local, live data refresh
+### Current Setup (Live)
+- **Hosting:** Vercel (https://sns-daily-report.vercel.app)
+- **Repository:** GitHub (https://github.com/ymi-flowing/sns-daily-report)
+- **Auto-refresh:** GitHub Actions runs every 4 hours
+- **Manual refresh:** Click refresh button on dashboard (triggers GitHub Actions via Vercel API)
+
+### How It Works
+1. GitHub Actions runs `generate_dashboard.py` on schedule or manual trigger
+2. Script fetches fresh data from ResMan API and Google Sheets
+3. Generates new `dashboard_live.html` with current timestamp
+4. Commits and pushes to GitHub
+5. Vercel auto-deploys on push
+
+### Environment Variables (GitHub Secrets)
+- `RESMAN_API_KEY` - ResMan API key
+- `RESMAN_PARTNER_ID` - ResMan partner ID
+- `RESMAN_ACCOUNT_ID` - ResMan account ID
+
+### Environment Variables (Vercel)
+- `GITHUB_TOKEN` - Fine-grained token with Actions write permission (for refresh button)
 
 ---
 
@@ -242,12 +273,13 @@ Shows unit renovation breakdown per property.
 - [x] ~~Renovation status tracking~~
 - [x] ~~Off the Market tracking~~
 - [x] ~~Fix off-market calculation~~
-- [ ] **Rent collection metrics** - How much rent was collected this month
-- [ ] Payment tracking and delinquency
-- [ ] Work order / maintenance metrics
+- [x] ~~Deploy to live hosting~~
+- [x] ~~Mobile responsive design~~
+- [ ] **Delinquency metrics** - Payment tracking and aged receivables
+- [ ] **Work order metrics** - Maintenance requests and completion rates
+- [ ] Individual property detail pages
 - [ ] Historical trends and charts
 - [ ] Automated daily email reports
-- [ ] Deploy to live hosting
 
 ---
 
