@@ -1,0 +1,25 @@
+# Credentials (use GitHub Secrets instead)
+Cardentials.txt
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+.env
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Archive folder (keep for local dev, don't deploy)
+archive/
+
+# Vercel
+.vercel/
