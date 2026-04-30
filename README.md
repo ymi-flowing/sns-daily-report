@@ -4,7 +4,7 @@ Real-time property management dashboard for SNS portfolio using ResMan API and G
 
 **Live Dashboard:** [https://sns-daily-report.vercel.app](https://sns-daily-report.vercel.app)
 
-**Last Updated:** April 28, 2026
+**Last Updated:** April 30, 2026
 
 ## Quick Start
 
@@ -275,11 +275,13 @@ Shows unit renovation breakdown per property.
 - [x] ~~Fix off-market calculation~~
 - [x] ~~Deploy to live hosting~~
 - [x] ~~Mobile responsive design~~
+- [ ] **Financial Summary card** - Charges, Credits, Income (via n8n + Google Sheet)
 - [ ] **Delinquency metrics** - Payment tracking and aged receivables
 - [ ] **Work order metrics** - Maintenance requests and completion rates
 - [ ] Individual property detail pages
 - [ ] Historical trends and charts
 - [ ] Automated daily email reports
+- [ ] API optimization - reduce duplicate calls (see DEVELOPMENT.md)
 
 ---
 

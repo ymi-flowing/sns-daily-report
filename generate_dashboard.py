@@ -95,20 +95,19 @@ def get_traffic_data():
         return {}
 
 
-def get_pending_leases_data(property_id):
-    """Get pending lease/applicant data for a property using Partners API"""
+def fetch_leases(property_id):
+    """Fetch all leases with history - single API call for all lease processing"""
     try:
-        # Use Partners API with GET request and Basic Auth
         headers = {
             "ResMan-Account-Id": ACCOUNT_ID,
             "Accept": "application/json",
         }
 
-        # Get leases modified in last 90 days
-        since_date = (datetime.now() - timedelta(days=90)).strftime("%Y-%m-%d")
+        # Use 730 days to capture renewed leases (needed for expiring leases)
+        since_date = (datetime.now() - timedelta(days=730)).strftime("%Y-%m-%d")
         params = {
             "propertyId": property_id,
-            "includeLeaseHistory": "true",  # Need history to identify new vs renewal
+            "includeLeaseHistory": "true",
             "modifiedSince": since_date
         }
 
@@ -122,9 +121,25 @@ def get_pending_leases_data(property_id):
 
         if not resp.ok:
             print(f"    Warning: Partners API returned {resp.status_code}")
-            return {"total_applicants": 0, "pending_approval": 0, "approved": 0, "signed_lease": 0, "signed_leases_mtd": 0}
+            return []
 
-        leases = resp.json().get("leases", [])
+        return resp.json().get("leases", [])
+    except Exception as e:
+        print(f"    Warning: Could not fetch leases: {e}")
+        return []
+
+
+def get_pending_leases_data(property_id, leases=None):
+    """Get pending lease/applicant data for a property
+
+    Args:
+        property_id: Property ID (used if leases not provided)
+        leases: Pre-fetched leases data (optional, to avoid duplicate API call)
+    """
+    try:
+        # Use provided leases or fetch
+        if leases is None:
+            leases = fetch_leases(property_id)
 
         # Filter for Pending status only (future leases/applicants)
         pending = [l for l in leases if l.get("leaseStatus") == "Pending"]
@@ -176,34 +191,25 @@ def get_pending_leases_data(property_id):
         print(f"    Warning: Could not fetch lease data: {e}")
         return {"total_applicants": 0, "pending_approval": 0, "approved": 0, "signed_lease": 0, "signed_leases_mtd": 0}
 
-def get_expiring_leases_data(property_id):
-    """Get expiring leases data for current + next 3 months using Partners API"""
+def get_expiring_leases_data(property_id, leases=None):
+    """Get expiring leases data for current + next 3 months
+
+    Args:
+        property_id: Property ID (used if leases not provided)
+        leases: Pre-fetched leases data (optional, to avoid duplicate API call)
+
+    Includes:
+    - Current leases with leaseEndDate in range
+    - Renewed leases found in history (already renewed to next year)
+    - Former residents if MO date is within 3 months (counted in NTV/Formers)
+    """
     try:
-        headers = {
-            "ResMan-Account-Id": ACCOUNT_ID,
-            "Accept": "application/json",
-        }
+        # Use provided leases or fetch
+        if leases is None:
+            leases = fetch_leases(property_id)
 
-        # Get leases with history to check for renewals
-        since_date = (datetime.now() - timedelta(days=365)).strftime("%Y-%m-%d")
-        params = {
-            "propertyId": property_id,
-            "includeLeaseHistory": "true",
-            "modifiedSince": since_date
-        }
-
-        resp = requests.get(
-            f"{PARTNERS_API_URL}/Leasing/Leases",
-            headers=headers,
-            params=params,
-            auth=HTTPBasicAuth(PARTNER_ID, API_KEY),
-            timeout=30
-        )
-
-        if not resp.ok:
+        if not leases:
             return {"month1": {}, "month2": {}, "month3": {}, "month4": {}, "total": {}}
-
-        leases = resp.json().get("leases", [])
         today = datetime.now().date()
 
         # Define month boundaries - current + next 3 months (4 total)
@@ -223,8 +229,18 @@ def get_expiring_leases_data(property_id):
                 return year + 1, 1
             return year, month + 1
 
-        # Calculate 4 month ranges
-        m1_start, m1_end = today, get_month_range(current_year, current_month)[1]
+        def prev_months(year, month, n):
+            """Go back n months"""
+            for _ in range(n):
+                if month == 1:
+                    year -= 1
+                    month = 12
+                else:
+                    month -= 1
+            return year, month
+
+        # Calculate 4 month ranges - Month 1 starts from 1st of current month
+        m1_start, m1_end = get_month_range(current_year, current_month)
         y2, m2 = next_month(current_year, current_month)
         m2_start, m2_end = get_month_range(y2, m2)
         y3, m3 = next_month(y2, m2)
@@ -232,69 +248,139 @@ def get_expiring_leases_data(property_id):
         y4, m4 = next_month(y3, m3)
         m4_start, m4_end = get_month_range(y4, m4)
 
-        # Initialize counters - updated status categories
-        statuses = ["Current", "Pending Renewal", "Renewed", "NTV", "Under Eviction"]
+        # Calculate MO date windows for Formers (3 months back from each month)
+        mo_y1, mo_m1 = prev_months(current_year, current_month, 3)
+        mo_window_1_start = datetime(mo_y1, mo_m1, 1).date()
+        mo_window_1_end = m1_end
+
+        mo_y2, mo_m2 = prev_months(y2, m2, 3)
+        mo_window_2_start = datetime(mo_y2, mo_m2, 1).date()
+        mo_window_2_end = m2_end
+
+        mo_y3, mo_m3 = prev_months(y3, m3, 3)
+        mo_window_3_start = datetime(mo_y3, mo_m3, 1).date()
+        mo_window_3_end = m3_end
+
+        mo_y4, mo_m4 = prev_months(y4, m4, 3)
+        mo_window_4_start = datetime(mo_y4, mo_m4, 1).date()
+        mo_window_4_end = m4_end
+
+        # Initialize counters - NTV/Formers combines NTV + Former with recent MO
+        statuses = ["Current", "Pending Renewal", "Renewed", "NTV/Formers", "Under Eviction"]
         month1 = {s: 0 for s in statuses}
         month2 = {s: 0 for s in statuses}
         month3 = {s: 0 for s in statuses}
         month4 = {s: 0 for s in statuses}
         total = {s: 0 for s in statuses}
 
-        # Categorize leases by expiration month
+        # Track processed unit+endDate combos to avoid duplicates
+        processed = set()
+
+        def get_month_bucket(end_date):
+            """Return month bucket number (1-4) or None if not in range"""
+            if m1_start <= end_date <= m1_end:
+                return 1
+            elif m2_start <= end_date <= m2_end:
+                return 2
+            elif m3_start <= end_date <= m3_end:
+                return 3
+            elif m4_start <= end_date <= m4_end:
+                return 4
+            return None
+
+        def is_mo_in_window(mo_date, month_bucket):
+            """Check if MO date is within 3-month window for a month"""
+            if mo_date is None:
+                return False
+            if month_bucket == 1:
+                return mo_window_1_start <= mo_date <= mo_window_1_end
+            elif month_bucket == 2:
+                return mo_window_2_start <= mo_date <= mo_window_2_end
+            elif month_bucket == 3:
+                return mo_window_3_start <= mo_date <= mo_window_3_end
+            elif month_bucket == 4:
+                return mo_window_4_start <= mo_date <= mo_window_4_end
+            return False
+
+        def add_to_bucket(bucket, status):
+            """Add a count to the appropriate month bucket"""
+            if bucket == 1:
+                month1[status] += 1
+            elif bucket == 2:
+                month2[status] += 1
+            elif bucket == 3:
+                month3[status] += 1
+            elif bucket == 4:
+                month4[status] += 1
+            total[status] += 1
+
+        # Process each lease
         for lease in leases:
-            end_date_str = lease.get("leaseEndDate", "")
-            if not end_date_str:
-                continue
-
-            try:
-                end_date = datetime.strptime(end_date_str[:10], "%Y-%m-%d").date()
-            except:
-                continue
-
-            # Skip if not in our date range
-            if not (m1_start <= end_date <= m4_end):
-                continue
-
-            # Determine the effective status
+            unit = lease.get("unitNumber", "")
             lease_status = lease.get("leaseStatus", "")
             history = lease.get("history", [])
 
-            # Check history for Pending Renewal
-            pending_renewal = None
+            # Get move out date for Formers
+            mo_date = None
+            mo_date_str = lease.get("moveOutDate", "")
+            if mo_date_str:
+                try:
+                    mo_date = datetime.strptime(mo_date_str[:10], "%Y-%m-%d").date()
+                except:
+                    pass
+
+            # PART 1: Check current leaseEndDate
+            end_date_str = lease.get("leaseEndDate", "")
+            if end_date_str:
+                try:
+                    end_date = datetime.strptime(end_date_str[:10], "%Y-%m-%d").date()
+                    bucket = get_month_bucket(end_date)
+                    if bucket:
+                        key = (unit, end_date_str[:10])
+                        if key not in processed:
+                            processed.add(key)
+
+                            # Check for Pending Renewal in history
+                            pending_renewal = None
+                            for h in history:
+                                if h.get("status") == "Pending Renewal":
+                                    pending_renewal = h
+                                    break
+
+                            # Determine status
+                            if pending_renewal:
+                                if pending_renewal.get("signedDate"):
+                                    add_to_bucket(bucket, "Renewed")
+                                else:
+                                    add_to_bucket(bucket, "Pending Renewal")
+                            elif lease_status == "Notice to Vacate":
+                                add_to_bucket(bucket, "NTV/Formers")
+                            elif lease_status == "Under Eviction":
+                                add_to_bucket(bucket, "Under Eviction")
+                            elif lease_status == "Current":
+                                add_to_bucket(bucket, "Current")
+                            elif lease_status == "Former":
+                                if is_mo_in_window(mo_date, bucket):
+                                    add_to_bucket(bucket, "NTV/Formers")
+                            # Skip Cancelled, Denied, etc.
+                except:
+                    pass
+
+            # PART 2: Check history for "Renewed" entries (already renewed to next year)
             for h in history:
-                if h.get("status") == "Pending Renewal":
-                    pending_renewal = h
-                    break
-
-            # Determine final status
-            if pending_renewal:
-                if pending_renewal.get("signedDate"):
-                    status = "Renewed"
-                else:
-                    status = "Pending Renewal"
-            elif lease_status == "Notice to Vacate":
-                status = "NTV"
-            elif lease_status == "Under Eviction":
-                status = "Under Eviction"
-            elif lease_status == "Current":
-                status = "Current"
-            else:
-                # Skip other statuses (Former, Cancelled, etc.)
-                continue
-
-            # Assign to correct month
-            if m1_start <= end_date <= m1_end:
-                month1[status] += 1
-                total[status] += 1
-            elif m2_start <= end_date <= m2_end:
-                month2[status] += 1
-                total[status] += 1
-            elif m3_start <= end_date <= m3_end:
-                month3[status] += 1
-                total[status] += 1
-            elif m4_start <= end_date <= m4_end:
-                month4[status] += 1
-                total[status] += 1
+                h_end_str = h.get("endDate", "")
+                h_status = h.get("status", "")
+                if h_end_str and h_status == "Renewed":
+                    try:
+                        h_end_date = datetime.strptime(h_end_str[:10], "%Y-%m-%d").date()
+                        bucket = get_month_bucket(h_end_date)
+                        if bucket:
+                            key = (unit, h_end_str[:10])
+                            if key not in processed:
+                                processed.add(key)
+                                add_to_bucket(bucket, "Renewed")
+                    except:
+                        pass
 
         # Add month labels
         month_names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
@@ -314,14 +400,13 @@ def get_expiring_leases_data(property_id):
         return {"month1": {}, "month2": {}, "month3": {}, "month4": {}, "total": {}}
 
 
-def get_units_renovation_data(property_id):
-    """Get unit renovation status breakdown using Partners API GET /Units"""
+def fetch_partners_units(property_id):
+    """Fetch units from Partners API - single call for renovation and off-market"""
     try:
         headers = {
             "ResMan-Account-Id": ACCOUNT_ID,
             "Accept": "application/json",
         }
-
         params = {"propertyId": property_id}
 
         resp = requests.get(
@@ -334,9 +419,27 @@ def get_units_renovation_data(property_id):
 
         if not resp.ok:
             print(f"    Warning: Units API returned {resp.status_code}")
-            return {"renovated": 0, "partial": 0, "classic": 0, "total": 0}
+            return []
 
-        all_units = resp.json().get("units", [])
+        return resp.json().get("units", [])
+    except Exception as e:
+        print(f"    Warning: Could not fetch units: {e}")
+        return []
+
+
+def get_units_renovation_data(property_id, partners_units=None):
+    """Get unit renovation status breakdown
+
+    Args:
+        property_id: Property ID (used if partners_units not provided)
+        partners_units: Pre-fetched units data (optional, to avoid duplicate API call)
+    """
+    try:
+        # Use provided units or fetch
+        if partners_units is None:
+            partners_units = fetch_partners_units(property_id)
+
+        all_units = partners_units
 
         # Filter to only units included in occupancy (exclude holding/office units)
         units = [u for u in all_units if not u.get("excludedFromOccupancy", False)]
@@ -376,24 +479,23 @@ def get_units_renovation_data(property_id):
         return {"renovated": 0, "partial": 0, "classic": 0, "total": 0, "renovated_pct": 0, "partial_pct": 0, "classic_pct": 0}
 
 
-def get_off_market_count(property_id, eviction_units=None, debug=False):
-    """Get count of vacant/NTV units off the market (availableForOnlineMarketing = false)
-    Only counts non-leased units: Vacant, Notice to Vacate (excludes Pre-Leased)
-    Excludes: Occupied, Under Eviction, Down/Abated
-    """
+def get_work_orders_data(property_id):
+    """Get open work orders count (excluding make-ready) and new in last 24h"""
     try:
-        if eviction_units is None:
-            eviction_units = set()
-
-        # Get unit marketing status from Partners API
         headers = {
             "ResMan-Account-Id": ACCOUNT_ID,
             "Accept": "application/json",
         }
-        params = {"propertyId": property_id}
+
+        # Fetch work orders from past 90 days
+        start_date = (datetime.now() - timedelta(days=90)).strftime("%Y-%m-%d")
+        params = {
+            "propertyId": property_id,
+            "startDate": start_date
+        }
 
         resp = requests.get(
-            f"{PARTNERS_API_URL}/Units",
+            f"{PARTNERS_API_URL}/WorkOrders",
             headers=headers,
             params=params,
             auth=HTTPBasicAuth(PARTNER_ID, API_KEY),
@@ -401,9 +503,59 @@ def get_off_market_count(property_id, eviction_units=None, debug=False):
         )
 
         if not resp.ok:
-            return 0
+            print(f"    Warning: WorkOrders API returned {resp.status_code}")
+            return {"open_total": 0, "new_24h": 0}
 
-        partners_units = resp.json().get("units", [])
+        work_orders = resp.json().get("workOrders", [])
+
+        # Filter: open statuses AND NOT make-ready
+        open_statuses = ["Submitted", "Not Started", "In Progress", "Scheduled", "On Hold"]
+        open_wos = [wo for wo in work_orders
+                    if wo.get("status") in open_statuses
+                    and wo.get("isMakeReady") == False]
+
+        # Count new in last 24 hours
+        now = datetime.now()
+        yesterday = now - timedelta(hours=24)
+        new_24h = 0
+        for wo in open_wos:
+            reported_str = wo.get("reportedDate", "")
+            if reported_str:
+                try:
+                    reported = datetime.fromisoformat(reported_str.replace("Z", "+00:00").split("+")[0])
+                    if reported >= yesterday:
+                        new_24h += 1
+                except:
+                    pass
+
+        return {
+            "open_total": len(open_wos),
+            "new_24h": new_24h
+        }
+    except Exception as e:
+        print(f"    Warning: Could not fetch work orders: {e}")
+        return {"open_total": 0, "new_24h": 0}
+
+
+def get_off_market_count(property_id, eviction_units=None, legacy_units=None, partners_units=None, debug=False):
+    """Get count of vacant/NTV units off the market (availableForOnlineMarketing = false)
+    Only counts non-leased units: Vacant, Notice to Vacate (excludes Pre-Leased)
+    Excludes: Occupied, Under Eviction, Down/Abated
+
+    Args:
+        property_id: Property ID
+        eviction_units: Set of unit numbers under eviction
+        legacy_units: Pre-fetched units from Legacy API GetUnitStatus (optional)
+        partners_units: Pre-fetched units from Partners API /Units (optional)
+        debug: Print debug info
+    """
+    try:
+        if eviction_units is None:
+            eviction_units = set()
+
+        # Use provided partners_units or fetch
+        if partners_units is None:
+            partners_units = fetch_partners_units(property_id)
 
         # Build lookup: unitNumber -> availableForOnlineMarketing
         marketing_status = {}
@@ -411,20 +563,21 @@ def get_off_market_count(property_id, eviction_units=None, debug=False):
             if not u.get("excludedFromOccupancy", False):
                 marketing_status[u.get("unitNumber")] = u.get("availableForOnlineMarketing", True)
 
-        # Get unit vacancy status from Legacy API
-        url = f"{BASE_URL}/Property/GetUnitStatus"
-        payload = {
-            "IntegrationPartnerID": PARTNER_ID,
-            "APIKey": API_KEY,
-            "AccountID": ACCOUNT_ID,
-            "PropertyID": property_id
-        }
-        legacy_resp = requests.post(url, json=payload, headers={"Accept": "application/json"}, timeout=30)
+        # Use provided legacy_units or fetch from Legacy API
+        if legacy_units is None:
+            url = f"{BASE_URL}/Property/GetUnitStatus"
+            payload = {
+                "IntegrationPartnerID": PARTNER_ID,
+                "APIKey": API_KEY,
+                "AccountID": ACCOUNT_ID,
+                "PropertyID": property_id
+            }
+            legacy_resp = requests.post(url, json=payload, headers={"Accept": "application/json"}, timeout=30)
 
-        if not legacy_resp.ok:
-            return 0
+            if not legacy_resp.ok:
+                return 0
 
-        legacy_units = legacy_resp.json().get("Units", [])
+            legacy_units = legacy_resp.json().get("Units", [])
 
         # Count off-market units that are Vacant or NTV but NOT pre-leased
         # Only: "Vacant", "Notice to Vacate" (exclude Pre-Leased variants)
@@ -564,7 +717,8 @@ def get_property_data(property_id, property_name):
         "status_breakdown": {k: len(v) for k, v in status_summary.items()},
         "unit_lists": {k: sorted(v) for k, v in status_summary.items()},
         "occupancy_rate": occupancy,
-        "eviction_units": list(eviction_units)  # Convert set to list for JSON serialization
+        "eviction_units": list(eviction_units),  # Convert set to list for JSON serialization
+        "legacy_units": units  # Raw units data for off-market calculation
     }
 
 def generate_html(properties_data, traffic_data, leases_data):
@@ -927,11 +1081,12 @@ def generate_html(properties_data, traffic_data, leases_data):
             </div>
         </div>
 
-        <!-- Renovation Status Table (shown only for ALL) -->
+        <!-- Renovation & Maintenance Table (shown only for ALL) -->
         <div id="renovation-table-section" class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
             <div class="p-4 border-b border-slate-200 dark:border-slate-700">
-                <h2 class="text-lg font-bold text-slate-800 dark:text-white">Renovation Status</h2>
+                <h2 class="text-lg font-bold text-slate-800 dark:text-white">Renovation & Maintenance</h2>
             </div>
+            <!-- Renovation Table -->
             <div class="overflow-x-auto fancy-scroll">
                 <table class="min-w-full text-xs table-fixed" id="renovation-matrix-table">
                     <!-- Generated by JS -->
@@ -1353,7 +1508,7 @@ def generate_html(properties_data, traffic_data, leases_data):
                 {{ key: 'Current', color: 'text-slate-600 dark:text-slate-400' }},
                 {{ key: 'Pending Renewal', color: 'text-amber-600 dark:text-amber-400' }},
                 {{ key: 'Renewed', color: 'text-emerald-600 dark:text-emerald-400' }},
-                {{ key: 'NTV', color: 'text-orange-600 dark:text-orange-400' }},
+                {{ key: 'NTV/Formers', color: 'text-orange-600 dark:text-orange-400', tooltip: 'Notice to Vacate + Move Outs from past 3 months' }},
                 {{ key: 'Under Eviction', color: 'text-red-600 dark:text-red-400' }}
             ];
 
@@ -1370,7 +1525,7 @@ def generate_html(properties_data, traffic_data, leases_data):
                         const expData = leasesData[abbr]?.expiring?.[monthKey] || {{}};
                         monthRenewed += expData['Renewed'] || 0;
                         // Total = all except Pending Renewal
-                        monthTotal += (expData['Current'] || 0) + (expData['Renewed'] || 0) + (expData['NTV'] || 0) + (expData['Under Eviction'] || 0);
+                        monthTotal += (expData['Current'] || 0) + (expData['Renewed'] || 0) + (expData['NTV/Formers'] || 0) + (expData['Under Eviction'] || 0);
                     }});
                 }});
                 const renewalPct = monthTotal > 0 ? (monthRenewed / monthTotal * 100).toFixed(1) : '0.0';
@@ -1394,7 +1549,7 @@ def generate_html(properties_data, traffic_data, leases_data):
                     propertyGroups[region].forEach(abbr => {{
                         const expData = leasesData[abbr]?.expiring?.[monthKey] || {{}};
                         const propRenewed = expData['Renewed'] || 0;
-                        const propTotal = (expData['Current'] || 0) + (expData['Renewed'] || 0) + (expData['NTV'] || 0) + (expData['Under Eviction'] || 0);
+                        const propTotal = (expData['Current'] || 0) + (expData['Renewed'] || 0) + (expData['NTV/Formers'] || 0) + (expData['Under Eviction'] || 0);
                         const propPct = propTotal > 0 ? (propRenewed / propTotal * 100).toFixed(0) : '-';
                         const propColor = propTotal === 0 ? 'text-slate-400' :
                                          parseFloat(propPct) >= 70 ? 'text-emerald-600 dark:text-emerald-400' :
@@ -1430,7 +1585,8 @@ def generate_html(properties_data, traffic_data, leases_data):
                     const isAlt = idx % 2 === 1;
                     const rowBg = isAlt ? 'bg-slate-50/50 dark:bg-slate-800/30' : '';
                     let tr = `<tr class="month-content-${{monthKey}} ${{rowBg}} hover:bg-blue-50/50 dark:hover:bg-blue-900/20 border-b border-slate-200 dark:border-slate-700" style="display: none;">`;
-                    tr += `<td class="px-3 py-2 pl-8 font-medium text-slate-700 dark:text-slate-300 sticky left-0 ${{rowBg}} bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700">${{status.key}}</td>`;
+                    const tooltipHtml = status.tooltip ? `<span class="tip" data-tip="${{status.tooltip}}">?</span>` : '';
+                    tr += `<td class="px-3 py-2 pl-8 font-medium text-slate-700 dark:text-slate-300 sticky left-0 ${{rowBg}} bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700">${{status.key}}${{tooltipHtml}}</td>`;
 
                     let rowTotal = 0;
                     regions.forEach(region => {{
@@ -1560,6 +1716,40 @@ def generate_html(properties_data, traffic_data, leases_data):
                         <span class="text-[10px] opacity-70 ml-0.5">(${{rowPct}}%)</span>
                     </td>`;
                 }}
+                tr += '</tr>';
+                bodyRows += tr;
+            }});
+
+            // Add thick divider before Work Orders section
+            const colCount = allProps.length + 2; // +2 for label and total columns
+            bodyRows += `<tr class="h-2 bg-slate-200 dark:bg-slate-600"><td colspan="${{colCount}}"></td></tr>`;
+
+            // Add Work Orders rows
+            const woMetrics = [
+                {{ key: 'open_total', label: 'Open WOs', color: 'text-blue-600 dark:text-blue-400' }},
+                {{ key: 'new_24h', label: 'New (24h)', color: 'text-amber-600 dark:text-amber-400' }}
+            ];
+
+            woMetrics.forEach((metric, idx) => {{
+                const isAlt = idx % 2 === 1;
+                const rowBg = isAlt ? 'bg-slate-50/50 dark:bg-slate-800/30' : '';
+                let tr = `<tr class="${{rowBg}} hover:bg-blue-50/50 dark:hover:bg-blue-900/20">`;
+                tr += `<td class="px-3 py-2 font-medium text-slate-700 dark:text-slate-300 sticky left-0 ${{rowBg}} bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700">${{metric.label}}</td>`;
+
+                let rowTotal = 0;
+                regions.forEach(region => {{
+                    propertyGroups[region].forEach(abbr => {{
+                        const woData = leasesData[abbr]?.work_orders || {{}};
+                        const val = woData[metric.key] || 0;
+                        rowTotal += val;
+
+                        const valColor = val > 0 ? metric.color : 'text-slate-400 dark:text-slate-500';
+                        tr += `<td class="px-2 py-2 text-center font-semibold ${{valColor}}">${{val}}</td>`;
+                    }});
+                }});
+
+                // Total column
+                tr += `<td class="px-3 py-2 text-center bg-slate-100 dark:bg-slate-700/50 ${{metric.color}} font-bold">${{rowTotal}}</td>`;
                 tr += '</tr>';
                 bodyRows += tr;
             }});
@@ -1956,31 +2146,52 @@ def main():
     leases_data = {}
     for abbr, prop in target_props.items():
         print(f"\n[2] Processing {abbr} - {prop.get('Name')}...")
-        data = get_property_data(prop["PropertyID"], prop.get("Name", abbr))
+        property_id = prop["PropertyID"]
+
+        # Get property data (unit status, evictions)
+        data = get_property_data(property_id, prop.get("Name", abbr))
         data["name"] = prop.get("Name", abbr)
-        data["property_id"] = prop["PropertyID"]
+        data["property_id"] = property_id
         properties_data[abbr] = data
         print(f"    Units: {data['total_units']}, Occupancy: {data['occupancy_rate']}%")
 
-        # Get pending lease data
-        lease_data = get_pending_leases_data(prop["PropertyID"])
+        # OPTIMIZED: Fetch leases once, use for both pending and expiring
+        all_leases = fetch_leases(property_id)
+
+        # Get pending lease data (using pre-fetched leases)
+        lease_data = get_pending_leases_data(property_id, leases=all_leases)
         leases_data[abbr] = lease_data
         print(f"    Applicants: {lease_data['total_applicants']} (Pending: {lease_data['pending_approval']}, Approved: {lease_data['approved']}, Signed: {lease_data['signed_lease']}, MTD New: {lease_data['signed_leases_mtd']})")
 
-        # Get expiring leases data
-        expiring_data = get_expiring_leases_data(prop["PropertyID"])
+        # Get expiring leases data (using pre-fetched leases)
+        expiring_data = get_expiring_leases_data(property_id, leases=all_leases)
         leases_data[abbr]["expiring"] = expiring_data
         exp_total = sum(expiring_data.get("total", {}).values())
-        print(f"    Expiring (3mo): {exp_total}")
+        print(f"    Expiring (4mo): {exp_total}")
 
-        # Get renovation status data
-        renovation_data = get_units_renovation_data(prop["PropertyID"])
+        # OPTIMIZED: Fetch partners units once, use for both renovation and off-market
+        partners_units = fetch_partners_units(property_id)
+
+        # Get renovation status data (using pre-fetched units)
+        renovation_data = get_units_renovation_data(property_id, partners_units=partners_units)
         leases_data[abbr]["renovation"] = renovation_data
         print(f"    Renovation: {renovation_data['renovated']} Reno, {renovation_data['partial']} Partial, {renovation_data['classic']} Classic")
 
-        # Get off-market count (pass eviction_units to avoid extra API call)
+        # Get work orders data
+        work_orders_data = get_work_orders_data(property_id)
+        leases_data[abbr]["work_orders"] = work_orders_data
+        print(f"    Work Orders: {work_orders_data['open_total']} Open, {work_orders_data['new_24h']} New (24h)")
+
+        # Get off-market count (using pre-fetched data)
         eviction_units = set(data.get("eviction_units", []))
-        off_market_count = get_off_market_count(prop["PropertyID"], eviction_units, debug=(abbr == "EAST"))
+        legacy_units = data.get("legacy_units", [])
+        off_market_count = get_off_market_count(
+            property_id,
+            eviction_units=eviction_units,
+            legacy_units=legacy_units,
+            partners_units=partners_units,
+            debug=(abbr == "EAST")
+        )
         properties_data[abbr]["off_market"] = off_market_count
         print(f"    Off Market: {off_market_count}")
 
