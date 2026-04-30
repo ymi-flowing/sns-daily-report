@@ -108,7 +108,7 @@ def get_pending_leases_data(property_id):
         since_date = (datetime.now() - timedelta(days=90)).strftime("%Y-%m-%d")
         params = {
             "propertyId": property_id,
-            "includeLeaseHistory": "false",
+            "includeLeaseHistory": "true",  # Need history to identify new vs renewal
             "modifiedSince": since_date
         }
 
@@ -122,7 +122,7 @@ def get_pending_leases_data(property_id):
 
         if not resp.ok:
             print(f"    Warning: Partners API returned {resp.status_code}")
-            return {"total_applicants": 0, "pending_approval": 0, "approved": 0, "signed_lease": 0}
+            return {"total_applicants": 0, "pending_approval": 0, "approved": 0, "signed_lease": 0, "signed_leases_mtd": 0}
 
         leases = resp.json().get("leases", [])
 
@@ -146,15 +146,35 @@ def get_pending_leases_data(property_id):
             else:
                 pending_approval += 1
 
+        # Count new leases signed this month (MTD) - excludes renewals
+        # New lease = exactly 1 history entry (the current lease itself)
+        # Renewal = 2+ history entries (previous lease + current)
+        today = datetime.now()
+        first_of_month = today.replace(day=1).strftime("%Y-%m-%d")
+        signed_leases_mtd = 0
+
+        for lease in leases:
+            signed_date_str = lease.get("leaseSignedDate")
+            if not signed_date_str:
+                continue
+
+            # Check if signed this month
+            if signed_date_str >= first_of_month:
+                # Check if it's a new lease (not a renewal)
+                history = lease.get("history", [])
+                if len(history) == 1:  # New lease has exactly 1 history entry
+                    signed_leases_mtd += 1
+
         return {
             "total_applicants": total,
             "pending_approval": pending_approval,
             "approved": approved_not_signed,
-            "signed_lease": signed_lease
+            "signed_lease": signed_lease,
+            "signed_leases_mtd": signed_leases_mtd
         }
     except Exception as e:
         print(f"    Warning: Could not fetch lease data: {e}")
-        return {"total_applicants": 0, "pending_approval": 0, "approved": 0, "signed_lease": 0}
+        return {"total_applicants": 0, "pending_approval": 0, "approved": 0, "signed_lease": 0, "signed_leases_mtd": 0}
 
 def get_expiring_leases_data(property_id):
     """Get expiring leases data for current + next 3 months using Partners API"""
@@ -1160,7 +1180,7 @@ def generate_html(properties_data, traffic_data, leases_data):
             }});
 
             // Calculate totals
-            let totals = {{ total: 0, dailyAvg: 0, totalApplicants: 0, pendingApproval: 0, approved: 0, signedLease: 0 }};
+            let totals = {{ total: 0, dailyAvg: 0, totalApplicants: 0, pendingApproval: 0, approved: 0, signedLease: 0, signedLeasesMtd: 0 }};
             allProps.forEach(p => {{
                 const t = trafficData[p.abbr] || {{}};
                 const l = leasesData[p.abbr] || {{}};
@@ -1170,6 +1190,7 @@ def generate_html(properties_data, traffic_data, leases_data):
                 totals.pendingApproval += l.pending_approval || 0;
                 totals.approved += l.approved || 0;
                 totals.signedLease += l.signed_lease || 0;
+                totals.signedLeasesMtd += l.signed_leases_mtd || 0;
             }});
 
             // Region colors
@@ -1205,7 +1226,14 @@ def generate_html(properties_data, traffic_data, leases_data):
             const tip = (text) => `<span class="tip" data-tip="${{text}}">?</span>`;
             const trafficRows = [
                 {{ key: 'total', label: 'Total Prospects' + tip('Month to date'), color: 'text-blue-600 dark:text-blue-400 font-semibold', getValue: abbr => (trafficData[abbr]?.total || 0) }},
-                {{ key: 'dailyAvg', label: 'Daily AVG' + tip('Since 1st of current month'), color: 'text-slate-600 dark:text-slate-300', getValue: abbr => (trafficData[abbr]?.daily_avg || 0) }},
+                {{ key: 'dailyAvg', label: 'Daily AVG' + tip('Average prospects per day since 1st of current month'), color: 'text-slate-600 dark:text-slate-300', getValue: abbr => (trafficData[abbr]?.daily_avg || 0) }},
+                {{ key: 'signedLeasesMtd', label: 'Total Signed Leases' + tip('New leases signed this month (MTD). Excludes renewals.'), color: 'text-emerald-600 dark:text-emerald-400 font-semibold', getValue: abbr => (leasesData[abbr]?.signed_leases_mtd || 0) }},
+                {{ key: 'conversionRate', label: 'Conversion Rate %' + tip('Total Signed Leases / Total Prospects'), color: 'text-purple-600 dark:text-purple-400', getValue: abbr => {{
+                    const prospects = trafficData[abbr]?.total || 0;
+                    const signed = leasesData[abbr]?.signed_leases_mtd || 0;
+                    if (prospects === 0) return '0.0';
+                    return ((signed / prospects) * 100).toFixed(1);
+                }}, isPercent: true }},
                 {{ key: 'divider', label: '', isDivider: true }},
                 {{ key: 'totalApplicants', label: 'Total Applicants' + tip('Currently active applicants'), color: 'text-indigo-600 dark:text-indigo-400 font-semibold', getValue: abbr => (leasesData[abbr]?.total_applicants || 0) }},
                 {{ key: 'pendingApproval', label: 'Pending Approval', color: 'text-amber-600 dark:text-amber-400', getValue: abbr => (leasesData[abbr]?.pending_approval || 0) }},
@@ -1230,7 +1258,8 @@ def generate_html(properties_data, traffic_data, leases_data):
                 regions.forEach(region => {{
                     propertyGroups[region].forEach(abbr => {{
                         const val = row.getValue(abbr);
-                        tr += `<td class="px-2 py-2 text-center ${{row.color}}">${{val}}</td>`;
+                        const suffix = row.isPercent ? '%' : '';
+                        tr += `<td class="px-2 py-2 text-center ${{row.color}}">${{val}}${{suffix}}</td>`;
                     }});
                 }});
 
@@ -1238,6 +1267,11 @@ def generate_html(properties_data, traffic_data, leases_data):
                 let totalVal;
                 if (row.key === 'total') totalVal = totals.total;
                 else if (row.key === 'dailyAvg') totalVal = totals.dailyAvg.toFixed(1);
+                else if (row.key === 'signedLeasesMtd') totalVal = totals.signedLeasesMtd;
+                else if (row.key === 'conversionRate') {{
+                    const rate = totals.total > 0 ? ((totals.signedLeasesMtd / totals.total) * 100).toFixed(1) : '0.0';
+                    totalVal = rate + '%';
+                }}
                 else if (row.key === 'totalApplicants') totalVal = totals.totalApplicants;
                 else if (row.key === 'pendingApproval') totalVal = totals.pendingApproval;
                 else if (row.key === 'approved') totalVal = totals.approved;
@@ -1931,7 +1965,7 @@ def main():
         # Get pending lease data
         lease_data = get_pending_leases_data(prop["PropertyID"])
         leases_data[abbr] = lease_data
-        print(f"    Applicants: {lease_data['total_applicants']} (Pending: {lease_data['pending_approval']}, Approved: {lease_data['approved']}, Signed: {lease_data['signed_lease']})")
+        print(f"    Applicants: {lease_data['total_applicants']} (Pending: {lease_data['pending_approval']}, Approved: {lease_data['approved']}, Signed: {lease_data['signed_lease']}, MTD New: {lease_data['signed_leases_mtd']})")
 
         # Get expiring leases data
         expiring_data = get_expiring_leases_data(prop["PropertyID"])
