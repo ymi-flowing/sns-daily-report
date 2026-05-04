@@ -1347,7 +1347,7 @@ def generate_html(properties_data, traffic_data, leases_data):
                 {{ key: 'divider2', label: '', color: '', getValue: () => '', isDivider: true }},
                 {{ key: 'futureMI', label: `Future MI (${{futureMovesMonth}})` + tip('Signed pending leases moving in this month'), color: 'text-emerald-600 dark:text-emerald-400', getValue: p => p.futureMI || 0 }},
                 {{ key: 'futureMO', label: `Future MO (${{futureMovesMonth}})` + tip('NTV units moving out this month'), color: 'text-amber-600 dark:text-amber-400', getValue: p => p.futureMO || 0 }},
-                {{ key: 'projectedOcc', label: 'Projected Occupancy' + tip('(Occupied + Future MI - Future MO) ÷ Total'), color: '', getValue: p => (((p.occupied || 0) + (p.futureMI || 0) - (p.futureMO || 0)) / p.total * 100).toFixed(2), isOccupancy: true }}
+                {{ key: 'projectedOcc', label: 'Projected Occupancy' + tip('Physical Occ adjusted for future moves'), color: '', getValue: p => ((p.total - (p.vacantReady || 0) - (p.vacantNotReady || 0) + (p.futureMI || 0) - (p.futureMO || 0)) / p.total * 100).toFixed(2), isOccupancy: true }}
             ];
 
             let bodyRows = '';
@@ -1401,7 +1401,7 @@ def generate_html(properties_data, traffic_data, leases_data):
                 else if (row.key === 'occRented') totalVal = ((totals.total - totals.vacantReady - totals.vacantNotReady + totals.vacantLeased) / totals.total * 100).toFixed(2) + '%';
                 else if (row.key === 'futureMI') totalVal = totals.futureMI;
                 else if (row.key === 'futureMO') totalVal = totals.futureMO;
-                else if (row.key === 'projectedOcc') totalVal = ((totals.occupied + totals.futureMI - totals.futureMO) / totals.total * 100).toFixed(2) + '%';
+                else if (row.key === 'projectedOcc') totalVal = ((totals.total - totals.vacantReady - totals.vacantNotReady + totals.futureMI - totals.futureMO) / totals.total * 100).toFixed(2) + '%';
 
                 const totalColor = row.isOccupancy ? 'text-slate-900 dark:text-white font-bold' : row.color + ' font-bold';
                 tr += `<td class="px-3 py-2 text-center bg-slate-100 dark:bg-slate-700/50 ${{totalColor}}">${{totalVal}}</td>`;
