@@ -537,6 +537,89 @@ def get_work_orders_data(property_id):
         return {"open_total": 0, "new_24h": 0}
 
 
+def get_future_moves_data(property_id, leases=None):
+    """Get future move-ins and move-outs for the current month.
+
+    Future Move-Ins: Signed pending leases with leaseStartDate in current month
+    Future Move-Outs: NTV leases with leaseEndDate in current month (from today onwards)
+
+    Args:
+        property_id: Property ID (used if leases not provided)
+        leases: Pre-fetched leases data (optional, to avoid duplicate API call)
+    """
+    try:
+        # Use provided leases or fetch
+        if leases is None:
+            leases = fetch_leases(property_id)
+
+        if not leases:
+            return {"future_mi": 0, "future_mo": 0, "month_label": ""}
+
+        today = datetime.now().date()
+
+        # Calculate end of current month
+        current_year = today.year
+        current_month = today.month
+        if current_month == 12:
+            end_of_month = datetime(current_year + 1, 1, 1).date() - timedelta(days=1)
+        else:
+            end_of_month = datetime(current_year, current_month + 1, 1).date() - timedelta(days=1)
+
+        # Month label for display (e.g., "May 2026")
+        month_names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+        month_label = f"{month_names[current_month - 1]} {current_year}"
+
+        future_mi = 0
+        future_mo = 0
+
+        # Track unique units to avoid double-counting
+        mi_units = set()
+        mo_units = set()
+
+        for lease in leases:
+            unit = lease.get("unitNumber", "")
+            lease_status = lease.get("leaseStatus", "")
+            signed_date = lease.get("leaseSignedDate")
+            start_date_str = lease.get("leaseStartDate", "")
+            end_date_str = lease.get("leaseEndDate", "")
+            move_in_date = lease.get("moveInDate")  # null if not yet moved in
+
+            # Future Move-Ins: Signed pending leases with start date in current month
+            if lease_status == "Pending" and signed_date and start_date_str:
+                # Only count if not yet moved in (moveInDate is null)
+                if move_in_date is None:
+                    try:
+                        start_date = datetime.strptime(start_date_str[:10], "%Y-%m-%d").date()
+                        # Start date is from today to end of month
+                        if today <= start_date <= end_of_month:
+                            if unit not in mi_units:
+                                mi_units.add(unit)
+                                future_mi += 1
+                    except:
+                        pass
+
+            # Future Move-Outs: NTV leases with end date in current month
+            if lease_status == "Notice to Vacate" and end_date_str:
+                try:
+                    end_date = datetime.strptime(end_date_str[:10], "%Y-%m-%d").date()
+                    # End date is from today to end of month
+                    if today <= end_date <= end_of_month:
+                        if unit not in mo_units:
+                            mo_units.add(unit)
+                            future_mo += 1
+                except:
+                    pass
+
+        return {
+            "future_mi": future_mi,
+            "future_mo": future_mo,
+            "month_label": month_label
+        }
+    except Exception as e:
+        print(f"    Warning: Could not calculate future moves: {e}")
+        return {"future_mi": 0, "future_mo": 0, "month_label": ""}
+
+
 def get_off_market_count(property_id, eviction_units=None, legacy_units=None, partners_units=None, debug=False):
     """Get count of vacant/NTV units off the market (availableForOnlineMarketing = false)
     Only counts non-leased units: Vacant, Notice to Vacate (excludes Pre-Leased)
@@ -771,6 +854,8 @@ def generate_html(properties_data, traffic_data, leases_data):
     table_data = {}
     for abbr, data in properties_data.items():
         sb = data["status_breakdown"]
+        # Get future moves data from leases_data
+        future_moves = leases_data.get(abbr, {}).get("future_moves", {})
         table_data[abbr] = {
             "abbr": abbr,
             "name": data["name"],
@@ -783,7 +868,10 @@ def generate_html(properties_data, traffic_data, leases_data):
             "ntvLeased": sb.get("NTV Leased", 0),  # Subset: how many are leased
             "eviction": sb.get("Under Eviction", 0),
             "offMarket": data.get("off_market", 0),  # Units not available for online marketing
-            "occupancy": data["occupancy_rate"]
+            "occupancy": data["occupancy_rate"],
+            "futureMI": future_moves.get("future_mi", 0),
+            "futureMO": future_moves.get("future_mo", 0),
+            "futureMovesMonth": future_moves.get("month_label", "")
         }
 
     table_data_js = json.dumps(table_data)
@@ -1191,7 +1279,8 @@ def generate_html(properties_data, traffic_data, leases_data):
             }});
 
             // Calculate totals
-            let totals = {{ total: 0, occupied: 0, vacantReady: 0, vacantNotReady: 0, vacantLeased: 0, ntv: 0, ntvLeased: 0, eviction: 0, offMarket: 0 }};
+            let totals = {{ total: 0, occupied: 0, vacantReady: 0, vacantNotReady: 0, vacantLeased: 0, ntv: 0, ntvLeased: 0, eviction: 0, offMarket: 0, futureMI: 0, futureMO: 0 }};
+            let futureMovesMonth = '';
             allProps.forEach(p => {{
                 totals.total += p.total || 0;
                 totals.occupied += p.occupied || 0;
@@ -1202,6 +1291,9 @@ def generate_html(properties_data, traffic_data, leases_data):
                 totals.ntvLeased += p.ntvLeased || 0;
                 totals.eviction += p.eviction || 0;
                 totals.offMarket += p.offMarket || 0;
+                totals.futureMI += p.futureMI || 0;
+                totals.futureMO += p.futureMO || 0;
+                if (p.futureMovesMonth) futureMovesMonth = p.futureMovesMonth;
             }});
 
             // Region colors
@@ -1251,7 +1343,11 @@ def generate_html(properties_data, traffic_data, leases_data):
                 {{ key: 'ntvLeased', label: 'NTV Leased', color: 'text-orange-600 dark:text-orange-400', getValue: p => p.ntvLeased }},
                 {{ key: 'availableForRent', label: 'Rentable Units' + tip('Vacant + NTV minus pre-leased'), color: 'text-blue-700 dark:text-blue-300 font-semibold', getValue: p => ((p.vacantReady || 0) + (p.vacantNotReady || 0) + (p.ntv || 0)) - ((p.vacantLeased || 0) + (p.ntvLeased || 0)) }},
                 {{ key: 'offMarket', label: 'Off the Market' + tip('Available units not listed online'), color: 'text-pink-600 dark:text-pink-400', getValue: p => p.offMarket }},
-                {{ key: 'occRented', label: 'Occupancy Rented' + tip('Physical + pre-leased vacant units'), color: '', getValue: p => ((p.total - (p.vacantReady || 0) - (p.vacantNotReady || 0) + (p.vacantLeased || 0)) / p.total * 100).toFixed(2), isOccupancy: true }}
+                {{ key: 'occRented', label: 'Occupancy Rented' + tip('Physical + pre-leased vacant units'), color: '', getValue: p => ((p.total - (p.vacantReady || 0) - (p.vacantNotReady || 0) + (p.vacantLeased || 0)) / p.total * 100).toFixed(2), isOccupancy: true }},
+                {{ key: 'divider2', label: '', color: '', getValue: () => '', isDivider: true }},
+                {{ key: 'futureMI', label: `Future MI (${{futureMovesMonth}})` + tip('Signed pending leases moving in this month'), color: 'text-emerald-600 dark:text-emerald-400', getValue: p => p.futureMI || 0 }},
+                {{ key: 'futureMO', label: `Upcoming MO (${{futureMovesMonth}})` + tip('NTV units moving out this month'), color: 'text-amber-600 dark:text-amber-400', getValue: p => p.futureMO || 0 }},
+                {{ key: 'projectedOcc', label: 'Projected Occupancy' + tip('(Occupied + Future MI - Future MO) ÷ Total'), color: '', getValue: p => (((p.occupied || 0) + (p.futureMI || 0) - (p.futureMO || 0)) / p.total * 100).toFixed(2), isOccupancy: true }}
             ];
 
             let bodyRows = '';
@@ -1303,6 +1399,9 @@ def generate_html(properties_data, traffic_data, leases_data):
                 else if (row.key === 'availableForRent') totalVal = (totals.vacantReady + totals.vacantNotReady + totals.ntv) - (totals.vacantLeased + totals.ntvLeased);
                 else if (row.key === 'occPhysical') totalVal = ((totals.total - totals.vacantReady - totals.vacantNotReady) / totals.total * 100).toFixed(2) + '%';
                 else if (row.key === 'occRented') totalVal = ((totals.total - totals.vacantReady - totals.vacantNotReady + totals.vacantLeased) / totals.total * 100).toFixed(2) + '%';
+                else if (row.key === 'futureMI') totalVal = totals.futureMI;
+                else if (row.key === 'futureMO') totalVal = totals.futureMO;
+                else if (row.key === 'projectedOcc') totalVal = ((totals.occupied + totals.futureMI - totals.futureMO) / totals.total * 100).toFixed(2) + '%';
 
                 const totalColor = row.isOccupancy ? 'text-slate-900 dark:text-white font-bold' : row.color + ' font-bold';
                 tr += `<td class="px-3 py-2 text-center bg-slate-100 dark:bg-slate-700/50 ${{totalColor}}">${{totalVal}}</td>`;
@@ -2168,6 +2267,11 @@ def main():
         leases_data[abbr]["expiring"] = expiring_data
         exp_total = sum(expiring_data.get("total", {}).values())
         print(f"    Expiring (4mo): {exp_total}")
+
+        # Get future move-ins and move-outs for projected occupancy (using pre-fetched leases)
+        future_moves = get_future_moves_data(property_id, leases=all_leases)
+        leases_data[abbr]["future_moves"] = future_moves
+        print(f"    Future Moves ({future_moves['month_label']}): {future_moves['future_mi']} MI, {future_moves['future_mo']} MO")
 
         # OPTIMIZED: Fetch partners units once, use for both renovation and off-market
         partners_units = fetch_partners_units(property_id)
