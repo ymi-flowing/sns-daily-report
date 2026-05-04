@@ -1346,7 +1346,7 @@ def generate_html(properties_data, traffic_data, leases_data):
                 {{ key: 'occRented', label: 'Occupancy Rented' + tip('Physical + pre-leased vacant units'), color: '', getValue: p => ((p.total - (p.vacantReady || 0) - (p.vacantNotReady || 0) + (p.vacantLeased || 0)) / p.total * 100).toFixed(2), isOccupancy: true }},
                 {{ key: 'divider2', label: '', color: '', getValue: () => '', isDivider: true }},
                 {{ key: 'futureMI', label: `Future MI (${{futureMovesMonth}})` + tip('Signed pending leases moving in this month'), color: 'text-emerald-600 dark:text-emerald-400', getValue: p => p.futureMI || 0 }},
-                {{ key: 'futureMO', label: `Upcoming MO (${{futureMovesMonth}})` + tip('NTV units moving out this month'), color: 'text-amber-600 dark:text-amber-400', getValue: p => p.futureMO || 0 }},
+                {{ key: 'futureMO', label: `Future MO (${{futureMovesMonth}})` + tip('NTV units moving out this month'), color: 'text-amber-600 dark:text-amber-400', getValue: p => p.futureMO || 0 }},
                 {{ key: 'projectedOcc', label: 'Projected Occupancy' + tip('(Occupied + Future MI - Future MO) ÷ Total'), color: '', getValue: p => (((p.occupied || 0) + (p.futureMI || 0) - (p.futureMO || 0)) / p.total * 100).toFixed(2), isOccupancy: true }}
             ];
 
