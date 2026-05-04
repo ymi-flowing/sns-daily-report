@@ -238,7 +238,7 @@
                 <div>
                     <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">&nbsp;</label>
                     <div class="h-11 py-2.5 px-4 bg-slate-100 dark:bg-slate-700 rounded-xl border-2 border-slate-200 dark:border-slate-600 flex items-center">
-                        <span id="refresh-timestamp" class="font-semibold text-slate-700 dark:text-slate-200 text-sm">May 04, 2026 at 08:41 AM ET</span>
+                        <span id="refresh-timestamp" class="font-semibold text-slate-700 dark:text-slate-200 text-sm">May 04, 2026 at 12:38 PM ET</span>
                     </div>
                 </div>
                 <!-- Refresh Button -->
@@ -344,12 +344,12 @@
     "total_units": 2229,
     "status_breakdown": {
       "Occupied": 1923,
-      "NTV": 117,
+      "NTV": 116,
       "Vacant Ready": 97,
       "Vacant Leased": 16,
       "Under Eviction": 30,
-      "NTV Leased": 6,
-      "Vacant Not Ready": 62
+      "Vacant Not Ready": 63,
+      "NTV Leased": 5
     },
     "unit_lists": {
       "Occupied": [
@@ -2371,7 +2371,6 @@
         "SJ:1649AU",
         "SJ:1669DU",
         "SJ:1741BU",
-        "SJ:1745CU",
         "SJ:5429AS",
         "SJ:5441CS",
         "SJ:5501AA",
@@ -2496,20 +2495,20 @@
         "TV:4748-4"
       ],
       "Vacant Leased": [
-        "49thStr:106",
-        "49thStr:504",
         "AP:087",
         "EAST:33B2",
+        "EAST:43D1",
         "EAST:49D2",
-        "EAST:71A2",
         "MOC:201",
         "MOC:206",
         "MOC:602",
         "MUSO:10304",
         "MUSO:11101",
+        "MUSO:11206",
         "MUSO:20203",
         "MUSO:20406",
         "ORT:C063",
+        "ORT:C131",
         "ROP:204",
         "SJ:1745AU"
       ],
@@ -2544,14 +2543,6 @@
         "ORT:T204",
         "SJ:5521DS",
         "SJ:5606AA"
-      ],
-      "NTV Leased": [
-        "49thStr:1708",
-        "MOC:1603",
-        "MOC:1803",
-        "MUSO:10705",
-        "MUSO:20205",
-        "SJ:1649AU"
       ],
       "Vacant Not Ready": [
         "49thStr:1111",
@@ -2609,6 +2600,7 @@
         "ROP:701",
         "ROP:702",
         "SJ:1745AU",
+        "SJ:1745CU",
         "SJ:5545DS",
         "SJ:5551DS",
         "SJ:5561DA",
@@ -2616,6 +2608,13 @@
         "TV:4712-4",
         "TV:4728-5",
         "TV:4737-3"
+      ],
+      "NTV Leased": [
+        "49thStr:1708",
+        "MOC:1603",
+        "MOC:1803",
+        "MUSO:20205",
+        "SJ:1649AU"
       ]
     },
     "occupancy_rate": 99.28
@@ -2626,10 +2625,10 @@
       "Occupied": 176,
       "NTV": 7,
       "Vacant Ready": 11,
-      "Vacant Leased": 4,
+      "Vacant Leased": 5,
       "Under Eviction": 2,
-      "NTV Leased": 2,
-      "Vacant Not Ready": 6
+      "Vacant Not Ready": 6,
+      "NTV Leased": 1
     },
     "unit_lists": {
       "Occupied": [
@@ -2835,16 +2834,13 @@
       "Vacant Leased": [
         "10304",
         "11101",
+        "11206",
         "20203",
         "20406"
       ],
       "Under Eviction": [
         "10509",
         "20511"
-      ],
-      "NTV Leased": [
-        "10705",
-        "20205"
       ],
       "Vacant Not Ready": [
         "11005",
@@ -2853,12 +2849,15 @@
         "20301",
         "20303",
         "20308"
+      ],
+      "NTV Leased": [
+        "20205"
       ]
     },
     "occupancy_rate": 91.58,
     "eviction_units": [
-      "20511",
-      "10509"
+      "10509",
+      "20511"
     ],
     "legacy_units": [
       {
@@ -4615,19 +4614,14 @@
         "Zip": "34470",
         "Status": "Ready",
         "StatusDate": "2026-04-03",
-        "VacancyStatus": "Notice to Vacate Pre-Leased",
+        "DateAvailable": "2026-07-14",
+        "VacancyStatus": "Notice to Vacate",
         "OccupyingLease": {
           "BillingAccountID": "05329c85-adc0-4aaf-90fe-9a2952492d02",
           "LeaseID": "bcd8e521-796d-4e44-8884-c60a4b8722bd",
           "MoveInDate": "2017-01-05",
           "NoticeToVacateDate": "2026-04-03",
           "MoveOutDate": "2026-06-30"
-        },
-        "ApplicantLease": {
-          "BillingAccountID": "e453b3f4-c84d-4894-884a-4d5d9214142c",
-          "LeaseID": "c5eeaad4-cdf4-434a-8e0c-40361cd2dd22",
-          "ApplicationDate": "2026-05-04",
-          "MoveInDate": "2026-07-31"
         }
       },
       {
@@ -5823,8 +5817,13 @@
         "Zip": "34470",
         "Status": "Ready",
         "StatusDate": "2026-04-07",
-        "DateAvailable": "2026-04-07",
-        "VacancyStatus": "Vacant"
+        "VacancyStatus": "Vacant Pre-Leased",
+        "ApplicantLease": {
+          "BillingAccountID": "cea1a75f-4f0e-4532-9600-4e2bd85a8b09",
+          "LeaseID": "5c8ee313-abaa-425f-acde-d6cf4d1bef33",
+          "ApplicationDate": "2026-04-28",
+          "MoveInDate": "2026-05-15"
+        }
       },
       {
         "PropertyID": "7bc6a02c-b4a6-4eb6-8295-1d8276c72b01",
@@ -7861,7 +7860,7 @@
     ],
     "name": "The Mustang at Ocala",
     "property_id": "7bc6a02c-b4a6-4eb6-8295-1d8276c72b01",
-    "off_market": 4
+    "off_market": 3
   },
   "TRA": {
     "total_units": 20,
@@ -8686,9 +8685,9 @@
     },
     "occupancy_rate": 90.04,
     "eviction_units": [
-      "202",
+      "901",
       "1006",
-      "901"
+      "202"
     ],
     "legacy_units": [
       {
@@ -9993,7 +9992,7 @@
         "Zip": "34471",
         "Status": "Not Ready",
         "StatusDate": "2026-04-13",
-        "DateAvailable": "2026-05-06",
+        "DateAvailable": "2026-05-12",
         "VacancyStatus": "Vacant"
       },
       {
@@ -14971,20 +14970,20 @@
       ],
       "Vacant Leased": [
         "33B2",
-        "49D2",
-        "71A2"
+        "43D1",
+        "49D2"
       ]
     },
     "occupancy_rate": 94.93,
     "eviction_units": [
-      "05A2",
-      "39B1",
       "09C2",
-      "15C2",
-      "19C2",
+      "29B2",
       "41C2",
+      "39B1",
+      "19C2",
       "61A2",
-      "29B2"
+      "05A2",
+      "15C2"
     ],
     "legacy_units": [
       {
@@ -19117,8 +19116,13 @@
         "Zip": "33334",
         "Status": "Ready",
         "StatusDate": "2026-03-19",
-        "DateAvailable": "2026-03-19",
-        "VacancyStatus": "Vacant"
+        "VacancyStatus": "Vacant Pre-Leased",
+        "ApplicantLease": {
+          "BillingAccountID": "ea1b06bb-3375-4605-ba8e-129e423c44e3",
+          "LeaseID": "18442661-23a5-410c-96b7-2eabc94a0847",
+          "ApplicationDate": "2026-05-01",
+          "MoveInDate": "2026-05-15"
+        }
       },
       {
         "PropertyID": "0e550e45-c21d-4481-b583-65a428f17198",
@@ -21772,13 +21776,8 @@
         "Zip": "33334",
         "Status": "Ready",
         "StatusDate": "2026-04-08",
-        "VacancyStatus": "Vacant Pre-Leased",
-        "ApplicantLease": {
-          "BillingAccountID": "9949055c-0e99-4609-8128-22f5f2afc242",
-          "LeaseID": "f65ea7ca-f344-4985-b733-f1bf5c5c75b7",
-          "ApplicationDate": "2026-05-02",
-          "MoveInDate": "2026-05-09"
-        }
+        "DateAvailable": "2026-04-09",
+        "VacancyStatus": "Vacant"
       },
       {
         "PropertyID": "0e550e45-c21d-4481-b583-65a428f17198",
@@ -22481,9 +22480,9 @@
     "eviction_units": [
       "5544B",
       "5504B",
+      "5530A",
       "5560D",
-      "5528B",
-      "5530A"
+      "5528B"
     ],
     "legacy_units": [
       {
@@ -25477,7 +25476,7 @@
       "Under Eviction": 5,
       "Vacant Not Ready": 9,
       "Occupied": 386,
-      "Vacant Leased": 1
+      "Vacant Leased": 2
     },
     "unit_lists": {
       "Vacant Ready": [
@@ -25935,14 +25934,15 @@
         "T240"
       ],
       "Vacant Leased": [
-        "C063"
+        "C063",
+        "C131"
       ]
     },
     "occupancy_rate": 93.02,
     "eviction_units": [
-      "T145",
-      "T016",
       "T204",
+      "T016",
+      "T145",
       "T162",
       "C003"
     ],
@@ -29072,8 +29072,13 @@
         "Zip": "32210",
         "Status": "Ready",
         "StatusDate": "2026-03-30",
-        "DateAvailable": "2026-03-30",
-        "VacancyStatus": "Vacant"
+        "VacancyStatus": "Vacant Pre-Leased",
+        "ApplicantLease": {
+          "BillingAccountID": "a6d4ba64-f3de-4ec3-84dd-1e1796b750e9",
+          "LeaseID": "edf235a3-fd18-4474-b7f8-8f74bb8cc668",
+          "ApplicationDate": "2026-04-06",
+          "MoveInDate": "2026-05-06"
+        }
       },
       {
         "PropertyID": "87e6d232-bbd8-443b-bd43-8992c83aa58c",
@@ -32704,7 +32709,6 @@
         "UnitTypeID": "53e6b969-2058-44ff-8171-00aeb2c002bb",
         "UnitType": "1000 sqft Renovated - 2 Bed 1 Bath",
         "UnitTypeMarketingName": "1000 sqft Renovated - 2 Bed 1 Bath",
-        "AvailableForOnlineMarketing": true,
         "BuildingID": "542c0df6-5892-44a6-8ede-7f754048f7e8",
         "Building": "9",
         "StreetAddress": "5327 Timuquana Road T071",
@@ -32860,7 +32864,6 @@
         "UnitTypeID": "ca90731b-7318-4d15-b013-bd14ce649322",
         "UnitType": "1350 sqft Renovated - 2 Bed 1.5 Bath",
         "UnitTypeMarketingName": "1350 sqft Renovated - 2 Bed 1.5 Bath",
-        "AvailableForOnlineMarketing": true,
         "BuildingID": "91a82339-0a4a-4099-a5ce-4241d2d08931",
         "Building": "10",
         "StreetAddress": "5327 Timuquana Road T077",
@@ -36910,7 +36913,7 @@
     ],
     "name": "The Villas at Ortega",
     "property_id": "87e6d232-bbd8-443b-bd43-8992c83aa58c",
-    "off_market": 26
+    "off_market": 28
   },
   "TV": {
     "total_units": 108,
@@ -39738,7 +39741,6 @@
       "Occupied": 243,
       "NTV": 20,
       "Vacant Ready": 17,
-      "Vacant Leased": 2,
       "Vacant Not Ready": 4,
       "Under Eviction": 2,
       "NTV Leased": 1
@@ -40030,10 +40032,6 @@
         "911",
         "913"
       ],
-      "Vacant Leased": [
-        "106",
-        "504"
-      ],
       "Vacant Not Ready": [
         "1111",
         "1506",
@@ -40050,8 +40048,8 @@
     },
     "occupancy_rate": 92.66,
     "eviction_units": [
-      "1412",
-      "1904"
+      "1904",
+      "1412"
     ],
     "legacy_units": [
       {
@@ -40215,13 +40213,8 @@
         "Zip": "33781",
         "Status": "Ready",
         "StatusDate": "2026-04-06",
-        "VacancyStatus": "Vacant Pre-Leased",
-        "ApplicantLease": {
-          "BillingAccountID": "5e6ef9e2-c164-4a72-9ea0-a41b74b47a2f",
-          "LeaseID": "36d80381-ca26-4d20-b35f-881eb393e90f",
-          "ApplicationDate": "2026-05-03",
-          "MoveInDate": "2026-05-04"
-        }
+        "DateAvailable": "2026-04-06",
+        "VacancyStatus": "Vacant"
       },
       {
         "PropertyID": "a262aa42-7393-4d84-9bf5-ae1bff852b32",
@@ -41298,13 +41291,8 @@
         "Zip": "33781",
         "Status": "Ready",
         "StatusDate": "2026-03-13",
-        "VacancyStatus": "Vacant Pre-Leased",
-        "ApplicantLease": {
-          "BillingAccountID": "e72ba9e5-c9e1-414e-ae17-4abaf596b8d4",
-          "LeaseID": "cd4fa729-0b7d-4f94-ad80-869d22b43a43",
-          "ApplicationDate": "2026-05-01",
-          "MoveInDate": "2026-05-01"
-        }
+        "DateAvailable": "2026-03-13",
+        "VacancyStatus": "Vacant"
       },
       {
         "PropertyID": "a262aa42-7393-4d84-9bf5-ae1bff852b32",
@@ -45509,7 +45497,7 @@
           "LeaseID": "98dd5b76-a500-4d85-a760-5231d7869b3d",
           "MoveInDate": "2025-05-15",
           "NoticeToVacateDate": "2026-04-23",
-          "MoveOutDate": "2026-05-22"
+          "MoveOutDate": "2026-05-14"
         }
       },
       {
@@ -47318,9 +47306,9 @@
     "total_units": 199,
     "status_breakdown": {
       "Occupied": 171,
-      "NTV": 12,
+      "NTV": 11,
       "NTV Leased": 1,
-      "Vacant Not Ready": 5,
+      "Vacant Not Ready": 6,
       "Vacant Leased": 1,
       "Vacant Ready": 9,
       "Under Eviction": 2
@@ -47503,7 +47491,6 @@
         "1649AU",
         "1669DU",
         "1741BU",
-        "1745CU",
         "5429AS",
         "5441CS",
         "5501AA",
@@ -47518,6 +47505,7 @@
       ],
       "Vacant Not Ready": [
         "1745AU",
+        "1745CU",
         "5545DS",
         "5551DS",
         "5561DA",
@@ -47542,10 +47530,10 @@
         "5606AA"
       ]
     },
-    "occupancy_rate": 92.96,
+    "occupancy_rate": 92.46,
     "eviction_units": [
-      "5521DS",
-      "5606AA"
+      "5606AA",
+      "5521DS"
     ],
     "legacy_units": [
       {
@@ -48419,17 +48407,10 @@
         "City": "Jacksonville",
         "State": "FL",
         "Zip": "32217",
-        "Status": "Ready",
-        "StatusDate": "2025-08-15",
+        "Status": "Not Ready",
+        "StatusDate": "2026-05-03",
         "DateAvailable": "2026-05-19",
-        "VacancyStatus": "Notice to Vacate",
-        "OccupyingLease": {
-          "BillingAccountID": "a48d10f8-2213-4ff7-b9dc-04b1078e11eb",
-          "LeaseID": "7f4255c1-02be-4676-958a-debe5d2609cc",
-          "MoveInDate": "2025-08-15",
-          "NoticeToVacateDate": "2026-04-09",
-          "MoveOutDate": "2026-05-05"
-        }
+        "VacancyStatus": "Vacant"
       },
       {
         "PropertyID": "c5ab0abe-740d-43f7-8096-d1eaba0d79e5",
@@ -53844,7 +53825,7 @@
         "Zip": "32073",
         "Status": "Not Ready",
         "StatusDate": "2026-04-13",
-        "DateAvailable": "2026-04-30",
+        "DateAvailable": "2026-05-08",
         "VacancyStatus": "Vacant"
       },
       {
@@ -53856,7 +53837,6 @@
         "UnitTypeID": "ba286730-fa87-4fef-8b20-ed59ba29adeb",
         "UnitType": "900 sqft Renovated - 2 Bed 1 Bath",
         "UnitTypeMarketingName": "900 sqft Renovated - 2 Bed 1 Bath",
-        "AvailableForOnlineMarketing": true,
         "BuildingID": "190072fe-b030-44f1-bc08-99423433216f",
         "Building": "500",
         "StreetAddress": "606 Park Ave Apart 501",
@@ -54325,6 +54305,7 @@
         "UnitTypeID": "cbb283fc-66e5-4727-9d20-dcf3987445b0",
         "UnitType": "1100 sqft Renovated - 2 Bed 2 Bath",
         "UnitTypeMarketingName": "1100 sqft Renovated - 2 Bed 2 Bath",
+        "AvailableForOnlineMarketing": true,
         "BuildingID": "50f290b4-ae65-41be-88b8-78f890fee15b",
         "Building": "600",
         "StreetAddress": "606 Park Ave Apart 608",
@@ -54493,7 +54474,7 @@
         "Zip": "32073",
         "Status": "Ready",
         "StatusDate": "2025-07-03",
-        "DateAvailable": "2026-07-10",
+        "DateAvailable": "2026-07-16",
         "VacancyStatus": "Notice to Vacate",
         "OccupyingLease": {
           "BillingAccountID": "314d79b1-6652-4026-bd2c-853343fa0a68",
@@ -55456,9 +55437,9 @@
     },
     "occupancy_rate": 93.2,
     "eviction_units": [
-      "109",
       "067",
-      "070"
+      "070",
+      "109"
     ],
     "legacy_units": [
       {
@@ -60565,10 +60546,10 @@
     "off_market": 7
   }
 };
-        const propertyTableData = {"MUSO": {"abbr": "MUSO", "name": "The Mustang at Ocala", "total": 202, "occupied": 176, "vacantReady": 11, "vacantNotReady": 6, "vacantLeased": 4, "ntv": 7, "ntvLeased": 2, "eviction": 2, "offMarket": 4, "occupancy": 91.58}, "TRA": {"abbr": "TRA", "name": "The River Apartments", "total": 20, "occupied": 17, "vacantReady": 0, "vacantNotReady": 0, "vacantLeased": 0, "ntv": 3, "ntvLeased": 0, "eviction": 0, "offMarket": 0, "occupancy": 100.0}, "MOC": {"abbr": "MOC", "name": "The Morgan At Ocala Apartments", "total": 241, "occupied": 196, "vacantReady": 7, "vacantNotReady": 17, "vacantLeased": 3, "ntv": 18, "ntvLeased": 2, "eviction": 3, "offMarket": 22, "occupancy": 90.04}, "EAST": {"abbr": "EAST", "name": "The Village at Eastpointe Apartments", "total": 296, "occupied": 262, "vacantReady": 12, "vacantNotReady": 3, "vacantLeased": 3, "ntv": 11, "ntvLeased": 0, "eviction": 8, "offMarket": 13, "occupancy": 94.93}, "MP": {"abbr": "MP", "name": "Marbella Park", "total": 120, "occupied": 104, "vacantReady": 3, "vacantNotReady": 3, "vacantLeased": 0, "ntv": 5, "ntvLeased": 0, "eviction": 5, "offMarket": 6, "occupancy": 95.0}, "ORT": {"abbr": "ORT", "name": "The Villas at Ortega", "total": 444, "occupied": 386, "vacantReady": 22, "vacantNotReady": 9, "vacantLeased": 1, "ntv": 22, "ntvLeased": 0, "eviction": 5, "offMarket": 26, "occupancy": 93.02}, "TV": {"abbr": "TV", "name": "The Vista At Winter Park", "total": 108, "occupied": 89, "vacantReady": 4, "vacantNotReady": 3, "vacantLeased": 0, "ntv": 12, "ntvLeased": 0, "eviction": 0, "offMarket": 13, "occupancy": 93.52}, "49thStr": {"abbr": "49thStr", "name": "49th St Apartments", "total": 286, "occupied": 243, "vacantReady": 17, "vacantNotReady": 4, "vacantLeased": 2, "ntv": 20, "ntvLeased": 1, "eviction": 2, "offMarket": 21, "occupancy": 92.66}, "AN3": {"abbr": "AN3", "name": "AN3 Investments", "total": 2, "occupied": 0, "vacantReady": 1, "vacantNotReady": 0, "vacantLeased": 0, "ntv": 1, "ntvLeased": 0, "eviction": 0, "offMarket": 1, "occupancy": 50.0}, "SJ": {"abbr": "SJ", "name": "The Village at San Jose", "total": 199, "occupied": 171, "vacantReady": 9, "vacantNotReady": 5, "vacantLeased": 1, "ntv": 12, "ntvLeased": 1, "eviction": 2, "offMarket": 11, "occupancy": 92.96}, "ROP": {"abbr": "ROP", "name": "Riverside at Orange Park", "total": 105, "occupied": 94, "vacantReady": 4, "vacantNotReady": 5, "vacantLeased": 1, "ntv": 2, "ntvLeased": 0, "eviction": 0, "offMarket": 4, "occupancy": 91.43}, "AP": {"abbr": "AP", "name": "Arbor Place Apartments", "total": 206, "occupied": 185, "vacantReady": 7, "vacantNotReady": 7, "vacantLeased": 1, "ntv": 4, "ntvLeased": 0, "eviction": 3, "offMarket": 7, "occupancy": 93.2}};
+        const propertyTableData = {"MUSO": {"abbr": "MUSO", "name": "The Mustang at Ocala", "total": 202, "occupied": 176, "vacantReady": 11, "vacantNotReady": 6, "vacantLeased": 5, "ntv": 7, "ntvLeased": 1, "eviction": 2, "offMarket": 3, "occupancy": 91.58}, "TRA": {"abbr": "TRA", "name": "The River Apartments", "total": 20, "occupied": 17, "vacantReady": 0, "vacantNotReady": 0, "vacantLeased": 0, "ntv": 3, "ntvLeased": 0, "eviction": 0, "offMarket": 0, "occupancy": 100.0}, "MOC": {"abbr": "MOC", "name": "The Morgan At Ocala Apartments", "total": 241, "occupied": 196, "vacantReady": 7, "vacantNotReady": 17, "vacantLeased": 3, "ntv": 18, "ntvLeased": 2, "eviction": 3, "offMarket": 22, "occupancy": 90.04}, "EAST": {"abbr": "EAST", "name": "The Village at Eastpointe Apartments", "total": 296, "occupied": 262, "vacantReady": 12, "vacantNotReady": 3, "vacantLeased": 3, "ntv": 11, "ntvLeased": 0, "eviction": 8, "offMarket": 13, "occupancy": 94.93}, "MP": {"abbr": "MP", "name": "Marbella Park", "total": 120, "occupied": 104, "vacantReady": 3, "vacantNotReady": 3, "vacantLeased": 0, "ntv": 5, "ntvLeased": 0, "eviction": 5, "offMarket": 6, "occupancy": 95.0}, "ORT": {"abbr": "ORT", "name": "The Villas at Ortega", "total": 444, "occupied": 386, "vacantReady": 22, "vacantNotReady": 9, "vacantLeased": 2, "ntv": 22, "ntvLeased": 0, "eviction": 5, "offMarket": 28, "occupancy": 93.02}, "TV": {"abbr": "TV", "name": "The Vista At Winter Park", "total": 108, "occupied": 89, "vacantReady": 4, "vacantNotReady": 3, "vacantLeased": 0, "ntv": 12, "ntvLeased": 0, "eviction": 0, "offMarket": 13, "occupancy": 93.52}, "49thStr": {"abbr": "49thStr", "name": "49th St Apartments", "total": 286, "occupied": 243, "vacantReady": 17, "vacantNotReady": 4, "vacantLeased": 0, "ntv": 20, "ntvLeased": 1, "eviction": 2, "offMarket": 21, "occupancy": 92.66}, "AN3": {"abbr": "AN3", "name": "AN3 Investments", "total": 2, "occupied": 0, "vacantReady": 1, "vacantNotReady": 0, "vacantLeased": 0, "ntv": 1, "ntvLeased": 0, "eviction": 0, "offMarket": 1, "occupancy": 50.0}, "SJ": {"abbr": "SJ", "name": "The Village at San Jose", "total": 199, "occupied": 171, "vacantReady": 9, "vacantNotReady": 6, "vacantLeased": 1, "ntv": 11, "ntvLeased": 1, "eviction": 2, "offMarket": 11, "occupancy": 92.46}, "ROP": {"abbr": "ROP", "name": "Riverside at Orange Park", "total": 105, "occupied": 94, "vacantReady": 4, "vacantNotReady": 5, "vacantLeased": 1, "ntv": 2, "ntvLeased": 0, "eviction": 0, "offMarket": 4, "occupancy": 91.43}, "AP": {"abbr": "AP", "name": "Arbor Place Apartments", "total": 206, "occupied": 185, "vacantReady": 7, "vacantNotReady": 7, "vacantLeased": 1, "ntv": 4, "ntvLeased": 0, "eviction": 3, "offMarket": 7, "occupancy": 93.2}};
         const propertyGroups = {"Tampa": ["49thStr"], "Orlando": ["MP", "TV", "MOC", "MUSO"], "Jacksonville": ["AP", "SJ", "ROP", "ORT"], "Ft. Lauderdale": ["EAST", "TRA", "AN3"]};
-        const trafficData = {"ORT": {"total": 20, "daily_avg": 6.7}, "AP": {"total": 15, "daily_avg": 7.5}, "MOC": {"total": 11, "daily_avg": 5.5}, "MP": {"total": 4, "daily_avg": 1.3}, "49thStr": {"total": 12, "daily_avg": 6.0}, "EAST": {"total": 16, "daily_avg": 8.0}, "TV": {"total": 4, "daily_avg": 2.0}, "SJ": {"total": 16, "daily_avg": 8.0}, "MUSO": {"total": 15, "daily_avg": 7.5}, "ROP": {"total": 4, "daily_avg": 2.0}};
-        const leasesData = {"MUSO": {"total_applicants": 10, "pending_approval": 4, "approved": 1, "signed_lease": 5, "signed_leases_mtd": 0, "expiring": {"month1": {"Current": 0, "Pending Renewal": 0, "Renewed": 5, "NTV/Formers": 5, "Under Eviction": 0}, "month1_label": "May", "month2": {"Current": 2, "Pending Renewal": 0, "Renewed": 5, "NTV/Formers": 3, "Under Eviction": 0}, "month2_label": "Jun", "month3": {"Current": 9, "Pending Renewal": 0, "Renewed": 2, "NTV/Formers": 0, "Under Eviction": 0}, "month3_label": "Jul", "month4": {"Current": 18, "Pending Renewal": 0, "Renewed": 0, "NTV/Formers": 1, "Under Eviction": 0}, "month4_label": "Aug", "total": {"Current": 29, "Pending Renewal": 0, "Renewed": 12, "NTV/Formers": 9, "Under Eviction": 0}}, "renovation": {"renovated": 131, "partial": 59, "classic": 12, "total": 202, "renovated_pct": 64.9, "partial_pct": 29.2, "classic_pct": 5.9}, "work_orders": {"open_total": 15, "new_24h": 2}}, "TRA": {"total_applicants": 0, "pending_approval": 0, "approved": 0, "signed_lease": 0, "signed_leases_mtd": 0, "expiring": {"month1": {"Current": 0, "Pending Renewal": 0, "Renewed": 0, "NTV/Formers": 1, "Under Eviction": 0}, "month1_label": "May", "month2": {"Current": 0, "Pending Renewal": 0, "Renewed": 0, "NTV/Formers": 1, "Under Eviction": 0}, "month2_label": "Jun", "month3": {"Current": 1, "Pending Renewal": 0, "Renewed": 0, "NTV/Formers": 0, "Under Eviction": 0}, "month3_label": "Jul", "month4": {"Current": 3, "Pending Renewal": 0, "Renewed": 0, "NTV/Formers": 0, "Under Eviction": 0}, "month4_label": "Aug", "total": {"Current": 4, "Pending Renewal": 0, "Renewed": 0, "NTV/Formers": 2, "Under Eviction": 0}}, "renovation": {"renovated": 0, "partial": 0, "classic": 20, "total": 20, "renovated_pct": 0.0, "partial_pct": 0.0, "classic_pct": 100.0}, "work_orders": {"open_total": 2, "new_24h": 1}}, "MOC": {"total_applicants": 10, "pending_approval": 4, "approved": 5, "signed_lease": 1, "signed_leases_mtd": 2, "expiring": {"month1": {"Current": 0, "Pending Renewal": 0, "Renewed": 9, "NTV/Formers": 4, "Under Eviction": 0}, "month1_label": "May", "month2": {"Current": 1, "Pending Renewal": 1, "Renewed": 6, "NTV/Formers": 13, "Under Eviction": 0}, "month2_label": "Jun", "month3": {"Current": 4, "Pending Renewal": 3, "Renewed": 6, "NTV/Formers": 5, "Under Eviction": 0}, "month3_label": "Jul", "month4": {"Current": 14, "Pending Renewal": 0, "Renewed": 0, "NTV/Formers": 0, "Under Eviction": 0}, "month4_label": "Aug", "total": {"Current": 19, "Pending Renewal": 4, "Renewed": 21, "NTV/Formers": 22, "Under Eviction": 0}}, "renovation": {"renovated": 203, "partial": 25, "classic": 13, "total": 241, "renovated_pct": 84.2, "partial_pct": 10.4, "classic_pct": 5.4}, "work_orders": {"open_total": 33, "new_24h": 2}}, "EAST": {"total_applicants": 9, "pending_approval": 4, "approved": 4, "signed_lease": 1, "signed_leases_mtd": 1, "expiring": {"month1": {"Current": 0, "Pending Renewal": 0, "Renewed": 17, "NTV/Formers": 8, "Under Eviction": 2}, "month1_label": "May", "month2": {"Current": 2, "Pending Renewal": 1, "Renewed": 12, "NTV/Formers": 8, "Under Eviction": 0}, "month2_label": "Jun", "month3": {"Current": 12, "Pending Renewal": 4, "Renewed": 6, "NTV/Formers": 1, "Under Eviction": 0}, "month3_label": "Jul", "month4": {"Current": 19, "Pending Renewal": 0, "Renewed": 0, "NTV/Formers": 0, "Under Eviction": 0}, "month4_label": "Aug", "total": {"Current": 33, "Pending Renewal": 5, "Renewed": 35, "NTV/Formers": 17, "Under Eviction": 2}}, "renovation": {"renovated": 219, "partial": 48, "classic": 29, "total": 296, "renovated_pct": 74.0, "partial_pct": 16.2, "classic_pct": 9.8}, "work_orders": {"open_total": 18, "new_24h": 1}}, "MP": {"total_applicants": 0, "pending_approval": 0, "approved": 0, "signed_lease": 0, "signed_leases_mtd": 0, "expiring": {"month1": {"Current": 0, "Pending Renewal": 3, "Renewed": 5, "NTV/Formers": 2, "Under Eviction": 0}, "month1_label": "May", "month2": {"Current": 0, "Pending Renewal": 3, "Renewed": 4, "NTV/Formers": 2, "Under Eviction": 0}, "month2_label": "Jun", "month3": {"Current": 6, "Pending Renewal": 3, "Renewed": 1, "NTV/Formers": 1, "Under Eviction": 0}, "month3_label": "Jul", "month4": {"Current": 7, "Pending Renewal": 0, "Renewed": 0, "NTV/Formers": 0, "Under Eviction": 0}, "month4_label": "Aug", "total": {"Current": 13, "Pending Renewal": 9, "Renewed": 10, "NTV/Formers": 5, "Under Eviction": 0}}, "renovation": {"renovated": 82, "partial": 16, "classic": 22, "total": 120, "renovated_pct": 68.3, "partial_pct": 13.3, "classic_pct": 18.3}, "work_orders": {"open_total": 9, "new_24h": 0}}, "ORT": {"total_applicants": 10, "pending_approval": 5, "approved": 5, "signed_lease": 0, "signed_leases_mtd": 1, "expiring": {"month1": {"Current": 1, "Pending Renewal": 0, "Renewed": 12, "NTV/Formers": 3, "Under Eviction": 0}, "month1_label": "May", "month2": {"Current": 4, "Pending Renewal": 6, "Renewed": 22, "NTV/Formers": 12, "Under Eviction": 1}, "month2_label": "Jun", "month3": {"Current": 15, "Pending Renewal": 5, "Renewed": 8, "NTV/Formers": 10, "Under Eviction": 0}, "month3_label": "Jul", "month4": {"Current": 33, "Pending Renewal": 0, "Renewed": 0, "NTV/Formers": 0, "Under Eviction": 0}, "month4_label": "Aug", "total": {"Current": 53, "Pending Renewal": 11, "Renewed": 42, "NTV/Formers": 25, "Under Eviction": 1}}, "renovation": {"renovated": 392, "partial": 36, "classic": 16, "total": 444, "renovated_pct": 88.3, "partial_pct": 8.1, "classic_pct": 3.6}, "work_orders": {"open_total": 34, "new_24h": 5}}, "TV": {"total_applicants": 0, "pending_approval": 0, "approved": 0, "signed_lease": 0, "signed_leases_mtd": 0, "expiring": {"month1": {"Current": 0, "Pending Renewal": 1, "Renewed": 5, "NTV/Formers": 2, "Under Eviction": 0}, "month1_label": "May", "month2": {"Current": 0, "Pending Renewal": 1, "Renewed": 4, "NTV/Formers": 5, "Under Eviction": 0}, "month2_label": "Jun", "month3": {"Current": 2, "Pending Renewal": 3, "Renewed": 2, "NTV/Formers": 5, "Under Eviction": 0}, "month3_label": "Jul", "month4": {"Current": 8, "Pending Renewal": 0, "Renewed": 0, "NTV/Formers": 0, "Under Eviction": 0}, "month4_label": "Aug", "total": {"Current": 10, "Pending Renewal": 5, "Renewed": 11, "NTV/Formers": 12, "Under Eviction": 0}}, "renovation": {"renovated": 91, "partial": 12, "classic": 5, "total": 108, "renovated_pct": 84.3, "partial_pct": 11.1, "classic_pct": 4.6}, "work_orders": {"open_total": 12, "new_24h": 2}}, "49thStr": {"total_applicants": 4, "pending_approval": 3, "approved": 1, "signed_lease": 0, "signed_leases_mtd": 0, "expiring": {"month1": {"Current": 0, "Pending Renewal": 0, "Renewed": 9, "NTV/Formers": 7, "Under Eviction": 0}, "month1_label": "May", "month2": {"Current": 1, "Pending Renewal": 2, "Renewed": 16, "NTV/Formers": 10, "Under Eviction": 0}, "month2_label": "Jun", "month3": {"Current": 5, "Pending Renewal": 2, "Renewed": 3, "NTV/Formers": 5, "Under Eviction": 0}, "month3_label": "Jul", "month4": {"Current": 11, "Pending Renewal": 0, "Renewed": 0, "NTV/Formers": 0, "Under Eviction": 0}, "month4_label": "Aug", "total": {"Current": 17, "Pending Renewal": 4, "Renewed": 28, "NTV/Formers": 22, "Under Eviction": 0}}, "renovation": {"renovated": 207, "partial": 57, "classic": 22, "total": 286, "renovated_pct": 72.4, "partial_pct": 19.9, "classic_pct": 7.7}, "work_orders": {"open_total": 12, "new_24h": 2}}, "AN3": {"total_applicants": 0, "pending_approval": 0, "approved": 0, "signed_lease": 0, "signed_leases_mtd": 0, "expiring": {"month1": {"Current": 0, "Pending Renewal": 0, "Renewed": 0, "NTV/Formers": 0, "Under Eviction": 0}, "month1_label": "May", "month2": {"Current": 0, "Pending Renewal": 0, "Renewed": 0, "NTV/Formers": 1, "Under Eviction": 0}, "month2_label": "Jun", "month3": {"Current": 0, "Pending Renewal": 0, "Renewed": 0, "NTV/Formers": 0, "Under Eviction": 0}, "month3_label": "Jul", "month4": {"Current": 0, "Pending Renewal": 0, "Renewed": 0, "NTV/Formers": 0, "Under Eviction": 0}, "month4_label": "Aug", "total": {"Current": 0, "Pending Renewal": 0, "Renewed": 0, "NTV/Formers": 1, "Under Eviction": 0}}, "renovation": {"renovated": 0, "partial": 0, "classic": 2, "total": 2, "renovated_pct": 0.0, "partial_pct": 0.0, "classic_pct": 100.0}, "work_orders": {"open_total": 0, "new_24h": 0}}, "SJ": {"total_applicants": 4, "pending_approval": 1, "approved": 3, "signed_lease": 0, "signed_leases_mtd": 0, "expiring": {"month1": {"Current": 0, "Pending Renewal": 0, "Renewed": 10, "NTV/Formers": 4, "Under Eviction": 0}, "month1_label": "May", "month2": {"Current": 1, "Pending Renewal": 0, "Renewed": 8, "NTV/Formers": 4, "Under Eviction": 1}, "month2_label": "Jun", "month3": {"Current": 3, "Pending Renewal": 4, "Renewed": 7, "NTV/Formers": 0, "Under Eviction": 0}, "month3_label": "Jul", "month4": {"Current": 17, "Pending Renewal": 0, "Renewed": 0, "NTV/Formers": 1, "Under Eviction": 0}, "month4_label": "Aug", "total": {"Current": 21, "Pending Renewal": 4, "Renewed": 25, "NTV/Formers": 9, "Under Eviction": 1}}, "renovation": {"renovated": 159, "partial": 19, "classic": 21, "total": 199, "renovated_pct": 79.9, "partial_pct": 9.5, "classic_pct": 10.6}, "work_orders": {"open_total": 11, "new_24h": 0}}, "ROP": {"total_applicants": 5, "pending_approval": 3, "approved": 2, "signed_lease": 0, "signed_leases_mtd": 0, "expiring": {"month1": {"Current": 0, "Pending Renewal": 1, "Renewed": 8, "NTV/Formers": 2, "Under Eviction": 0}, "month1_label": "May", "month2": {"Current": 0, "Pending Renewal": 1, "Renewed": 0, "NTV/Formers": 3, "Under Eviction": 0}, "month2_label": "Jun", "month3": {"Current": 2, "Pending Renewal": 1, "Renewed": 1, "NTV/Formers": 1, "Under Eviction": 0}, "month3_label": "Jul", "month4": {"Current": 7, "Pending Renewal": 0, "Renewed": 0, "NTV/Formers": 0, "Under Eviction": 0}, "month4_label": "Aug", "total": {"Current": 9, "Pending Renewal": 3, "Renewed": 9, "NTV/Formers": 6, "Under Eviction": 0}}, "renovation": {"renovated": 81, "partial": 9, "classic": 15, "total": 105, "renovated_pct": 77.1, "partial_pct": 8.6, "classic_pct": 14.3}, "work_orders": {"open_total": 8, "new_24h": 1}}, "AP": {"total_applicants": 2, "pending_approval": 1, "approved": 1, "signed_lease": 0, "signed_leases_mtd": 0, "expiring": {"month1": {"Current": 2, "Pending Renewal": 0, "Renewed": 4, "NTV/Formers": 2, "Under Eviction": 0}, "month1_label": "May", "month2": {"Current": 3, "Pending Renewal": 0, "Renewed": 9, "NTV/Formers": 1, "Under Eviction": 0}, "month2_label": "Jun", "month3": {"Current": 7, "Pending Renewal": 2, "Renewed": 5, "NTV/Formers": 2, "Under Eviction": 0}, "month3_label": "Jul", "month4": {"Current": 19, "Pending Renewal": 0, "Renewed": 0, "NTV/Formers": 0, "Under Eviction": 0}, "month4_label": "Aug", "total": {"Current": 31, "Pending Renewal": 2, "Renewed": 18, "NTV/Formers": 5, "Under Eviction": 0}}, "renovation": {"renovated": 173, "partial": 17, "classic": 16, "total": 206, "renovated_pct": 84.0, "partial_pct": 8.3, "classic_pct": 7.8}, "work_orders": {"open_total": 8, "new_24h": 2}}};
+        const trafficData = {"ORT": {"total": 26, "daily_avg": 8.7}, "AP": {"total": 17, "daily_avg": 5.7}, "MOC": {"total": 14, "daily_avg": 4.7}, "MP": {"total": 4, "daily_avg": 1.3}, "49thStr": {"total": 13, "daily_avg": 4.3}, "EAST": {"total": 21, "daily_avg": 7.0}, "TV": {"total": 6, "daily_avg": 2.0}, "SJ": {"total": 16, "daily_avg": 8.0}, "MUSO": {"total": 14, "daily_avg": 7.0}, "ROP": {"total": 5, "daily_avg": 1.7}};
+        const leasesData = {"MUSO": {"total_applicants": 10, "pending_approval": 4, "approved": 1, "signed_lease": 5, "signed_leases_mtd": 0, "expiring": {"month1": {"Current": 0, "Pending Renewal": 0, "Renewed": 5, "NTV/Formers": 5, "Under Eviction": 0}, "month1_label": "May", "month2": {"Current": 2, "Pending Renewal": 0, "Renewed": 5, "NTV/Formers": 3, "Under Eviction": 0}, "month2_label": "Jun", "month3": {"Current": 9, "Pending Renewal": 0, "Renewed": 2, "NTV/Formers": 0, "Under Eviction": 0}, "month3_label": "Jul", "month4": {"Current": 18, "Pending Renewal": 0, "Renewed": 0, "NTV/Formers": 1, "Under Eviction": 0}, "month4_label": "Aug", "total": {"Current": 29, "Pending Renewal": 0, "Renewed": 12, "NTV/Formers": 9, "Under Eviction": 0}}, "renovation": {"renovated": 131, "partial": 59, "classic": 12, "total": 202, "renovated_pct": 64.9, "partial_pct": 29.2, "classic_pct": 5.9}, "work_orders": {"open_total": 17, "new_24h": 4}}, "TRA": {"total_applicants": 0, "pending_approval": 0, "approved": 0, "signed_lease": 0, "signed_leases_mtd": 0, "expiring": {"month1": {"Current": 0, "Pending Renewal": 0, "Renewed": 0, "NTV/Formers": 1, "Under Eviction": 0}, "month1_label": "May", "month2": {"Current": 0, "Pending Renewal": 0, "Renewed": 0, "NTV/Formers": 1, "Under Eviction": 0}, "month2_label": "Jun", "month3": {"Current": 1, "Pending Renewal": 0, "Renewed": 0, "NTV/Formers": 0, "Under Eviction": 0}, "month3_label": "Jul", "month4": {"Current": 3, "Pending Renewal": 0, "Renewed": 0, "NTV/Formers": 0, "Under Eviction": 0}, "month4_label": "Aug", "total": {"Current": 4, "Pending Renewal": 0, "Renewed": 0, "NTV/Formers": 2, "Under Eviction": 0}}, "renovation": {"renovated": 0, "partial": 0, "classic": 20, "total": 20, "renovated_pct": 0.0, "partial_pct": 0.0, "classic_pct": 100.0}, "work_orders": {"open_total": 2, "new_24h": 0}}, "MOC": {"total_applicants": 10, "pending_approval": 4, "approved": 4, "signed_lease": 2, "signed_leases_mtd": 3, "expiring": {"month1": {"Current": 0, "Pending Renewal": 0, "Renewed": 9, "NTV/Formers": 4, "Under Eviction": 0}, "month1_label": "May", "month2": {"Current": 1, "Pending Renewal": 1, "Renewed": 6, "NTV/Formers": 13, "Under Eviction": 0}, "month2_label": "Jun", "month3": {"Current": 4, "Pending Renewal": 2, "Renewed": 7, "NTV/Formers": 5, "Under Eviction": 0}, "month3_label": "Jul", "month4": {"Current": 14, "Pending Renewal": 0, "Renewed": 0, "NTV/Formers": 0, "Under Eviction": 0}, "month4_label": "Aug", "total": {"Current": 19, "Pending Renewal": 3, "Renewed": 22, "NTV/Formers": 22, "Under Eviction": 0}}, "renovation": {"renovated": 203, "partial": 25, "classic": 13, "total": 241, "renovated_pct": 84.2, "partial_pct": 10.4, "classic_pct": 5.4}, "work_orders": {"open_total": 34, "new_24h": 3}}, "EAST": {"total_applicants": 9, "pending_approval": 4, "approved": 3, "signed_lease": 2, "signed_leases_mtd": 2, "expiring": {"month1": {"Current": 0, "Pending Renewal": 0, "Renewed": 17, "NTV/Formers": 8, "Under Eviction": 2}, "month1_label": "May", "month2": {"Current": 2, "Pending Renewal": 1, "Renewed": 12, "NTV/Formers": 8, "Under Eviction": 0}, "month2_label": "Jun", "month3": {"Current": 12, "Pending Renewal": 4, "Renewed": 6, "NTV/Formers": 1, "Under Eviction": 0}, "month3_label": "Jul", "month4": {"Current": 19, "Pending Renewal": 0, "Renewed": 0, "NTV/Formers": 0, "Under Eviction": 0}, "month4_label": "Aug", "total": {"Current": 33, "Pending Renewal": 5, "Renewed": 35, "NTV/Formers": 17, "Under Eviction": 2}}, "renovation": {"renovated": 219, "partial": 48, "classic": 29, "total": 296, "renovated_pct": 74.0, "partial_pct": 16.2, "classic_pct": 9.8}, "work_orders": {"open_total": 13, "new_24h": 0}}, "MP": {"total_applicants": 0, "pending_approval": 0, "approved": 0, "signed_lease": 0, "signed_leases_mtd": 0, "expiring": {"month1": {"Current": 0, "Pending Renewal": 3, "Renewed": 5, "NTV/Formers": 2, "Under Eviction": 0}, "month1_label": "May", "month2": {"Current": 0, "Pending Renewal": 3, "Renewed": 4, "NTV/Formers": 2, "Under Eviction": 0}, "month2_label": "Jun", "month3": {"Current": 6, "Pending Renewal": 3, "Renewed": 1, "NTV/Formers": 1, "Under Eviction": 0}, "month3_label": "Jul", "month4": {"Current": 7, "Pending Renewal": 0, "Renewed": 0, "NTV/Formers": 0, "Under Eviction": 0}, "month4_label": "Aug", "total": {"Current": 13, "Pending Renewal": 9, "Renewed": 10, "NTV/Formers": 5, "Under Eviction": 0}}, "renovation": {"renovated": 82, "partial": 16, "classic": 22, "total": 120, "renovated_pct": 68.3, "partial_pct": 13.3, "classic_pct": 18.3}, "work_orders": {"open_total": 9, "new_24h": 0}}, "ORT": {"total_applicants": 10, "pending_approval": 5, "approved": 5, "signed_lease": 0, "signed_leases_mtd": 1, "expiring": {"month1": {"Current": 1, "Pending Renewal": 0, "Renewed": 12, "NTV/Formers": 3, "Under Eviction": 0}, "month1_label": "May", "month2": {"Current": 4, "Pending Renewal": 6, "Renewed": 22, "NTV/Formers": 12, "Under Eviction": 1}, "month2_label": "Jun", "month3": {"Current": 15, "Pending Renewal": 5, "Renewed": 8, "NTV/Formers": 10, "Under Eviction": 0}, "month3_label": "Jul", "month4": {"Current": 33, "Pending Renewal": 0, "Renewed": 0, "NTV/Formers": 0, "Under Eviction": 0}, "month4_label": "Aug", "total": {"Current": 53, "Pending Renewal": 11, "Renewed": 42, "NTV/Formers": 25, "Under Eviction": 1}}, "renovation": {"renovated": 392, "partial": 36, "classic": 16, "total": 444, "renovated_pct": 88.3, "partial_pct": 8.1, "classic_pct": 3.6}, "work_orders": {"open_total": 19, "new_24h": 4}}, "TV": {"total_applicants": 0, "pending_approval": 0, "approved": 0, "signed_lease": 0, "signed_leases_mtd": 0, "expiring": {"month1": {"Current": 0, "Pending Renewal": 1, "Renewed": 5, "NTV/Formers": 2, "Under Eviction": 0}, "month1_label": "May", "month2": {"Current": 0, "Pending Renewal": 1, "Renewed": 4, "NTV/Formers": 5, "Under Eviction": 0}, "month2_label": "Jun", "month3": {"Current": 2, "Pending Renewal": 3, "Renewed": 2, "NTV/Formers": 5, "Under Eviction": 0}, "month3_label": "Jul", "month4": {"Current": 8, "Pending Renewal": 0, "Renewed": 0, "NTV/Formers": 0, "Under Eviction": 0}, "month4_label": "Aug", "total": {"Current": 10, "Pending Renewal": 5, "Renewed": 11, "NTV/Formers": 12, "Under Eviction": 0}}, "renovation": {"renovated": 91, "partial": 12, "classic": 5, "total": 108, "renovated_pct": 84.3, "partial_pct": 11.1, "classic_pct": 4.6}, "work_orders": {"open_total": 15, "new_24h": 5}}, "49thStr": {"total_applicants": 4, "pending_approval": 3, "approved": 1, "signed_lease": 0, "signed_leases_mtd": 0, "expiring": {"month1": {"Current": 0, "Pending Renewal": 0, "Renewed": 9, "NTV/Formers": 7, "Under Eviction": 0}, "month1_label": "May", "month2": {"Current": 1, "Pending Renewal": 2, "Renewed": 16, "NTV/Formers": 10, "Under Eviction": 0}, "month2_label": "Jun", "month3": {"Current": 5, "Pending Renewal": 2, "Renewed": 3, "NTV/Formers": 5, "Under Eviction": 0}, "month3_label": "Jul", "month4": {"Current": 11, "Pending Renewal": 0, "Renewed": 0, "NTV/Formers": 0, "Under Eviction": 0}, "month4_label": "Aug", "total": {"Current": 17, "Pending Renewal": 4, "Renewed": 28, "NTV/Formers": 22, "Under Eviction": 0}}, "renovation": {"renovated": 207, "partial": 57, "classic": 22, "total": 286, "renovated_pct": 72.4, "partial_pct": 19.9, "classic_pct": 7.7}, "work_orders": {"open_total": 14, "new_24h": 6}}, "AN3": {"total_applicants": 0, "pending_approval": 0, "approved": 0, "signed_lease": 0, "signed_leases_mtd": 0, "expiring": {"month1": {"Current": 0, "Pending Renewal": 0, "Renewed": 0, "NTV/Formers": 0, "Under Eviction": 0}, "month1_label": "May", "month2": {"Current": 0, "Pending Renewal": 0, "Renewed": 0, "NTV/Formers": 1, "Under Eviction": 0}, "month2_label": "Jun", "month3": {"Current": 0, "Pending Renewal": 0, "Renewed": 0, "NTV/Formers": 0, "Under Eviction": 0}, "month3_label": "Jul", "month4": {"Current": 0, "Pending Renewal": 0, "Renewed": 0, "NTV/Formers": 0, "Under Eviction": 0}, "month4_label": "Aug", "total": {"Current": 0, "Pending Renewal": 0, "Renewed": 0, "NTV/Formers": 1, "Under Eviction": 0}}, "renovation": {"renovated": 0, "partial": 0, "classic": 2, "total": 2, "renovated_pct": 0.0, "partial_pct": 0.0, "classic_pct": 100.0}, "work_orders": {"open_total": 0, "new_24h": 0}}, "SJ": {"total_applicants": 4, "pending_approval": 1, "approved": 3, "signed_lease": 0, "signed_leases_mtd": 0, "expiring": {"month1": {"Current": 0, "Pending Renewal": 0, "Renewed": 10, "NTV/Formers": 4, "Under Eviction": 0}, "month1_label": "May", "month2": {"Current": 1, "Pending Renewal": 0, "Renewed": 8, "NTV/Formers": 4, "Under Eviction": 1}, "month2_label": "Jun", "month3": {"Current": 3, "Pending Renewal": 4, "Renewed": 7, "NTV/Formers": 0, "Under Eviction": 0}, "month3_label": "Jul", "month4": {"Current": 17, "Pending Renewal": 0, "Renewed": 0, "NTV/Formers": 1, "Under Eviction": 0}, "month4_label": "Aug", "total": {"Current": 21, "Pending Renewal": 4, "Renewed": 25, "NTV/Formers": 9, "Under Eviction": 1}}, "renovation": {"renovated": 159, "partial": 19, "classic": 21, "total": 199, "renovated_pct": 79.9, "partial_pct": 9.5, "classic_pct": 10.6}, "work_orders": {"open_total": 14, "new_24h": 5}}, "ROP": {"total_applicants": 4, "pending_approval": 2, "approved": 2, "signed_lease": 0, "signed_leases_mtd": 0, "expiring": {"month1": {"Current": 0, "Pending Renewal": 1, "Renewed": 8, "NTV/Formers": 2, "Under Eviction": 0}, "month1_label": "May", "month2": {"Current": 0, "Pending Renewal": 1, "Renewed": 0, "NTV/Formers": 3, "Under Eviction": 0}, "month2_label": "Jun", "month3": {"Current": 2, "Pending Renewal": 1, "Renewed": 1, "NTV/Formers": 1, "Under Eviction": 0}, "month3_label": "Jul", "month4": {"Current": 7, "Pending Renewal": 0, "Renewed": 0, "NTV/Formers": 0, "Under Eviction": 0}, "month4_label": "Aug", "total": {"Current": 9, "Pending Renewal": 3, "Renewed": 9, "NTV/Formers": 6, "Under Eviction": 0}}, "renovation": {"renovated": 81, "partial": 9, "classic": 15, "total": 105, "renovated_pct": 77.1, "partial_pct": 8.6, "classic_pct": 14.3}, "work_orders": {"open_total": 5, "new_24h": 0}}, "AP": {"total_applicants": 2, "pending_approval": 1, "approved": 1, "signed_lease": 0, "signed_leases_mtd": 0, "expiring": {"month1": {"Current": 2, "Pending Renewal": 0, "Renewed": 4, "NTV/Formers": 2, "Under Eviction": 0}, "month1_label": "May", "month2": {"Current": 3, "Pending Renewal": 0, "Renewed": 9, "NTV/Formers": 1, "Under Eviction": 0}, "month2_label": "Jun", "month3": {"Current": 7, "Pending Renewal": 2, "Renewed": 5, "NTV/Formers": 2, "Under Eviction": 0}, "month3_label": "Jul", "month4": {"Current": 20, "Pending Renewal": 0, "Renewed": 0, "NTV/Formers": 0, "Under Eviction": 0}, "month4_label": "Aug", "total": {"Current": 32, "Pending Renewal": 2, "Renewed": 18, "NTV/Formers": 5, "Under Eviction": 0}}, "renovation": {"renovated": 173, "partial": 17, "classic": 16, "total": 206, "renovated_pct": 84.0, "partial_pct": 8.3, "classic_pct": 7.8}, "work_orders": {"open_total": 7, "new_24h": 1}}};
         const trafficMonth = "May 2026";
 
         let statusChart;
