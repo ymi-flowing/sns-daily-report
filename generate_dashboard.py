@@ -129,6 +129,38 @@ def fetch_leases(property_id):
         return []
 
 
+def fetch_units_availability(property_id):
+    """Fetch unit availability data from Partners API.
+
+    Replaces Legacy GetUnitStatus + Partners /Units with a single call.
+    Provides: vacancyStatus, status, availableForOnlineMarketing, unitTypeName,
+              occupyingLease.moveOutDate, and more.
+    """
+    try:
+        headers = {
+            "ResMan-Account-Id": ACCOUNT_ID,
+            "Accept": "application/json",
+        }
+        params = {"propertyId": property_id}
+
+        resp = requests.get(
+            f"{PARTNERS_API_URL}/Units/Availability",
+            headers=headers,
+            params=params,
+            auth=HTTPBasicAuth(PARTNER_ID, API_KEY),
+            timeout=30
+        )
+
+        if not resp.ok:
+            print(f"    Warning: Units/Availability API returned {resp.status_code}")
+            return []
+
+        return resp.json().get("units", [])
+    except Exception as e:
+        print(f"    Warning: Could not fetch units availability: {e}")
+        return []
+
+
 def get_pending_leases_data(property_id, leases=None):
     """Get pending lease/applicant data for a property
 
@@ -427,30 +459,29 @@ def fetch_partners_units(property_id):
         return []
 
 
-def get_units_renovation_data(property_id, partners_units=None):
+def get_units_renovation_data(property_id, units_availability=None):
     """Get unit renovation status breakdown
 
     Args:
-        property_id: Property ID (used if partners_units not provided)
-        partners_units: Pre-fetched units data (optional, to avoid duplicate API call)
+        property_id: Property ID (used if units_availability not provided)
+        units_availability: Pre-fetched units from Units/Availability API
     """
     try:
         # Use provided units or fetch
-        if partners_units is None:
-            partners_units = fetch_partners_units(property_id)
-
-        all_units = partners_units
+        if units_availability is None:
+            units_availability = fetch_units_availability(property_id)
 
         # Filter to only units included in occupancy (exclude holding/office units)
-        units = [u for u in all_units if not u.get("excludedFromOccupancy", False)]
+        units = [u for u in units_availability if not u.get("excludedFromOccupancy", False)]
 
-        # Count by renovation status (parsed from unitType field)
+        # Count by renovation status (parsed from unitTypeName field)
         renovated = 0
         partial = 0
         classic = 0
 
         for unit in units:
-            unit_type = unit.get("unitType", "").lower()
+            # Units/Availability uses unitTypeName instead of unitType
+            unit_type = unit.get("unitTypeName", "").lower()
 
             # Check for renovation status in unit type name
             if "partial renovated" in unit_type:
@@ -537,15 +568,16 @@ def get_work_orders_data(property_id):
         return {"open_total": 0, "new_24h": 0}
 
 
-def get_future_moves_data(property_id, leases=None):
+def get_future_moves_data(property_id, leases=None, units_availability=None):
     """Get future move-ins and move-outs for the current month.
 
     Future Move-Ins: Signed pending leases with leaseStartDate in current month
-    Future Move-Outs: NTV leases with leaseEndDate in current month (from today onwards)
+    Future Move-Outs: NTV leases with MoveOutDate in current month (from today onwards)
 
     Args:
         property_id: Property ID (used if leases not provided)
         leases: Pre-fetched leases data (optional, to avoid duplicate API call)
+        units_availability: Pre-fetched units from Units/Availability API (for moveOutDate)
     """
     try:
         # Use provided leases or fetch
@@ -554,6 +586,18 @@ def get_future_moves_data(property_id, leases=None):
 
         if not leases:
             return {"future_mi": 0, "future_mo": 0, "month_label": ""}
+
+        # Build lookup for MoveOutDate from Units/Availability (occupyingLease.moveOutDate)
+        # This is the actual scheduled move-out date, which may differ from leaseEndDate
+        move_out_dates = {}
+        if units_availability:
+            for unit in units_availability:
+                unit_num = unit.get("number", "")
+                occ_lease = unit.get("occupyingLease")
+                if occ_lease and unit_num:
+                    mo_date = occ_lease.get("moveOutDate", "")
+                    if mo_date:
+                        move_out_dates[unit_num] = mo_date
 
         today = datetime.now().date()
 
@@ -598,17 +642,20 @@ def get_future_moves_data(property_id, leases=None):
                     except:
                         pass
 
-            # Future Move-Outs: NTV leases with end date in current month
-            if lease_status == "Notice to Vacate" and end_date_str:
-                try:
-                    end_date = datetime.strptime(end_date_str[:10], "%Y-%m-%d").date()
-                    # End date is from today to end of month
-                    if today <= end_date <= end_of_month:
-                        if unit not in mo_units:
-                            mo_units.add(unit)
-                            future_mo += 1
-                except:
-                    pass
+            # Future Move-Outs: NTV leases with MoveOutDate in current month
+            # Use MoveOutDate from Legacy API (preferred) or fall back to leaseEndDate
+            if lease_status == "Notice to Vacate":
+                mo_date_str = move_out_dates.get(unit, "") or end_date_str
+                if mo_date_str:
+                    try:
+                        mo_date = datetime.strptime(mo_date_str[:10], "%Y-%m-%d").date()
+                        # Move-out date is from today to end of month
+                        if today <= mo_date <= end_of_month:
+                            if unit not in mo_units:
+                                mo_units.add(unit)
+                                future_mo += 1
+                    except:
+                        pass
 
         return {
             "future_mi": future_mi,
@@ -620,7 +667,7 @@ def get_future_moves_data(property_id, leases=None):
         return {"future_mi": 0, "future_mo": 0, "month_label": ""}
 
 
-def get_off_market_count(property_id, eviction_units=None, legacy_units=None, partners_units=None, debug=False):
+def get_off_market_count(property_id, eviction_units=None, units_availability=None, debug=False):
     """Get count of vacant/NTV units off the market (availableForOnlineMarketing = false)
     Only counts non-leased units: Vacant, Notice to Vacate (excludes Pre-Leased)
     Excludes: Occupied, Under Eviction, Down/Abated
@@ -628,39 +675,16 @@ def get_off_market_count(property_id, eviction_units=None, legacy_units=None, pa
     Args:
         property_id: Property ID
         eviction_units: Set of unit numbers under eviction
-        legacy_units: Pre-fetched units from Legacy API GetUnitStatus (optional)
-        partners_units: Pre-fetched units from Partners API /Units (optional)
+        units_availability: Pre-fetched units from Units/Availability API
         debug: Print debug info
     """
     try:
         if eviction_units is None:
             eviction_units = set()
 
-        # Use provided partners_units or fetch
-        if partners_units is None:
-            partners_units = fetch_partners_units(property_id)
-
-        # Build lookup: unitNumber -> availableForOnlineMarketing
-        marketing_status = {}
-        for u in partners_units:
-            if not u.get("excludedFromOccupancy", False):
-                marketing_status[u.get("unitNumber")] = u.get("availableForOnlineMarketing", True)
-
-        # Use provided legacy_units or fetch from Legacy API
-        if legacy_units is None:
-            url = f"{BASE_URL}/Property/GetUnitStatus"
-            payload = {
-                "IntegrationPartnerID": PARTNER_ID,
-                "APIKey": API_KEY,
-                "AccountID": ACCOUNT_ID,
-                "PropertyID": property_id
-            }
-            legacy_resp = requests.post(url, json=payload, headers={"Accept": "application/json"}, timeout=30)
-
-            if not legacy_resp.ok:
-                return 0
-
-            legacy_units = legacy_resp.json().get("Units", [])
+        # Use provided units_availability or fetch
+        if units_availability is None:
+            units_availability = fetch_units_availability(property_id)
 
         # Count off-market units that are Vacant or NTV but NOT pre-leased
         # Only: "Vacant", "Notice to Vacate" (exclude Pre-Leased variants)
@@ -671,13 +695,16 @@ def get_off_market_count(property_id, eviction_units=None, legacy_units=None, pa
         off_market_units = []
         available_units = []
 
-        for u in legacy_units:
-            unit_num = u.get("Number", "")
-            vacancy_status = u.get("VacancyStatus", "")
-            ready_status = u.get("Status", "")
+        for u in units_availability:
+            # Units/Availability uses lowercase field names
+            unit_num = u.get("number", "")
+            vacancy_status = u.get("vacancyStatus", "")
+            ready_status = u.get("status", "")
+            excluded = u.get("excludedFromOccupancy", False)
+            available_for_marketing = u.get("availableForOnlineMarketing", True)
 
-            # Skip Down/Abated units
-            if ready_status in down_statuses:
+            # Skip excluded or Down/Abated units
+            if excluded or ready_status in down_statuses:
                 continue
 
             # Skip units under eviction
@@ -691,7 +718,7 @@ def get_off_market_count(property_id, eviction_units=None, legacy_units=None, pa
             available_units.append((unit_num, vacancy_status, ready_status))
 
             # Check if this unit is off market
-            if unit_num in marketing_status and not marketing_status[unit_num]:
+            if not available_for_marketing:
                 off_market_count += 1
                 off_market_units.append((unit_num, vacancy_status, ready_status))
 
@@ -725,37 +752,49 @@ def make_request(endpoint, extra_params=None):
             return data
     return None
 
-def get_property_data(property_id, property_name):
-    """Get unit status data for a property using GetUnitStatus endpoint"""
-    # Get unit status (includes VacancyStatus and Ready/Not Ready status)
-    status_data = make_request("Property/GetUnitStatus", {"PropertyID": property_id})
-    units = status_data.get("Units", []) if status_data else []
+def get_property_data(property_id, property_name, units_availability=None, leases=None):
+    """Get unit status data for a property using Units/Availability endpoint.
 
-    # Get residents to identify Under Eviction units
-    people_data = make_request("Leasing/GetApplicantsAndCurrentResidents", {"PropertyID": property_id})
-    people = people_data.get("People", []) if people_data else []
+    Args:
+        property_id: Property ID
+        property_name: Property name for logging
+        units_availability: Pre-fetched units from Units/Availability API
+        leases: Pre-fetched leases from Leasing/Leases API (for eviction/former status)
+    """
+    units = units_availability or []
+    leases = leases or []
 
-    # Find units with eviction
+    # Build eviction units set from leases (leaseStatus = "Under Eviction")
     eviction_units = set()
-    for person in people:
-        if person.get("Status") == "Under Eviction":
-            eviction_units.add(person.get("Unit", ""))
+    for lease in leases:
+        if lease.get("leaseStatus") == "Under Eviction":
+            eviction_units.add(lease.get("unitNumber", ""))
 
-    # Categorize units based on VacancyStatus and Status
+    # Build leaseId -> leaseStatus map (to check if occupying lease is "Former")
+    lease_status_by_id = {}
+    for lease in leases:
+        lease_id = lease.get("leaseId", "")
+        if lease_id:
+            lease_status_by_id[lease_id] = lease.get("leaseStatus", "")
+
+    # Categorize units based on vacancyStatus and status
     # Track both combined categories and leased subcategories
     status_summary = defaultdict(list)
 
     for u in units:
-        unit_num = u.get("Number", "")
-        vacancy_status = u.get("VacancyStatus", "")
-        ready_status = u.get("Status", "")  # Ready, Not Ready, Down, Abated
+        # Units/Availability uses lowercase field names
+        unit_num = u.get("number", "")
+        vacancy_status = u.get("vacancyStatus", "")
+        ready_status = u.get("status", "")  # Ready, Not Ready, Down, Abated
+        excluded = u.get("excludedFromOccupancy", False)
         is_ready = ready_status == "Ready"
-        is_down = ready_status in ["Abated", "Down"]  # Down/Abated units
+        is_down = ready_status in ["Abated", "Down"]
 
-        # Skip Down/Abated units entirely (don't count in totals)
-        if is_down:
+        # Skip excluded or Down/Abated units entirely (don't count in totals)
+        if excluded or is_down:
             continue
-        # Check for eviction
+
+        # Check for eviction first (takes priority)
         if unit_num in eviction_units:
             status_summary["Under Eviction"].append(unit_num)
         elif vacancy_status == "Occupied":
@@ -774,10 +813,37 @@ def get_property_data(property_id, property_name):
                 status_summary["Vacant Not Ready"].append(unit_num)
             status_summary["Vacant Leased"].append(unit_num)  # Also track as leased
         elif vacancy_status == "Notice to Vacate":
-            status_summary["NTV"].append(unit_num)
+            # Check if resident already moved out (lease is "Former") - treat as Vacant
+            occ_lease = u.get("occupyingLease", {})
+            occ_lease_id = occ_lease.get("leaseId", "") if occ_lease else ""
+            occ_lease_status = lease_status_by_id.get(occ_lease_id, "")
+            is_former = occ_lease_status == "Former"
+
+            if is_former:
+                # Resident moved out - treat as Vacant
+                if is_ready:
+                    status_summary["Vacant Ready"].append(unit_num)
+                else:
+                    status_summary["Vacant Not Ready"].append(unit_num)
+            else:
+                status_summary["NTV"].append(unit_num)
         elif vacancy_status == "Notice to Vacate Pre-Leased":
-            status_summary["NTV"].append(unit_num)  # Count in NTV total
-            status_summary["NTV Leased"].append(unit_num)  # Also track as leased
+            # Check if resident already moved out (lease is "Former") - treat as Vacant
+            occ_lease = u.get("occupyingLease", {})
+            occ_lease_id = occ_lease.get("leaseId", "") if occ_lease else ""
+            occ_lease_status = lease_status_by_id.get(occ_lease_id, "")
+            is_former = occ_lease_status == "Former"
+
+            if is_former:
+                # Resident moved out - treat as Vacant (leased)
+                if is_ready:
+                    status_summary["Vacant Ready"].append(unit_num)
+                else:
+                    status_summary["Vacant Not Ready"].append(unit_num)
+                status_summary["Vacant Leased"].append(unit_num)
+            else:
+                status_summary["NTV"].append(unit_num)  # Count in NTV total
+                status_summary["NTV Leased"].append(unit_num)  # Also track as leased
         else:
             status_summary["Other"].append(unit_num)
 
@@ -801,7 +867,7 @@ def get_property_data(property_id, property_name):
         "unit_lists": {k: sorted(v) for k, v in status_summary.items()},
         "occupancy_rate": occupancy,
         "eviction_units": list(eviction_units),  # Convert set to list for JSON serialization
-        "legacy_units": units  # Raw units data for off-market calculation
+        "units_availability": units  # Raw units data for off-market/renovation calculations
     }
 
 def generate_html(properties_data, traffic_data, leases_data):
@@ -2247,15 +2313,18 @@ def main():
         print(f"\n[2] Processing {abbr} - {prop.get('Name')}...")
         property_id = prop["PropertyID"]
 
-        # Get property data (unit status, evictions)
-        data = get_property_data(property_id, prop.get("Name", abbr))
+        # OPTIMIZED: Fetch leases FIRST (needed for eviction/former status)
+        all_leases = fetch_leases(property_id)
+
+        # Fetch Units/Availability (replaces Legacy GetUnitStatus + Partners /Units)
+        units_availability = fetch_units_availability(property_id)
+
+        # Get property data (unit status, evictions) - uses Units/Availability + Leases
+        data = get_property_data(property_id, prop.get("Name", abbr), units_availability, all_leases)
         data["name"] = prop.get("Name", abbr)
         data["property_id"] = property_id
         properties_data[abbr] = data
         print(f"    Units: {data['total_units']}, Occupancy: {data['occupancy_rate']}%")
-
-        # OPTIMIZED: Fetch leases once, use for both pending and expiring
-        all_leases = fetch_leases(property_id)
 
         # Get pending lease data (using pre-fetched leases)
         lease_data = get_pending_leases_data(property_id, leases=all_leases)
@@ -2268,16 +2337,13 @@ def main():
         exp_total = sum(expiring_data.get("total", {}).values())
         print(f"    Expiring (4mo): {exp_total}")
 
-        # Get future move-ins and move-outs for projected occupancy (using pre-fetched leases)
-        future_moves = get_future_moves_data(property_id, leases=all_leases)
+        # Get future move-ins and move-outs for projected occupancy (using Units/Availability)
+        future_moves = get_future_moves_data(property_id, leases=all_leases, units_availability=units_availability)
         leases_data[abbr]["future_moves"] = future_moves
         print(f"    Future Moves ({future_moves['month_label']}): {future_moves['future_mi']} MI, {future_moves['future_mo']} MO")
 
-        # OPTIMIZED: Fetch partners units once, use for both renovation and off-market
-        partners_units = fetch_partners_units(property_id)
-
-        # Get renovation status data (using pre-fetched units)
-        renovation_data = get_units_renovation_data(property_id, partners_units=partners_units)
+        # Get renovation status data (using Units/Availability)
+        renovation_data = get_units_renovation_data(property_id, units_availability=units_availability)
         leases_data[abbr]["renovation"] = renovation_data
         print(f"    Renovation: {renovation_data['renovated']} Reno, {renovation_data['partial']} Partial, {renovation_data['classic']} Classic")
 
@@ -2286,14 +2352,12 @@ def main():
         leases_data[abbr]["work_orders"] = work_orders_data
         print(f"    Work Orders: {work_orders_data['open_total']} Open, {work_orders_data['new_24h']} New (24h)")
 
-        # Get off-market count (using pre-fetched data)
+        # Get off-market count (using Units/Availability)
         eviction_units = set(data.get("eviction_units", []))
-        legacy_units = data.get("legacy_units", [])
         off_market_count = get_off_market_count(
             property_id,
             eviction_units=eviction_units,
-            legacy_units=legacy_units,
-            partners_units=partners_units,
+            units_availability=units_availability,
             debug=(abbr == "EAST")
         )
         properties_data[abbr]["off_market"] = off_market_count
