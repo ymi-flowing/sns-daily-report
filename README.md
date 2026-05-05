@@ -4,7 +4,7 @@ Real-time property management dashboard for SNS portfolio using ResMan API and G
 
 **Live Dashboard:** [https://sns-daily-report.vercel.app](https://sns-daily-report.vercel.app)
 
-**Last Updated:** April 30, 2026
+**Last Updated:** May 5, 2026
 
 ## Quick Start
 
@@ -36,7 +36,6 @@ This dashboard provides a unified view of:
 | `dashboard_live.html` | Generated dashboard (open in browser) |
 | `SNS_STYLEGUIDE.md` | SNS design system documentation |
 | `Cardentials.txt` | API credentials (keep secure, in .gitignore) |
-| `archive/` | Exploration scripts, debug tools, raw data from development |
 | `.github/workflows/refresh.yml` | GitHub Actions - auto-refresh every 4 hours |
 | `api/index.py` | Vercel serverless function - triggers manual refresh |
 | `vercel.json` | Vercel deployment configuration |
@@ -218,16 +217,40 @@ Shows unit renovation breakdown per property.
 - **Manual refresh** button with loading animation and auto-reload
 - **Mobile responsive** - works on phones and tablets
 - **Dark/light mode** toggle (persists in browser)
+- **Pop-up tables** - Click any metric to see detailed unit/lease list
+- **Sortable columns** - Click column headers to sort ascending/descending
+- **Clickable links** - Unit numbers and resident names link directly to ResMan
+- **Status filters** - Filter applicants and expiring leases by status
+- **Alert indicators** - Highlights cells with date issues (past available/move-in/move-out dates)
 - Region-grouped columns (Tampa, Orlando, Jacksonville, Ft. Lauderdale)
 - Tooltip explanations on metrics (hover over ?)
 - Color-coded occupancy rates (green 95%+, amber 90-95%, red <90%)
 - Collapsible expiring leases with renewal % preview
+- Work orders summary per property (open count, new in 24h)
 - Responsive tables with horizontal scroll on mobile
 - Florida timezone (ET) for all timestamps
 
 ---
 
 ## Recent Changes
+
+### May 5, 2026
+- **Added:** Alert system for date issues:
+  - Vacant Not Ready: highlights units with past available date
+  - Vacant Leased: highlights units with past move-in date
+  - NTV: highlights units with past move-out date or insufficient turnaround time
+  - Light pink background in light mode, light blue in dark mode
+  - Red dot with tooltip in pop-up rows showing specific alert reason
+- **Added:** Pop-up tables - click any metric to see detailed unit/lease list
+- **Added:** Sortable columns in pop-ups (click headers to sort)
+- **Added:** Clickable unit numbers - link directly to ResMan unit page
+- **Added:** Clickable resident names - link directly to ResMan resident page
+- **Added:** Status filters for Applicants and Expiring Leases pop-ups
+- **Added:** Work orders summary per property (open count, new in 24h)
+- **Added:** Resident names in Future MI, Future MO, and Expiring Leases
+- **Added:** Custom scrollbar styling
+- **Fixed:** Date sorting in pop-up tables
+- **Cleaned:** Removed archive folder and debug scripts
 
 ### April 28, 2026
 - **Deployed:** Live dashboard on Vercel with auto-refresh every 4 hours
@@ -275,13 +298,13 @@ Shows unit renovation breakdown per property.
 - [x] ~~Fix off-market calculation~~
 - [x] ~~Deploy to live hosting~~
 - [x] ~~Mobile responsive design~~
+- [x] ~~Work order metrics~~
+- [x] ~~Pop-up tables with detailed data~~
 - [ ] **Financial Summary card** - Charges, Credits, Income (via n8n + Google Sheet)
 - [ ] **Delinquency metrics** - Payment tracking and aged receivables
-- [ ] **Work order metrics** - Maintenance requests and completion rates
 - [ ] Individual property detail pages
 - [ ] Historical trends and charts
 - [ ] Automated daily email reports
-- [ ] API optimization - reduce duplicate calls (see DEVELOPMENT.md)
 
 ---
 

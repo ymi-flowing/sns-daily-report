@@ -139,12 +139,11 @@ SNS Daily Report/
 ├── vercel.json             # Vercel configuration
 ├── api/
 │   └── index.py            # Vercel serverless function (refresh trigger)
-├── .github/
-│   └── workflows/
-│       └── refresh.yml     # GitHub Actions auto-refresh
-└── archive/                # Old exploration scripts
+└── .github/
+    └── workflows/
+        └── refresh.yml     # GitHub Actions auto-refresh
 ```
 
 ---
 
-*Last Updated: April 30, 2026*
+*Last Updated: May 5, 2026*

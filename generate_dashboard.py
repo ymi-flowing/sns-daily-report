@@ -182,16 +182,43 @@ def get_pending_leases_data(property_id, leases=None):
         approved_not_signed = 0
         signed_lease = 0
 
+        # Build detailed applicants list for pop-up
+        applicants_list = []
+
         for lease in pending:
             approval_date = lease.get("approvalDate")
             signed_date = lease.get("leaseSignedDate")
 
+            # Determine status
             if signed_date:
                 signed_lease += 1
+                status = "Signed"
             elif approval_date:
                 approved_not_signed += 1
+                status = "Approved"
             else:
                 pending_approval += 1
+                status = "Pending"
+
+            # Get applicant name
+            people = lease.get("people", [])
+            applicant_name = ""
+            if people:
+                p = people[0]
+                applicant_name = f"{p.get('firstName', '')} {p.get('lastName', '')}".strip()
+
+            applicants_list.append({
+                "status": status,
+                "unit": lease.get("unitNumber", ""),
+                "unitId": lease.get("unitId", ""),
+                "type": lease.get("unitTypeName", ""),
+                "applicant": applicant_name,
+                "leaseId": lease.get("leaseId", ""),
+                "appDate": (lease.get("applicationDate") or "")[:10],
+                "approvedDate": (approval_date or "")[:10] if approval_date else "",
+                "signedDate": (signed_date or "")[:10] if signed_date else "",
+                "moveIn": (lease.get("scheduledMoveInDate") or lease.get("leaseStartDate") or "")[:10]
+            })
 
         # Count new leases signed this month (MTD) - excludes renewals
         # New lease = exactly 1 history entry (the current lease itself)
@@ -217,11 +244,12 @@ def get_pending_leases_data(property_id, leases=None):
             "pending_approval": pending_approval,
             "approved": approved_not_signed,
             "signed_lease": signed_lease,
-            "signed_leases_mtd": signed_leases_mtd
+            "signed_leases_mtd": signed_leases_mtd,
+            "applicantsList": sorted(applicants_list, key=lambda x: x["unit"])
         }
     except Exception as e:
         print(f"    Warning: Could not fetch lease data: {e}")
-        return {"total_applicants": 0, "pending_approval": 0, "approved": 0, "signed_lease": 0, "signed_leases_mtd": 0}
+        return {"total_applicants": 0, "pending_approval": 0, "approved": 0, "signed_lease": 0, "signed_leases_mtd": 0, "applicantsList": []}
 
 def get_expiring_leases_data(property_id, leases=None):
     """Get expiring leases data for current + next 3 months
@@ -305,6 +333,14 @@ def get_expiring_leases_data(property_id, leases=None):
         month4 = {s: 0 for s in statuses}
         total = {s: 0 for s in statuses}
 
+        # Detailed lists for pop-ups (by month)
+        expiring_lists = {
+            "month1": [],
+            "month2": [],
+            "month3": [],
+            "month4": []
+        }
+
         # Track processed unit+endDate combos to avoid duplicates
         processed = set()
 
@@ -334,16 +370,24 @@ def get_expiring_leases_data(property_id, leases=None):
                 return mo_window_4_start <= mo_date <= mo_window_4_end
             return False
 
-        def add_to_bucket(bucket, status):
-            """Add a count to the appropriate month bucket"""
+        def add_to_bucket(bucket, status, detail_entry=None):
+            """Add a count to the appropriate month bucket and track details"""
             if bucket == 1:
                 month1[status] += 1
+                if detail_entry:
+                    expiring_lists["month1"].append(detail_entry)
             elif bucket == 2:
                 month2[status] += 1
+                if detail_entry:
+                    expiring_lists["month2"].append(detail_entry)
             elif bucket == 3:
                 month3[status] += 1
+                if detail_entry:
+                    expiring_lists["month3"].append(detail_entry)
             elif bucket == 4:
                 month4[status] += 1
+                if detail_entry:
+                    expiring_lists["month4"].append(detail_entry)
             total[status] += 1
 
         # Process each lease
@@ -351,6 +395,15 @@ def get_expiring_leases_data(property_id, leases=None):
             unit = lease.get("unitNumber", "")
             lease_status = lease.get("leaseStatus", "")
             history = lease.get("history", [])
+            unit_type = lease.get("unitTypeName", "")
+            lease_id = lease.get("leaseId", "")
+            # Get resident name from people array
+            people = lease.get("people", [])
+            resident_name = ""
+            if people:
+                first = people[0].get("firstName", "") or ""
+                last = people[0].get("lastName", "") or ""
+                resident_name = f"{first} {last}".strip()
 
             # Get move out date for Formers
             mo_date = None
@@ -379,21 +432,40 @@ def get_expiring_leases_data(property_id, leases=None):
                                     pending_renewal = h
                                     break
 
+                            # Build detail entry for pop-up
+                            detail_entry = {
+                                "unit": unit,
+                                "unitId": lease.get("unitId", ""),
+                                "type": unit_type,
+                                "resident": resident_name,
+                                "leaseId": lease_id,
+                                "leaseEnd": end_date_str[:10],
+                                "moDate": mo_date_str[:10] if mo_date_str else "",
+                                "renewalSigned": ""
+                            }
+
                             # Determine status
                             if pending_renewal:
                                 if pending_renewal.get("signedDate"):
-                                    add_to_bucket(bucket, "Renewed")
+                                    detail_entry["status"] = "Renewed"
+                                    detail_entry["renewalSigned"] = (pending_renewal.get("signedDate") or "")[:10]
+                                    add_to_bucket(bucket, "Renewed", detail_entry)
                                 else:
-                                    add_to_bucket(bucket, "Pending Renewal")
+                                    detail_entry["status"] = "Pending Renewal"
+                                    add_to_bucket(bucket, "Pending Renewal", detail_entry)
                             elif lease_status == "Notice to Vacate":
-                                add_to_bucket(bucket, "NTV/Formers")
+                                detail_entry["status"] = "NTV"
+                                add_to_bucket(bucket, "NTV/Formers", detail_entry)
                             elif lease_status == "Under Eviction":
-                                add_to_bucket(bucket, "Under Eviction")
+                                detail_entry["status"] = "Under Eviction"
+                                add_to_bucket(bucket, "Under Eviction", detail_entry)
                             elif lease_status == "Current":
-                                add_to_bucket(bucket, "Current")
+                                detail_entry["status"] = "Current"
+                                add_to_bucket(bucket, "Current", detail_entry)
                             elif lease_status == "Former":
                                 if is_mo_in_window(mo_date, bucket):
-                                    add_to_bucket(bucket, "NTV/Formers")
+                                    detail_entry["status"] = "Former"
+                                    add_to_bucket(bucket, "NTV/Formers", detail_entry)
                             # Skip Cancelled, Denied, etc.
                 except:
                     pass
@@ -410,9 +482,24 @@ def get_expiring_leases_data(property_id, leases=None):
                             key = (unit, h_end_str[:10])
                             if key not in processed:
                                 processed.add(key)
-                                add_to_bucket(bucket, "Renewed")
+                                detail_entry = {
+                                    "status": "Renewed",
+                                    "unit": unit,
+                                    "unitId": lease.get("unitId", ""),
+                                    "type": unit_type,
+                                    "resident": resident_name,
+                                    "leaseId": lease_id,
+                                    "leaseEnd": h_end_str[:10],
+                                    "moDate": "",
+                                    "renewalSigned": (h.get("signedDate") or "")[:10]
+                                }
+                                add_to_bucket(bucket, "Renewed", detail_entry)
                     except:
                         pass
+
+        # Sort expiring lists by unit
+        for month_key in expiring_lists:
+            expiring_lists[month_key] = sorted(expiring_lists[month_key], key=lambda x: x["unit"])
 
         # Add month labels
         month_names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
@@ -425,7 +512,8 @@ def get_expiring_leases_data(property_id, leases=None):
             "month3_label": month_names[m3 - 1],
             "month4": month4,
             "month4_label": month_names[m4 - 1],
-            "total": total
+            "total": total,
+            "expiringLists": expiring_lists
         }
     except Exception as e:
         print(f"    Warning: Could not fetch expiring leases: {e}")
@@ -616,9 +704,23 @@ def get_future_moves_data(property_id, leases=None, units_availability=None):
         future_mi = 0
         future_mo = 0
 
+        # Detailed lists for pop-ups
+        future_mi_list = []
+        future_mo_list = []
+
         # Track unique units to avoid double-counting
         mi_units = set()
         mo_units = set()
+
+        # Build unit type and unitId lookup from units_availability
+        unit_type_map = {}
+        unit_id_map = {}
+        if units_availability:
+            for u in units_availability:
+                unit_num = u.get("number", "")
+                if unit_num:
+                    unit_type_map[unit_num] = u.get("unitTypeName", "")
+                    unit_id_map[unit_num] = u.get("unitId", "")
 
         for lease in leases:
             unit = lease.get("unitNumber", "")
@@ -627,6 +729,15 @@ def get_future_moves_data(property_id, leases=None, units_availability=None):
             start_date_str = lease.get("leaseStartDate", "")
             end_date_str = lease.get("leaseEndDate", "")
             move_in_date = lease.get("moveInDate")  # null if not yet moved in
+            unit_type = lease.get("unitTypeName", "") or unit_type_map.get(unit, "")
+            lease_id = lease.get("leaseId", "")
+            # Get resident name from people array
+            people = lease.get("people", [])
+            resident_name = ""
+            if people:
+                first = people[0].get("firstName", "") or ""
+                last = people[0].get("lastName", "") or ""
+                resident_name = f"{first} {last}".strip()
 
             # Future Move-Ins: Signed pending leases with start date in current month
             if lease_status == "Pending" and signed_date and start_date_str:
@@ -639,11 +750,20 @@ def get_future_moves_data(property_id, leases=None, units_availability=None):
                             if unit not in mi_units:
                                 mi_units.add(unit)
                                 future_mi += 1
+                                future_mi_list.append({
+                                    "unit": unit,
+                                    "unitId": lease.get("unitId", "") or unit_id_map.get(unit, ""),
+                                    "type": unit_type,
+                                    "resident": resident_name,
+                                    "leaseId": lease_id,
+                                    "signed": (signed_date or "")[:10],
+                                    "moveIn": start_date_str[:10]
+                                })
                     except:
                         pass
 
             # Future Move-Outs: NTV leases with MoveOutDate in current month
-            # Use MoveOutDate from Legacy API (preferred) or fall back to leaseEndDate
+            # Use MoveOutDate from Units/Availability (preferred) or fall back to leaseEndDate
             if lease_status == "Notice to Vacate":
                 mo_date_str = move_out_dates.get(unit, "") or end_date_str
                 if mo_date_str:
@@ -654,13 +774,35 @@ def get_future_moves_data(property_id, leases=None, units_availability=None):
                             if unit not in mo_units:
                                 mo_units.add(unit)
                                 future_mo += 1
+                                # Get NTV date and unitId from units_availability
+                                ntv_date = ""
+                                unit_id = unit_id_map.get(unit, "")
+                                if units_availability:
+                                    for u in units_availability:
+                                        if u.get("number") == unit:
+                                            occ = u.get("occupyingLease", {}) or {}
+                                            ntv_date = (occ.get("noticeToVacateDate") or "")[:10]
+                                            if not unit_id:
+                                                unit_id = u.get("unitId", "")
+                                            break
+                                future_mo_list.append({
+                                    "unit": unit,
+                                    "unitId": unit_id,
+                                    "type": unit_type,
+                                    "resident": resident_name,
+                                    "leaseId": lease_id,
+                                    "ntvDate": ntv_date,
+                                    "moDate": mo_date_str[:10]
+                                })
                     except:
                         pass
 
         return {
             "future_mi": future_mi,
             "future_mo": future_mo,
-            "month_label": month_label
+            "month_label": month_label,
+            "futureMIList": sorted(future_mi_list, key=lambda x: x["unit"]),
+            "futureMOList": sorted(future_mo_list, key=lambda x: x["unit"])
         }
     except Exception as e:
         print(f"    Warning: Could not calculate future moves: {e}")
@@ -764,11 +906,27 @@ def get_property_data(property_id, property_name, units_availability=None, lease
     units = units_availability or []
     leases = leases or []
 
-    # Build eviction units set from leases (leaseStatus = "Under Eviction")
+    # Get today's date for alert calculations
+    today = datetime.now().date()
+
+    # Build eviction units set and details from leases (leaseStatus = "Under Eviction")
     eviction_units = set()
+    eviction_details = {}  # unit -> {name, leaseEnd, moDate}
     for lease in leases:
         if lease.get("leaseStatus") == "Under Eviction":
-            eviction_units.add(lease.get("unitNumber", ""))
+            unit_num = lease.get("unitNumber", "")
+            eviction_units.add(unit_num)
+            people = lease.get("people", [])
+            name = ""
+            if people:
+                p = people[0]
+                name = f"{p.get('firstName', '')} {p.get('lastName', '')}".strip()
+            eviction_details[unit_num] = {
+                "name": name,
+                "leaseEnd": (lease.get("leaseEndDate") or "")[:10],
+                "moDate": (lease.get("moveOutDate") or "")[:10],
+                "leaseId": lease.get("leaseId", "")
+            }
 
     # Build leaseId -> leaseStatus map (to check if occupying lease is "Former")
     lease_status_by_id = {}
@@ -777,9 +935,30 @@ def get_property_data(property_id, property_name, units_availability=None, lease
         if lease_id:
             lease_status_by_id[lease_id] = lease.get("leaseStatus", "")
 
+    # Build unit -> unit data lookup for quick access
+    unit_data_map = {}
+    for u in units:
+        unit_num = u.get("number", "")
+        if unit_num:
+            unit_data_map[unit_num] = u
+
+    # Helper to format unit type (shorten if needed)
+    def format_type(unit_type_name):
+        if not unit_type_name:
+            return ""
+        return unit_type_name
+
     # Categorize units based on vacancyStatus and status
     # Track both combined categories and leased subcategories
+    # Now storing detailed objects instead of just unit numbers
     status_summary = defaultdict(list)
+    detailed_lists = {
+        "vacantReadyList": [],
+        "vacantNotReadyList": [],
+        "ntvList": [],
+        "evictionList": [],
+        "offMarketList": []
+    }
 
     for u in units:
         # Units/Availability uses lowercase field names
@@ -789,32 +968,106 @@ def get_property_data(property_id, property_name, units_availability=None, lease
         excluded = u.get("excludedFromOccupancy", False)
         is_ready = ready_status == "Ready"
         is_down = ready_status in ["Abated", "Down"]
+        unit_type = format_type(u.get("unitTypeName", ""))
+        unit_id = u.get("unitId", "")
+        av_date = (u.get("dateAvailable") or "")[:10]
+        occ_lease = u.get("occupyingLease", {}) or {}
+        ntv_date = (occ_lease.get("noticeToVacateDate") or "")[:10]
+        mo_date = (occ_lease.get("moveOutDate") or "")[:10]
+        available_for_marketing = u.get("availableForOnlineMarketing", True)
 
         # Skip excluded or Down/Abated units entirely (don't count in totals)
         if excluded or is_down:
             continue
 
+        # Track off-market units (available for rent but not marketed)
+        if not available_for_marketing and vacancy_status != "Occupied":
+            detailed_lists["offMarketList"].append({
+                "unit": unit_num,
+                "unitId": unit_id,
+                "type": unit_type,
+                "vacancyStatus": vacancy_status,
+                "avDate": av_date
+            })
+
         # Check for eviction first (takes priority)
         if unit_num in eviction_units:
             status_summary["Under Eviction"].append(unit_num)
+            ev_info = eviction_details.get(unit_num, {})
+            detailed_lists["evictionList"].append({
+                "unit": unit_num,
+                "unitId": unit_id,
+                "type": unit_type,
+                "name": ev_info.get("name", ""),
+                "leaseId": ev_info.get("leaseId", ""),
+                "leaseEnd": ev_info.get("leaseEnd", ""),
+                "moDate": ev_info.get("moDate", "")
+            })
         elif vacancy_status == "Occupied":
             status_summary["Occupied"].append(unit_num)
         elif vacancy_status == "Vacant":
             # Not leased vacant
             if is_ready:
                 status_summary["Vacant Ready"].append(unit_num)
+                detailed_lists["vacantReadyList"].append({
+                    "unit": unit_num,
+                    "unitId": unit_id,
+                    "type": unit_type,
+                    "avDate": av_date
+                })
             else:
                 status_summary["Vacant Not Ready"].append(unit_num)
+                # Check for alert: available date in the past
+                vnr_alert = False
+                vnr_alert_msg = ""
+                if av_date:
+                    try:
+                        av_dt = datetime.strptime(av_date, "%Y-%m-%d").date()
+                        if av_dt < today:
+                            vnr_alert = True
+                            vnr_alert_msg = "Past Available Date"
+                    except: pass
+                detailed_lists["vacantNotReadyList"].append({
+                    "unit": unit_num,
+                    "unitId": unit_id,
+                    "type": unit_type,
+                    "avDate": av_date,
+                    "hasAlert": vnr_alert,
+                    "alertMsg": vnr_alert_msg
+                })
         elif vacancy_status == "Vacant Pre-Leased":
             # Leased vacant - add to appropriate ready/not ready AND track as leased
             if is_ready:
                 status_summary["Vacant Ready"].append(unit_num)
+                detailed_lists["vacantReadyList"].append({
+                    "unit": unit_num,
+                    "unitId": unit_id,
+                    "type": unit_type,
+                    "avDate": av_date
+                })
             else:
                 status_summary["Vacant Not Ready"].append(unit_num)
+                # Check for alert: available date in the past
+                vnr_alert = False
+                vnr_alert_msg = ""
+                if av_date:
+                    try:
+                        av_dt = datetime.strptime(av_date, "%Y-%m-%d").date()
+                        if av_dt < today:
+                            vnr_alert = True
+                            vnr_alert_msg = "Past Available Date"
+                    except: pass
+                detailed_lists["vacantNotReadyList"].append({
+                    "unit": unit_num,
+                    "unitId": unit_id,
+                    "type": unit_type,
+                    "avDate": av_date,
+                    "hasAlert": vnr_alert,
+                    "alertMsg": vnr_alert_msg
+                })
             status_summary["Vacant Leased"].append(unit_num)  # Also track as leased
         elif vacancy_status == "Notice to Vacate":
             # Check if resident already moved out (lease is "Former") - treat as Vacant
-            occ_lease = u.get("occupyingLease", {})
             occ_lease_id = occ_lease.get("leaseId", "") if occ_lease else ""
             occ_lease_status = lease_status_by_id.get(occ_lease_id, "")
             is_former = occ_lease_status == "Former"
@@ -823,13 +1076,66 @@ def get_property_data(property_id, property_name, units_availability=None, lease
                 # Resident moved out - treat as Vacant
                 if is_ready:
                     status_summary["Vacant Ready"].append(unit_num)
+                    detailed_lists["vacantReadyList"].append({
+                        "unit": unit_num,
+                        "unitId": unit_id,
+                        "type": unit_type,
+                        "avDate": av_date
+                    })
                 else:
                     status_summary["Vacant Not Ready"].append(unit_num)
+                    # Check for alert: available date in the past
+                    vnr_alert = False
+                    vnr_alert_msg = ""
+                    if av_date:
+                        try:
+                            av_dt = datetime.strptime(av_date, "%Y-%m-%d").date()
+                            if av_dt < today:
+                                vnr_alert = True
+                                vnr_alert_msg = "Past Available Date"
+                        except: pass
+                    detailed_lists["vacantNotReadyList"].append({
+                        "unit": unit_num,
+                        "unitId": unit_id,
+                        "type": unit_type,
+                        "avDate": av_date,
+                        "hasAlert": vnr_alert,
+                        "alertMsg": vnr_alert_msg
+                    })
             else:
                 status_summary["NTV"].append(unit_num)
+                # Check for NTV alerts: past move-out OR available date less than 7 days after move-out
+                ntv_alert = False
+                ntv_alert_msg = ""
+                if mo_date:
+                    try:
+                        mo_dt = datetime.strptime(mo_date, "%Y-%m-%d").date()
+                        if mo_dt < today:
+                            ntv_alert = True
+                            ntv_alert_msg = "Past Move-Out Date"
+                        elif av_date:
+                            av_dt = datetime.strptime(av_date, "%Y-%m-%d").date()
+                            min_ready_date = mo_dt + timedelta(days=7)
+                            if av_dt < min_ready_date:
+                                days_gap = (av_dt - mo_dt).days
+                                if days_gap < 0:
+                                    ntv_alert_msg = f"Available {abs(days_gap)} days BEFORE move-out"
+                                else:
+                                    ntv_alert_msg = f"Only {days_gap} days to get ready"
+                                ntv_alert = True
+                    except: pass
+                detailed_lists["ntvList"].append({
+                    "unit": unit_num,
+                    "unitId": unit_id,
+                    "type": unit_type,
+                    "ntvDate": ntv_date,
+                    "moDate": mo_date,
+                    "avDate": av_date,
+                    "hasAlert": ntv_alert,
+                    "alertMsg": ntv_alert_msg
+                })
         elif vacancy_status == "Notice to Vacate Pre-Leased":
             # Check if resident already moved out (lease is "Former") - treat as Vacant
-            occ_lease = u.get("occupyingLease", {})
             occ_lease_id = occ_lease.get("leaseId", "") if occ_lease else ""
             occ_lease_status = lease_status_by_id.get(occ_lease_id, "")
             is_former = occ_lease_status == "Former"
@@ -838,12 +1144,66 @@ def get_property_data(property_id, property_name, units_availability=None, lease
                 # Resident moved out - treat as Vacant (leased)
                 if is_ready:
                     status_summary["Vacant Ready"].append(unit_num)
+                    detailed_lists["vacantReadyList"].append({
+                        "unit": unit_num,
+                        "unitId": unit_id,
+                        "type": unit_type,
+                        "avDate": av_date
+                    })
                 else:
                     status_summary["Vacant Not Ready"].append(unit_num)
+                    # Check for alert: available date in the past
+                    vnr_alert = False
+                    vnr_alert_msg = ""
+                    if av_date:
+                        try:
+                            av_dt = datetime.strptime(av_date, "%Y-%m-%d").date()
+                            if av_dt < today:
+                                vnr_alert = True
+                                vnr_alert_msg = "Past Available Date"
+                        except: pass
+                    detailed_lists["vacantNotReadyList"].append({
+                        "unit": unit_num,
+                        "unitId": unit_id,
+                        "type": unit_type,
+                        "avDate": av_date,
+                        "hasAlert": vnr_alert,
+                        "alertMsg": vnr_alert_msg
+                    })
                 status_summary["Vacant Leased"].append(unit_num)
             else:
                 status_summary["NTV"].append(unit_num)  # Count in NTV total
                 status_summary["NTV Leased"].append(unit_num)  # Also track as leased
+                # Check for NTV alerts: past move-out OR available date less than 7 days after move-out
+                ntv_alert = False
+                ntv_alert_msg = ""
+                if mo_date:
+                    try:
+                        mo_dt = datetime.strptime(mo_date, "%Y-%m-%d").date()
+                        if mo_dt < today:
+                            ntv_alert = True
+                            ntv_alert_msg = "Past Move-Out Date"
+                        elif av_date:
+                            av_dt = datetime.strptime(av_date, "%Y-%m-%d").date()
+                            min_ready_date = mo_dt + timedelta(days=7)
+                            if av_dt < min_ready_date:
+                                days_gap = (av_dt - mo_dt).days
+                                if days_gap < 0:
+                                    ntv_alert_msg = f"Available {abs(days_gap)} days BEFORE move-out"
+                                else:
+                                    ntv_alert_msg = f"Only {days_gap} days to get ready"
+                                ntv_alert = True
+                    except: pass
+                detailed_lists["ntvList"].append({
+                    "unit": unit_num,
+                    "unitId": unit_id,
+                    "type": unit_type,
+                    "ntvDate": ntv_date,
+                    "moDate": mo_date,
+                    "avDate": av_date,
+                    "hasAlert": ntv_alert,
+                    "alertMsg": ntv_alert_msg
+                })
         else:
             status_summary["Other"].append(unit_num)
 
@@ -867,7 +1227,13 @@ def get_property_data(property_id, property_name, units_availability=None, lease
         "unit_lists": {k: sorted(v) for k, v in status_summary.items()},
         "occupancy_rate": occupancy,
         "eviction_units": list(eviction_units),  # Convert set to list for JSON serialization
-        "units_availability": units  # Raw units data for off-market/renovation calculations
+        "units_availability": units,  # Raw units data for off-market/renovation calculations
+        # Detailed lists for pop-ups
+        "vacantReadyList": sorted(detailed_lists["vacantReadyList"], key=lambda x: x["unit"]),
+        "vacantNotReadyList": sorted(detailed_lists["vacantNotReadyList"], key=lambda x: x["unit"]),
+        "ntvList": sorted(detailed_lists["ntvList"], key=lambda x: x["unit"]),
+        "evictionList": sorted(detailed_lists["evictionList"], key=lambda x: x["unit"]),
+        "offMarketList": sorted(detailed_lists["offMarketList"], key=lambda x: x["unit"])
     }
 
 def generate_html(properties_data, traffic_data, leases_data):
@@ -922,6 +1288,92 @@ def generate_html(properties_data, traffic_data, leases_data):
         sb = data["status_breakdown"]
         # Get future moves data from leases_data
         future_moves = leases_data.get(abbr, {}).get("future_moves", {})
+        lease_info = leases_data.get(abbr, {})
+
+        # Build Vacant Leased and NTV Leased lists from applicants data
+        # Match pending leases to pre-leased unit numbers
+        applicants_list = lease_info.get("applicantsList", [])
+        vacant_leased_units = set(data.get("unit_lists", {}).get("Vacant Leased", []))
+        ntv_leased_units = set(data.get("unit_lists", {}).get("NTV Leased", []))
+
+        # Get today for alert calculations
+        today = datetime.now().date()
+
+        vacant_leased_list = []
+        ntv_leased_list = []
+        for app in applicants_list:
+            unit = app.get("unit", "")
+            move_in = app.get("moveIn", "")
+
+            # Check for alert: move-in date in the past
+            vl_alert = False
+            vl_alert_msg = ""
+            if move_in:
+                try:
+                    mi_dt = datetime.strptime(move_in[:10], "%Y-%m-%d").date()
+                    if mi_dt < today:
+                        vl_alert = True
+                        vl_alert_msg = "Past Move-In Date"
+                except: pass
+
+            if unit in vacant_leased_units:
+                vacant_leased_list.append({
+                    "unit": unit,
+                    "unitId": app.get("unitId", ""),
+                    "type": app.get("type", ""),
+                    "applicant": app.get("applicant", ""),
+                    "leaseId": app.get("leaseId", ""),
+                    "moveIn": move_in,
+                    "hasAlert": vl_alert,
+                    "alertMsg": vl_alert_msg
+                })
+            if unit in ntv_leased_units:
+                ntv_leased_list.append({
+                    "unit": unit,
+                    "unitId": app.get("unitId", ""),
+                    "type": app.get("type", ""),
+                    "applicant": app.get("applicant", ""),
+                    "leaseId": app.get("leaseId", ""),
+                    "moveIn": move_in,
+                    "hasAlert": vl_alert,
+                    "alertMsg": vl_alert_msg
+                })
+
+        # Calculate Future MI from Vacant Leased + NTV Leased with move-in in current month
+        # Get current month boundaries
+        current_year = today.year
+        current_month = today.month
+        month_names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+        future_moves_month = f"{month_names[current_month - 1]} {current_year}"
+
+        # Filter to move-ins in current month (any date in the month, not just today forward)
+        future_mi_list = []
+        for item in vacant_leased_list + ntv_leased_list:
+            move_in_str = item.get("moveIn", "")
+            if move_in_str and len(move_in_str) >= 10:
+                try:
+                    move_in_date = datetime.strptime(move_in_str[:10], "%Y-%m-%d").date()
+                    if move_in_date.year == current_year and move_in_date.month == current_month:
+                        future_mi_list.append({
+                            "unit": item.get("unit", ""),
+                            "unitId": item.get("unitId", ""),
+                            "type": item.get("type", ""),
+                            "resident": item.get("applicant", ""),
+                            "leaseId": item.get("leaseId", ""),
+                            "signed": "",  # Not tracking signed date for this logic
+                            "moveIn": move_in_str[:10]
+                        })
+                except:
+                    pass
+
+        future_mi_count = len(future_mi_list)
+        future_mi_list_sorted = sorted(future_mi_list, key=lambda x: x["unit"])
+
+        # Calculate alert counts
+        vnr_alerts = sum(1 for x in data.get("vacantNotReadyList", []) if x.get("hasAlert"))
+        ntv_alerts = sum(1 for x in data.get("ntvList", []) if x.get("hasAlert"))
+        vl_alerts = sum(1 for x in vacant_leased_list if x.get("hasAlert"))
+
         table_data[abbr] = {
             "abbr": abbr,
             "name": data["name"],
@@ -935,9 +1387,23 @@ def generate_html(properties_data, traffic_data, leases_data):
             "eviction": sb.get("Under Eviction", 0),
             "offMarket": data.get("off_market", 0),  # Units not available for online marketing
             "occupancy": data["occupancy_rate"],
-            "futureMI": future_moves.get("future_mi", 0),
+            "futureMI": future_mi_count,  # From Vacant Leased + NTV Leased with move-in in current month
             "futureMO": future_moves.get("future_mo", 0),
-            "futureMovesMonth": future_moves.get("month_label", "")
+            "futureMovesMonth": future_moves_month,
+            # Alert counts
+            "vacantNotReadyAlerts": vnr_alerts,
+            "ntvAlerts": ntv_alerts,
+            "vacantLeasedAlerts": vl_alerts,
+            # Detailed lists for pop-ups
+            "vacantReadyList": data.get("vacantReadyList", []),
+            "vacantNotReadyList": data.get("vacantNotReadyList", []),
+            "ntvList": data.get("ntvList", []),
+            "evictionList": data.get("evictionList", []),
+            "offMarketList": data.get("offMarketList", []),
+            "vacantLeasedList": vacant_leased_list,
+            "ntvLeasedList": ntv_leased_list,
+            "futureMIList": future_mi_list_sorted,
+            "futureMOList": future_moves.get("futureMOList", [])
         }
 
     table_data_js = json.dumps(table_data)
@@ -1040,6 +1506,93 @@ def generate_html(properties_data, traffic_data, leases_data):
             background: #1e293b;
             color: #e2e8f0;
             border-color: #475569;
+        }}
+
+        /* Alert badges */
+        .alert-dot {{
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            width: 3px;
+            height: 3px;
+            background-color: #dc2626;
+            border-radius: 50%;
+        }}
+        .dark .alert-dot {{
+            background-color: #f87171;
+        }}
+        .alert-tooltip {{
+            cursor: help;
+        }}
+        .alert-tooltip::after {{
+            content: attr(data-tooltip);
+            position: absolute;
+            right: calc(100% + 6px);
+            top: 50%;
+            transform: translateY(-50%);
+            padding: 6px 10px;
+            background: white;
+            color: #334155;
+            font-size: 11px;
+            font-weight: 500;
+            white-space: nowrap;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border: 1px solid #e2e8f0;
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s;
+        }}
+        .dark .alert-tooltip::after {{
+            background: #1e293b;
+            color: #e2e8f0;
+            border-color: #475569;
+        }}
+        .alert-tooltip:hover::after {{
+            opacity: 1;
+            visibility: visible;
+        }}
+        input[type="checkbox"] {{
+            accent-color: #1e40af;
+        }}
+
+        /* Custom Scrollbar Styles */
+        * {{
+            scrollbar-width: thin;
+            scrollbar-color: #94a3b8 transparent;
+        }}
+        .dark * {{
+            scrollbar-color: #475569 transparent;
+        }}
+        *::-webkit-scrollbar {{
+            width: 8px;
+            height: 8px;
+        }}
+        *::-webkit-scrollbar-track {{
+            background: transparent;
+            border-radius: 10px;
+        }}
+        *::-webkit-scrollbar-thumb {{
+            background: linear-gradient(180deg, #94a3b8 0%, #64748b 100%);
+            border-radius: 10px;
+            border: 2px solid transparent;
+            background-clip: padding-box;
+        }}
+        *::-webkit-scrollbar-thumb:hover {{
+            background: linear-gradient(180deg, #64748b 0%, #475569 100%);
+            background-clip: padding-box;
+        }}
+        .dark *::-webkit-scrollbar-thumb {{
+            background: linear-gradient(180deg, #475569 0%, #334155 100%);
+            background-clip: padding-box;
+        }}
+        .dark *::-webkit-scrollbar-thumb:hover {{
+            background: linear-gradient(180deg, #64748b 0%, #475569 100%);
+            background-clip: padding-box;
+        }}
+        *::-webkit-scrollbar-corner {{
+            background: transparent;
         }}
 
         /* Mobile Responsive Styles */
@@ -1273,6 +1826,31 @@ def generate_html(properties_data, traffic_data, leases_data):
         </div>
     </div>
 
+    <!-- Pop-up Modal -->
+    <div id="popup-modal" class="hidden fixed inset-0 z-50 overflow-y-auto" onclick="if(event.target===this)closePopup()">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="fixed inset-0 bg-black/50 dark:bg-black/70"></div>
+            <div class="relative bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-fit max-w-[90vw] max-h-[80vh] overflow-hidden">
+                <div class="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700">
+                    <h3 id="popup-title" class="text-lg font-bold text-slate-800 dark:text-white"></h3>
+                    <button onclick="closePopup()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-2xl leading-none">&times;</button>
+                </div>
+                <div id="popup-filters" class="hidden px-4 py-2 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/30">
+                    <div class="flex flex-wrap gap-3 items-center">
+                        <span class="text-sm font-medium text-slate-600 dark:text-slate-300">Filter:</span>
+                        <div id="popup-filter-checkboxes" class="flex flex-wrap gap-2"></div>
+                    </div>
+                </div>
+                <div class="p-4 overflow-auto max-h-[calc(80vh-120px)]">
+                    <table id="popup-table" class="min-w-full text-sm">
+                        <thead id="popup-thead" class="bg-slate-50 dark:bg-slate-700/50"></thead>
+                        <tbody id="popup-tbody" class="divide-y divide-slate-100 dark:divide-slate-700"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         const propertiesData = {js_data};
         const propertyTableData = {table_data_js};
@@ -1316,6 +1894,349 @@ def generate_html(properties_data, traffic_data, leases_data):
                 chevron.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
             }}
         }}
+
+        // Pop-up modal functions
+        let popupData = [];
+        let popupFullData = [];  // Unfiltered data
+        let popupSortColumn = '';
+        let popupSortAsc = true;
+        let popupColumns = [];
+        let popupActiveFilters = new Set();  // Active status filters
+        let popupHasFilters = false;  // Whether this popup has filters
+
+        function showPopup(category, abbr, monthKey) {{
+            const modal = document.getElementById('popup-modal');
+            const title = document.getElementById('popup-title');
+            const p = propertyTableData[abbr];
+            const l = leasesData[abbr] || {{}};
+
+            let data = [];
+            let columns = [];
+            let titleText = '';
+
+            // Define columns and get data based on category
+            switch(category) {{
+                case 'vacantReady':
+                    data = p.vacantReadyList || [];
+                    columns = [
+                        {{key: 'unit', label: 'Unit'}},
+                        {{key: 'type', label: 'Type'}},
+                        {{key: 'avDate', label: 'Av. Date'}}
+                    ];
+                    titleText = `${{abbr}} - Vacant Ready (${{data.length}})`;
+                    break;
+                case 'vacantNotReady':
+                    data = p.vacantNotReadyList || [];
+                    columns = [
+                        {{key: 'unit', label: 'Unit'}},
+                        {{key: 'type', label: 'Type'}},
+                        {{key: 'avDate', label: 'Av. Date'}}
+                    ];
+                    titleText = `${{abbr}} - Vacant Not Ready (${{data.length}})`;
+                    break;
+                case 'ntv':
+                    data = p.ntvList || [];
+                    columns = [
+                        {{key: 'unit', label: 'Unit'}},
+                        {{key: 'type', label: 'Type'}},
+                        {{key: 'ntvDate', label: 'NTV Date'}},
+                        {{key: 'moDate', label: 'MO Date'}},
+                        {{key: 'avDate', label: 'Av. Date'}}
+                    ];
+                    titleText = `${{abbr}} - NTV Units (${{data.length}})`;
+                    break;
+                case 'eviction':
+                    data = p.evictionList || [];
+                    columns = [
+                        {{key: 'unit', label: 'Unit'}},
+                        {{key: 'type', label: 'Type'}},
+                        {{key: 'name', label: 'Name'}},
+                        {{key: 'leaseEnd', label: 'Lease End'}},
+                        {{key: 'moDate', label: 'MO Date'}}
+                    ];
+                    titleText = `${{abbr}} - Under Eviction (${{data.length}})`;
+                    break;
+                case 'vacantLeased':
+                    data = p.vacantLeasedList || [];
+                    columns = [
+                        {{key: 'unit', label: 'Unit'}},
+                        {{key: 'type', label: 'Type'}},
+                        {{key: 'applicant', label: 'Applicant'}},
+                        {{key: 'moveIn', label: 'Move-In'}}
+                    ];
+                    titleText = `${{abbr}} - Vacant Leased (${{data.length}})`;
+                    break;
+                case 'ntvLeased':
+                    data = p.ntvLeasedList || [];
+                    columns = [
+                        {{key: 'unit', label: 'Unit'}},
+                        {{key: 'type', label: 'Type'}},
+                        {{key: 'applicant', label: 'Applicant'}},
+                        {{key: 'moveIn', label: 'Move-In'}}
+                    ];
+                    titleText = `${{abbr}} - NTV Leased (${{data.length}})`;
+                    break;
+                case 'offMarket':
+                    data = p.offMarketList || [];
+                    columns = [
+                        {{key: 'unit', label: 'Unit'}},
+                        {{key: 'type', label: 'Type'}},
+                        {{key: 'vacancyStatus', label: 'Vacancy Status'}},
+                        {{key: 'avDate', label: 'Av. Date'}}
+                    ];
+                    titleText = `${{abbr}} - Off Market (${{data.length}})`;
+                    break;
+                case 'futureMI':
+                    data = p.futureMIList || [];
+                    columns = [
+                        {{key: 'unit', label: 'Unit'}},
+                        {{key: 'type', label: 'Type'}},
+                        {{key: 'resident', label: 'Resident'}},
+                        {{key: 'signed', label: 'Signed Date'}},
+                        {{key: 'moveIn', label: 'Move-In'}}
+                    ];
+                    titleText = `${{abbr}} - Future Move-Ins (${{data.length}})`;
+                    break;
+                case 'futureMO':
+                    data = p.futureMOList || [];
+                    columns = [
+                        {{key: 'unit', label: 'Unit'}},
+                        {{key: 'type', label: 'Type'}},
+                        {{key: 'resident', label: 'Resident'}},
+                        {{key: 'ntvDate', label: 'NTV Date'}},
+                        {{key: 'moDate', label: 'MO Date'}}
+                    ];
+                    titleText = `${{abbr}} - Future Move-Outs (${{data.length}})`;
+                    break;
+                case 'applicants':
+                    data = l.applicantsList || [];
+                    columns = [
+                        {{key: 'status', label: 'Status'}},
+                        {{key: 'unit', label: 'Unit'}},
+                        {{key: 'type', label: 'Type'}},
+                        {{key: 'applicant', label: 'Applicant'}},
+                        {{key: 'appDate', label: 'App Date'}},
+                        {{key: 'approvedDate', label: 'Approved'}},
+                        {{key: 'signedDate', label: 'Signed'}},
+                        {{key: 'moveIn', label: 'Move-In'}}
+                    ];
+                    titleText = `${{abbr}} - Applicants (${{data.length}})`;
+                    break;
+                case 'expiring':
+                    const expiring = l.expiring || {{}};
+                    const lists = expiring.expiringLists || {{}};
+                    data = lists[monthKey] || [];
+                    const monthLabel = expiring[monthKey + '_label'] || monthKey;
+                    columns = [
+                        {{key: 'status', label: 'Status'}},
+                        {{key: 'unit', label: 'Unit'}},
+                        {{key: 'type', label: 'Type'}},
+                        {{key: 'resident', label: 'Resident'}},
+                        {{key: 'leaseEnd', label: 'Lease End'}},
+                        {{key: 'moDate', label: 'Move Out'}},
+                        {{key: 'renewalSigned', label: 'Renewal Signed'}}
+                    ];
+                    titleText = `${{abbr}} - Expiring ${{monthLabel}} (${{data.length}})`;
+                    break;
+                default:
+                    return;
+            }}
+
+            if (data.length === 0) {{
+                alert('No data available');
+                return;
+            }}
+
+            popupData = data;
+            popupColumns = columns;
+            popupSortColumn = '';
+            popupSortAsc = true;
+            popupFullData = [...data];  // Store full unfiltered data
+
+            // Set up filters for applicants and expiring
+            const filtersContainer = document.getElementById('popup-filters');
+            const checkboxesContainer = document.getElementById('popup-filter-checkboxes');
+
+            if (category === 'applicants' || category === 'expiring') {{
+                popupHasFilters = true;
+                // Get unique statuses
+                const statuses = [...new Set(data.map(d => d.status).filter(s => s))];
+                popupActiveFilters = new Set(statuses);  // All checked by default
+
+                // Build checkboxes
+                let checkboxHtml = '';
+                const statusColors = {{
+                    'Pending': 'text-amber-600 dark:text-amber-400',
+                    'Approved': 'text-cyan-600 dark:text-cyan-400',
+                    'Signed': 'text-emerald-600 dark:text-emerald-400',
+                    'Current': 'text-slate-600 dark:text-slate-400',
+                    'Pending Renewal': 'text-amber-600 dark:text-amber-400',
+                    'Renewed': 'text-emerald-600 dark:text-emerald-400',
+                    'NTV': 'text-orange-600 dark:text-orange-400',
+                    'Former': 'text-orange-600 dark:text-orange-400',
+                    'Under Eviction': 'text-red-600 dark:text-red-400'
+                }};
+                statuses.forEach(status => {{
+                    const color = statusColors[status] || 'text-slate-600 dark:text-slate-300';
+                    const count = data.filter(d => d.status === status).length;
+                    checkboxHtml += `
+                        <label class="flex items-center gap-1.5 cursor-pointer select-none">
+                            <input type="checkbox" checked class="w-4 h-4 rounded border-slate-300 dark:border-slate-600 text-blue-600 focus:ring-blue-500" onchange="togglePopupFilter('${{status}}')" data-status="${{status}}">
+                            <span class="text-sm font-medium ${{color}}">${{status}} (${{count}})</span>
+                        </label>
+                    `;
+                }});
+                checkboxesContainer.innerHTML = checkboxHtml;
+                filtersContainer.classList.remove('hidden');
+            }} else {{
+                popupHasFilters = false;
+                popupActiveFilters.clear();
+                filtersContainer.classList.add('hidden');
+            }}
+
+            title.textContent = titleText;
+            renderPopupTable();
+            modal.classList.remove('hidden');
+        }}
+
+        function togglePopupFilter(status) {{
+            if (popupActiveFilters.has(status)) {{
+                popupActiveFilters.delete(status);
+            }} else {{
+                popupActiveFilters.add(status);
+            }}
+            applyPopupFilters();
+        }}
+
+        function applyPopupFilters() {{
+            if (popupHasFilters && popupActiveFilters.size > 0) {{
+                popupData = popupFullData.filter(d => popupActiveFilters.has(d.status));
+            }} else if (popupHasFilters && popupActiveFilters.size === 0) {{
+                popupData = [];  // No filters selected = show nothing
+            }} else {{
+                popupData = [...popupFullData];
+            }}
+            // Re-apply current sort
+            if (popupSortColumn) {{
+                sortPopupTable(popupSortColumn);
+                sortPopupTable(popupSortColumn);  // Toggle back to maintain direction
+            }} else {{
+                renderPopupTable();
+            }}
+            // Update title count
+            const title = document.getElementById('popup-title');
+            const baseTitle = title.textContent.replace(/\(\d+\)/, '').trim();
+            title.textContent = `${{baseTitle}} (${{popupData.length}})`;
+        }}
+
+        function formatDate(dateStr) {{
+            // Convert YYYY-MM-DD to MM/DD/YYYY
+            if (!dateStr || dateStr.length < 10) return dateStr || '';
+            const parts = dateStr.substring(0, 10).split('-');
+            if (parts.length !== 3) return dateStr;
+            return `${{parts[1]}}/${{parts[2]}}/${{parts[0]}}`;
+        }}
+
+        // Date columns that need formatting
+        const dateColumns = ['avDate', 'ntvDate', 'moDate', 'leaseEnd', 'moveIn', 'signed', 'appDate', 'approvedDate', 'signedDate', 'renewalSigned'];
+
+        function renderPopupTable() {{
+            const thead = document.getElementById('popup-thead');
+            const tbody = document.getElementById('popup-tbody');
+
+            // Build header with sort indicators
+            let headerHtml = '<tr>';
+            popupColumns.forEach(col => {{
+                const sortIcon = popupSortColumn === col.key ? (popupSortAsc ? ' ▲' : ' ▼') : '';
+                headerHtml += `<th class="px-3 py-2 text-left font-semibold text-slate-600 dark:text-slate-300 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-600 whitespace-nowrap" onclick="sortPopupTable('${{col.key}}')">${{col.label}}${{sortIcon}}</th>`;
+            }});
+            headerHtml += '</tr>';
+            thead.innerHTML = headerHtml;
+
+            // Build body
+            let bodyHtml = '';
+            popupData.forEach((row, idx) => {{
+                const rowBg = idx % 2 === 0 ? '' : 'bg-slate-50/50 dark:bg-slate-800/30';
+                bodyHtml += `<tr class="${{rowBg}} hover:bg-blue-50/50 dark:hover:bg-blue-900/20">`;
+                popupColumns.forEach((col, colIdx) => {{
+                    let val = row[col.key] || '';
+                    // Format date columns
+                    if (dateColumns.includes(col.key)) {{
+                        val = formatDate(val);
+                    }}
+                    // Alert indicator for last column if row has alert
+                    const isLastCol = colIdx === popupColumns.length - 1;
+                    const hasRowAlert = isLastCol && row.hasAlert;
+                    const alertHtml = hasRowAlert ? `<span class="alert-dot alert-tooltip" data-tooltip="${{row.alertMsg || 'Needs attention'}}"></span>` : '';
+                    const posClass = hasRowAlert ? 'relative' : '';
+
+                    // Make unit column a clickable link to ResMan if unitId exists
+                    if (col.key === 'unit' && row.unitId) {{
+                        const resmanUrl = `https://sns.myresman.com/#/Units/Detail/${{row.unitId}}`;
+                        bodyHtml += `<td class="px-3 py-2 whitespace-nowrap ${{posClass}}"><a href="${{resmanUrl}}" target="_blank" class="text-blue-600 dark:text-blue-400 hover:underline">${{val}}</a>${{alertHtml}}</td>`;
+                    // Make applicant/resident column a clickable link to ResMan if leaseId exists
+                    }} else if ((col.key === 'applicant' || col.key === 'resident' || col.key === 'name') && row.leaseId && val) {{
+                        const resmanUrl = `https://sns.myresman.com/#/Residents/Detail/${{row.leaseId}}`;
+                        bodyHtml += `<td class="px-3 py-2 whitespace-nowrap ${{posClass}}"><a href="${{resmanUrl}}" target="_blank" class="text-blue-600 dark:text-blue-400 hover:underline">${{val}}</a>${{alertHtml}}</td>`;
+                    }} else {{
+                        bodyHtml += `<td class="px-3 py-2 text-slate-700 dark:text-slate-300 whitespace-nowrap ${{posClass}}">${{val}}${{alertHtml}}</td>`;
+                    }}
+                }});
+                bodyHtml += '</tr>';
+            }});
+            tbody.innerHTML = bodyHtml;
+        }}
+
+        function sortPopupTable(column) {{
+            if (popupSortColumn === column) {{
+                popupSortAsc = !popupSortAsc;
+            }} else {{
+                popupSortColumn = column;
+                popupSortAsc = true;
+            }}
+
+            popupData.sort((a, b) => {{
+                let valA = a[column] || '';
+                let valB = b[column] || '';
+
+                // Date columns - sort by original YYYY-MM-DD format
+                if (dateColumns.includes(column)) {{
+                    // Empty dates go to end
+                    if (!valA && !valB) return 0;
+                    if (!valA) return popupSortAsc ? 1 : -1;
+                    if (!valB) return popupSortAsc ? -1 : 1;
+                    // Compare as strings (YYYY-MM-DD sorts correctly)
+                    if (valA < valB) return popupSortAsc ? -1 : 1;
+                    if (valA > valB) return popupSortAsc ? 1 : -1;
+                    return 0;
+                }}
+
+                // Try numeric sort first
+                const numA = parseFloat(valA);
+                const numB = parseFloat(valB);
+                if (!isNaN(numA) && !isNaN(numB)) {{
+                    return popupSortAsc ? numA - numB : numB - numA;
+                }}
+
+                // String sort
+                valA = String(valA).toLowerCase();
+                valB = String(valB).toLowerCase();
+                if (valA < valB) return popupSortAsc ? -1 : 1;
+                if (valA > valB) return popupSortAsc ? 1 : -1;
+                return 0;
+            }});
+
+            renderPopupTable();
+        }}
+
+        function closePopup() {{
+            document.getElementById('popup-modal').classList.add('hidden');
+        }}
+
+        // Close popup on Escape key
+        document.addEventListener('keydown', function(e) {{
+            if (e.key === 'Escape') closePopup();
+        }});
 
         function getColors() {{
             const isDark = document.documentElement.classList.contains('dark');
@@ -1380,7 +2301,7 @@ def generate_html(properties_data, traffic_data, leases_data):
                 if (colspan > 0) {{
                     headerRow1 += `<th colspan="${{colspan}}" class="px-2 py-2 text-center font-bold text-xs uppercase tracking-wide ${{regionColors[region] || 'bg-slate-100 dark:bg-slate-700'}}">${{region}}</th>`;
                     propsInRegion.forEach(abbr => {{
-                        headerRow2 += `<th class="px-2 py-2 text-center w-[65px] cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700" onclick="document.getElementById('propertyFilter').value='${{abbr}}'; updateDashboard();">
+                        headerRow2 += `<th class="px-2 py-2 text-center w-[65px]">
                             <div class="font-bold text-slate-900 dark:text-white text-xs">${{abbr}}</div>
                         </th>`;
                     }});
@@ -1399,20 +2320,20 @@ def generate_html(properties_data, traffic_data, leases_data):
             const statusRows = [
                 {{ key: 'total', label: 'Total Units', color: 'text-slate-900 dark:text-white font-bold', getValue: p => p.total }},
                 {{ key: 'occupied', label: 'Occupied', color: 'text-emerald-600 dark:text-emerald-400', getValue: p => p.occupied }},
-                {{ key: 'vacantReady', label: 'Vacant Ready' + tip('Ready for move-in (includes pre-leased)'), color: 'text-blue-600 dark:text-blue-400', getValue: p => p.vacantReady }},
-                {{ key: 'vacantNotReady', label: 'Vacant Not Ready' + tip('Not ready yet (includes pre-leased)'), color: 'text-cyan-600 dark:text-cyan-400', getValue: p => p.vacantNotReady }},
-                {{ key: 'ntv', label: 'NTV' + tip('Notice to Vacate (includes pre-leased)'), color: 'text-amber-600 dark:text-amber-400', getValue: p => p.ntv }},
-                {{ key: 'eviction', label: 'Under Eviction', color: 'text-red-600 dark:text-red-400', getValue: p => p.eviction }},
+                {{ key: 'vacantReady', label: 'Vacant Ready' + tip('Ready for move-in (includes pre-leased)'), color: 'text-blue-600 dark:text-blue-400', getValue: p => p.vacantReady, clickable: true }},
+                {{ key: 'vacantNotReady', label: 'Vacant Not Ready' + tip('Not ready yet (includes pre-leased)'), color: 'text-cyan-600 dark:text-cyan-400', getValue: p => p.vacantNotReady, clickable: true }},
+                {{ key: 'ntv', label: 'NTV' + tip('Notice to Vacate (includes pre-leased)'), color: 'text-amber-600 dark:text-amber-400', getValue: p => p.ntv, clickable: true }},
+                {{ key: 'eviction', label: 'Under Eviction', color: 'text-red-600 dark:text-red-400', getValue: p => p.eviction, clickable: true }},
                 {{ key: 'occPhysical', label: 'Physical Occupancy' + tip('Currently occupied ÷ Total units'), color: '', getValue: p => ((p.total - (p.vacantReady || 0) - (p.vacantNotReady || 0)) / p.total * 100).toFixed(2), isOccupancy: true }},
                 {{ key: 'divider', label: '', color: '', getValue: () => '', isDivider: true }},
-                {{ key: 'vacantLeased', label: 'Vacant Leased', color: 'text-indigo-600 dark:text-indigo-400', getValue: p => p.vacantLeased }},
-                {{ key: 'ntvLeased', label: 'NTV Leased', color: 'text-orange-600 dark:text-orange-400', getValue: p => p.ntvLeased }},
+                {{ key: 'vacantLeased', label: 'Vacant Leased', color: 'text-indigo-600 dark:text-indigo-400', getValue: p => p.vacantLeased, clickable: true }},
+                {{ key: 'ntvLeased', label: 'NTV Leased', color: 'text-orange-600 dark:text-orange-400', getValue: p => p.ntvLeased, clickable: true }},
                 {{ key: 'availableForRent', label: 'Rentable Units' + tip('Vacant + NTV minus pre-leased'), color: 'text-blue-700 dark:text-blue-300 font-semibold', getValue: p => ((p.vacantReady || 0) + (p.vacantNotReady || 0) + (p.ntv || 0)) - ((p.vacantLeased || 0) + (p.ntvLeased || 0)) }},
-                {{ key: 'offMarket', label: 'Off the Market' + tip('Available units not listed online'), color: 'text-pink-600 dark:text-pink-400', getValue: p => p.offMarket }},
+                {{ key: 'offMarket', label: 'Off the Market' + tip('Available units not listed online'), color: 'text-pink-600 dark:text-pink-400', getValue: p => p.offMarket, clickable: true }},
                 {{ key: 'occRented', label: 'Occupancy Rented' + tip('Physical + pre-leased vacant units'), color: '', getValue: p => ((p.total - (p.vacantReady || 0) - (p.vacantNotReady || 0) + (p.vacantLeased || 0)) / p.total * 100).toFixed(2), isOccupancy: true }},
                 {{ key: 'divider2', label: '', color: '', getValue: () => '', isDivider: true }},
-                {{ key: 'futureMI', label: `Future MI (${{futureMovesMonth}})` + tip('Signed pending leases moving in this month'), color: 'text-emerald-600 dark:text-emerald-400', getValue: p => p.futureMI || 0 }},
-                {{ key: 'futureMO', label: `Future MO (${{futureMovesMonth}})` + tip('NTV units moving out this month'), color: 'text-amber-600 dark:text-amber-400', getValue: p => p.futureMO || 0 }},
+                {{ key: 'futureMI', label: `Future MI (${{futureMovesMonth}})` + tip('Signed pending leases moving in this month'), color: 'text-emerald-600 dark:text-emerald-400', getValue: p => p.futureMI || 0, clickable: true }},
+                {{ key: 'futureMO', label: `Future MO (${{futureMovesMonth}})` + tip('NTV units moving out this month'), color: 'text-amber-600 dark:text-amber-400', getValue: p => p.futureMO || 0, clickable: true }},
                 {{ key: 'projectedOcc', label: 'Projected Occupancy' + tip('Physical Occ adjusted for future moves'), color: '', getValue: p => ((p.total - (p.vacantReady || 0) - (p.vacantNotReady || 0) + (p.futureMI || 0) - (p.futureMO || 0)) / p.total * 100).toFixed(2), isOccupancy: true }}
             ];
 
@@ -1445,7 +2366,22 @@ def generate_html(properties_data, traffic_data, leases_data):
                                            'text-red-600 dark:text-red-400 font-semibold';
                             }}
 
-                            tr += `<td class="px-2 py-2 text-center ${{cellColor}}">${{val}}</td>`;
+                            // Check for alerts - use background color
+                            let hasAlert = false;
+                            if (row.key === 'vacantNotReady' && p.vacantNotReadyAlerts > 0) {{
+                                hasAlert = true;
+                            }} else if (row.key === 'ntv' && p.ntvAlerts > 0) {{
+                                hasAlert = true;
+                            }} else if (row.key === 'vacantLeased' && p.vacantLeasedAlerts > 0) {{
+                                hasAlert = true;
+                            }}
+
+                            const alertBg = hasAlert ? 'bg-red-100 dark:bg-blue-900/40' : '';
+                            if (row.clickable && val > 0) {{
+                                tr += `<td class="px-2 py-2 text-center ${{cellColor}} ${{alertBg}} cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/50" onclick="showPopup('${{row.key}}', '${{abbr}}')">${{val}}</td>`;
+                            }} else {{
+                                tr += `<td class="px-2 py-2 text-center ${{cellColor}} ${{alertBg}}">${{val}}</td>`;
+                            }}
                         }}
                     }});
                 }});
@@ -1555,7 +2491,7 @@ def generate_html(properties_data, traffic_data, leases_data):
                     return ((signed / prospects) * 100).toFixed(1);
                 }}, isPercent: true }},
                 {{ key: 'divider', label: '', isDivider: true }},
-                {{ key: 'totalApplicants', label: 'Total Applicants' + tip('Currently active applicants'), color: 'text-indigo-600 dark:text-indigo-400 font-semibold', getValue: abbr => (leasesData[abbr]?.total_applicants || 0) }},
+                {{ key: 'totalApplicants', label: 'Total Applicants' + tip('Currently active applicants'), color: 'text-indigo-600 dark:text-indigo-400 font-semibold', getValue: abbr => (leasesData[abbr]?.total_applicants || 0), clickable: true }},
                 {{ key: 'pendingApproval', label: 'Pending Approval', color: 'text-amber-600 dark:text-amber-400', getValue: abbr => (leasesData[abbr]?.pending_approval || 0) }},
                 {{ key: 'approved', label: 'Approved', color: 'text-cyan-600 dark:text-cyan-400', getValue: abbr => (leasesData[abbr]?.approved || 0) }},
                 {{ key: 'signedLease', label: 'Signed Lease', color: 'text-emerald-600 dark:text-emerald-400', getValue: abbr => (leasesData[abbr]?.signed_lease || 0) }}
@@ -1579,7 +2515,11 @@ def generate_html(properties_data, traffic_data, leases_data):
                     propertyGroups[region].forEach(abbr => {{
                         const val = row.getValue(abbr);
                         const suffix = row.isPercent ? '%' : '';
-                        tr += `<td class="px-2 py-2 text-center ${{row.color}}">${{val}}${{suffix}}</td>`;
+                        if (row.clickable && val > 0) {{
+                            tr += `<td class="px-2 py-2 text-center ${{row.color}} cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/50" onclick="showPopup('applicants', '${{abbr}}')">${{val}}${{suffix}}</td>`;
+                        }} else {{
+                            tr += `<td class="px-2 py-2 text-center ${{row.color}}">${{val}}${{suffix}}</td>`;
+                        }}
                     }});
                 }});
 
@@ -1720,7 +2660,11 @@ def generate_html(properties_data, traffic_data, leases_data):
                                          parseFloat(propPct) >= 70 ? 'text-emerald-600 dark:text-emerald-400' :
                                          parseFloat(propPct) >= 50 ? 'text-amber-600 dark:text-amber-400' :
                                          'text-red-600 dark:text-red-400';
-                        bodyRows += `<td class="px-2 py-2 text-center font-semibold ${{propColor}}">${{propPct}}${{propTotal > 0 ? '%' : ''}}</td>`;
+                        if (propTotal > 0) {{
+                            bodyRows += `<td class="px-2 py-2 text-center font-semibold ${{propColor}} cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/50" onclick="event.stopPropagation(); showPopup('expiring', '${{abbr}}', '${{monthKey}}')">${{propPct}}%</td>`;
+                        }} else {{
+                            bodyRows += `<td class="px-2 py-2 text-center font-semibold ${{propColor}}">-</td>`;
+                        }}
                     }});
                 }});
 
@@ -1818,7 +2762,7 @@ def generate_html(properties_data, traffic_data, leases_data):
             regions.forEach(region => {{
                 propertyGroups[region].forEach(abbr => {{
                     if (leasesData[abbr]?.renovation) {{
-                        headerRow2 += `<th class="px-2 py-2 text-center w-[65px] cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700" onclick="document.getElementById('propertyFilter').value='${{abbr}}'; updateDashboard();">
+                        headerRow2 += `<th class="px-2 py-2 text-center w-[65px]">
                             <div class="font-bold text-slate-900 dark:text-white text-xs">${{abbr}}</div>
                         </th>`;
                     }}
@@ -2337,10 +3281,11 @@ def main():
         exp_total = sum(expiring_data.get("total", {}).values())
         print(f"    Expiring (4mo): {exp_total}")
 
-        # Get future move-ins and move-outs for projected occupancy (using Units/Availability)
+        # Get future move-outs (Future MI is calculated from Vacant/NTV Leased in HTML generation)
         future_moves = get_future_moves_data(property_id, leases=all_leases, units_availability=units_availability)
         leases_data[abbr]["future_moves"] = future_moves
-        print(f"    Future Moves ({future_moves['month_label']}): {future_moves['future_mi']} MI, {future_moves['future_mo']} MO")
+        # Note: Future MI count is calculated in generate_html() from Vacant Leased + NTV Leased with current month move-in
+        print(f"    Future MO ({future_moves['month_label']}): {future_moves['future_mo']}")
 
         # Get renovation status data (using Units/Availability)
         renovation_data = get_units_renovation_data(property_id, units_availability=units_availability)
