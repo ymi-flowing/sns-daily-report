@@ -1339,6 +1339,33 @@ def generate_html(properties_data, traffic_data, leases_data):
                     "alertMsg": vl_alert_msg
                 })
 
+        # DEBUG: Check specific units for SJ and ORT
+        debug_units = {"SJ": "1745AU", "ORT": "C009"}
+        if abbr in debug_units:
+            target_unit = debug_units[abbr]
+            print(f"\n    === DEBUG {abbr} - Unit {target_unit} ===")
+            print(f"    Vacant Leased units from API: {sorted(vacant_leased_units)}")
+            print(f"    Is {target_unit} in vacant_leased_units? {target_unit in vacant_leased_units}")
+
+            # Check applicants list for this unit or similar
+            print(f"    Applicants list units: {[a.get('unit') for a in applicants_list]}")
+            matching_apps = [a for a in applicants_list if target_unit in a.get('unit', '') or a.get('unit', '') in target_unit]
+            print(f"    Matching applicants for {target_unit}: {matching_apps}")
+
+            # Check if unit is in vacant_leased_list
+            vl_units = [v.get('unit') for v in vacant_leased_list]
+            print(f"    Vacant Leased List (popup) units: {vl_units}")
+            print(f"    Is {target_unit} in popup list? {target_unit in vl_units}")
+
+            # Check all leases for this property to find any with this unit
+            all_leases = leases_data.get(abbr, {}).get("_all_leases", [])
+            if all_leases:
+                unit_leases = [l for l in all_leases if target_unit in (l.get("unitNumber") or "")]
+                print(f"    All leases for unit {target_unit}:")
+                for ul in unit_leases:
+                    print(f"      - Status: {ul.get('leaseStatus')}, Unit: {ul.get('unitNumber')}, MoveIn: {ul.get('scheduledMoveInDate')}")
+            print(f"    === END DEBUG ===\n")
+
         # Calculate Future MI from Vacant Leased + NTV Leased with move-in in current month
         # Get current month boundaries
         current_year = today.year
@@ -1703,8 +1730,9 @@ def generate_html(properties_data, traffic_data, leases_data):
         <!-- Header -->
         <div class="mobile-header flex justify-between items-center bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl flex items-center justify-center">
-                    <span class="text-white font-bold text-lg">S</span>
+                <div class="w-14 h-14 flex items-center justify-center">
+                    <img src="https://www.dropbox.com/scl/fi/ss6tqrjk1xyldcwl5g3w9/SNS-Blue.png?rlkey=zcsommki78v65qmk6zvzo0jxh&st=ie5tvrph&raw=1" alt="SNS Logo" class="w-14 h-14 object-contain dark:hidden">
+                    <img src="https://www.dropbox.com/scl/fi/8qha3kw2j503jbd037ahh/SNS-White.png?rlkey=s3gjbikiohpe00vpcx8x1td3r&st=efmsepz3&raw=1" alt="SNS Logo" class="w-14 h-14 object-contain hidden dark:block">
                 </div>
                 <div>
                     <h1 class="text-2xl font-bold text-slate-900 dark:text-white">SNS Daily Report</h1>
@@ -3276,6 +3304,9 @@ def main():
         # Get pending lease data (using pre-fetched leases)
         lease_data = get_pending_leases_data(property_id, leases=all_leases)
         leases_data[abbr] = lease_data
+        # Store all leases for debug purposes (for SJ and ORT)
+        if abbr in ["SJ", "ORT"]:
+            leases_data[abbr]["_all_leases"] = all_leases
         print(f"    Applicants: {lease_data['total_applicants']} (Pending: {lease_data['pending_approval']}, Approved: {lease_data['approved']}, Signed: {lease_data['signed_lease']}, MTD New: {lease_data['signed_leases_mtd']})")
 
         # Get expiring leases data (using pre-fetched leases)
