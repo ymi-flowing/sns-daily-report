@@ -173,8 +173,8 @@ def get_pending_leases_data(property_id, leases=None):
         if leases is None:
             leases = fetch_leases(property_id)
 
-        # Filter for Pending status only (future leases/applicants)
-        pending = [l for l in leases if l.get("leaseStatus") == "Pending"]
+        # Filter for Pending status and Pending Transfer (future leases/applicants)
+        pending = [l for l in leases if l.get("leaseStatus") in ["Pending", "Pending Transfer"]]
 
         # Categorize by approval and signing status
         total = len(pending)
@@ -188,9 +188,12 @@ def get_pending_leases_data(property_id, leases=None):
         for lease in pending:
             approval_date = lease.get("approvalDate")
             signed_date = lease.get("leaseSignedDate")
+            is_transfer = lease.get("leaseStatus") == "Pending Transfer"
 
-            # Determine status
-            if signed_date:
+            # Determine status (don't count transfers in regular applicant counts)
+            if is_transfer:
+                status = "Transfer"
+            elif signed_date:
                 signed_lease += 1
                 status = "Signed"
             elif approval_date:
@@ -217,7 +220,8 @@ def get_pending_leases_data(property_id, leases=None):
                 "appDate": (lease.get("applicationDate") or "")[:10],
                 "approvedDate": (approval_date or "")[:10] if approval_date else "",
                 "signedDate": (signed_date or "")[:10] if signed_date else "",
-                "moveIn": (lease.get("scheduledMoveInDate") or lease.get("leaseStartDate") or "")[:10]
+                "moveIn": (lease.get("scheduledMoveInDate") or lease.get("leaseStartDate") or "")[:10],
+                "isTransfer": is_transfer
             })
 
         # Count new leases signed this month (MTD) - excludes renewals
@@ -1325,7 +1329,8 @@ def generate_html(properties_data, traffic_data, leases_data):
                     "leaseId": app.get("leaseId", ""),
                     "moveIn": move_in,
                     "hasAlert": vl_alert,
-                    "alertMsg": vl_alert_msg
+                    "alertMsg": vl_alert_msg,
+                    "isTransfer": app.get("isTransfer", False)
                 })
             if unit in ntv_leased_units:
                 ntv_leased_list.append({
@@ -1336,35 +1341,9 @@ def generate_html(properties_data, traffic_data, leases_data):
                     "leaseId": app.get("leaseId", ""),
                     "moveIn": move_in,
                     "hasAlert": vl_alert,
-                    "alertMsg": vl_alert_msg
+                    "alertMsg": vl_alert_msg,
+                    "isTransfer": app.get("isTransfer", False)
                 })
-
-        # DEBUG: Check specific units for SJ and ORT
-        debug_units = {"SJ": "1745AU", "ORT": "C009"}
-        if abbr in debug_units:
-            target_unit = debug_units[abbr]
-            print(f"\n    === DEBUG {abbr} - Unit {target_unit} ===")
-            print(f"    Vacant Leased units from API: {sorted(vacant_leased_units)}")
-            print(f"    Is {target_unit} in vacant_leased_units? {target_unit in vacant_leased_units}")
-
-            # Check applicants list for this unit or similar
-            print(f"    Applicants list units: {[a.get('unit') for a in applicants_list]}")
-            matching_apps = [a for a in applicants_list if target_unit in a.get('unit', '') or a.get('unit', '') in target_unit]
-            print(f"    Matching applicants for {target_unit}: {matching_apps}")
-
-            # Check if unit is in vacant_leased_list
-            vl_units = [v.get('unit') for v in vacant_leased_list]
-            print(f"    Vacant Leased List (popup) units: {vl_units}")
-            print(f"    Is {target_unit} in popup list? {target_unit in vl_units}")
-
-            # Check all leases for this property to find any with this unit
-            all_leases = leases_data.get(abbr, {}).get("_all_leases", [])
-            if all_leases:
-                unit_leases = [l for l in all_leases if target_unit in (l.get("unitNumber") or "")]
-                print(f"    All leases for unit {target_unit}:")
-                for ul in unit_leases:
-                    print(f"      - Status: {ul.get('leaseStatus')}, Unit: {ul.get('unitNumber')}, MoveIn: {ul.get('scheduledMoveInDate')}")
-            print(f"    === END DEBUG ===\n")
 
         # Calculate Future MI from Vacant Leased + NTV Leased with move-in in current month
         # Get current month boundaries
@@ -1388,7 +1367,8 @@ def generate_html(properties_data, traffic_data, leases_data):
                             "resident": item.get("applicant", ""),
                             "leaseId": item.get("leaseId", ""),
                             "signed": "",  # Not tracking signed date for this logic
-                            "moveIn": move_in_str[:10]
+                            "moveIn": move_in_str[:10],
+                            "isTransfer": item.get("isTransfer", False)
                         })
                 except:
                     pass
@@ -1546,6 +1526,26 @@ def generate_html(properties_data, traffic_data, leases_data):
             border-radius: 50%;
         }}
         .dark .alert-dot {{
+            background-color: #f87171;
+        }}
+        /* Transfer indicator (yellow dot) */
+        .transfer-dot {{
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            width: 5px;
+            height: 5px;
+            background-color: #eab308;
+            border-radius: 50%;
+        }}
+        .dark .transfer-dot {{
+            background-color: #facc15;
+        }}
+        /* When both alert and transfer, show alert (red takes priority) */
+        .alert-dot.transfer-dot {{
+            background-color: #dc2626;
+        }}
+        .dark .alert-dot.transfer-dot {{
             background-color: #f87171;
         }}
         .alert-tooltip {{
@@ -2194,22 +2194,28 @@ def generate_html(properties_data, traffic_data, leases_data):
                     if (dateColumns.includes(col.key)) {{
                         val = formatDate(val);
                     }}
-                    // Alert indicator for last column if row has alert
+                    // Alert/Transfer indicator for last column
                     const isLastCol = colIdx === popupColumns.length - 1;
                     const hasRowAlert = isLastCol && row.hasAlert;
-                    const alertHtml = hasRowAlert ? `<span class="alert-dot alert-tooltip" data-tooltip="${{row.alertMsg || 'Needs attention'}}"></span>` : '';
-                    const posClass = hasRowAlert ? 'relative' : '';
+                    const isTransfer = isLastCol && row.isTransfer;
+                    let indicatorHtml = '';
+                    if (hasRowAlert) {{
+                        indicatorHtml = `<span class="alert-dot alert-tooltip" data-tooltip="${{row.alertMsg || 'Needs attention'}}"></span>`;
+                    }} else if (isTransfer) {{
+                        indicatorHtml = `<span class="transfer-dot alert-tooltip" data-tooltip="Transfer"></span>`;
+                    }}
+                    const posClass = (hasRowAlert || isTransfer) ? 'relative' : '';
 
                     // Make unit column a clickable link to ResMan if unitId exists
                     if (col.key === 'unit' && row.unitId) {{
                         const resmanUrl = `https://sns.myresman.com/#/Units/Detail/${{row.unitId}}`;
-                        bodyHtml += `<td class="px-3 py-2 whitespace-nowrap ${{posClass}} ${{boldClass}}"><a href="${{resmanUrl}}" target="_blank" class="text-blue-600 dark:text-blue-400 hover:scale-105 inline-block transition-transform ${{boldClass}}">${{val}}</a>${{alertHtml}}</td>`;
+                        bodyHtml += `<td class="px-3 py-2 whitespace-nowrap ${{posClass}} ${{boldClass}}"><a href="${{resmanUrl}}" target="_blank" class="text-blue-600 dark:text-blue-400 hover:scale-105 inline-block transition-transform ${{boldClass}}">${{val}}</a>${{indicatorHtml}}</td>`;
                     // Make applicant/resident column a clickable link to ResMan if leaseId exists
                     }} else if ((col.key === 'applicant' || col.key === 'resident' || col.key === 'name') && row.leaseId && val) {{
                         const resmanUrl = `https://sns.myresman.com/#/Residents/Detail/${{row.leaseId}}`;
-                        bodyHtml += `<td class="px-3 py-2 whitespace-nowrap ${{posClass}} ${{boldClass}}"><a href="${{resmanUrl}}" target="_blank" class="text-blue-600 dark:text-blue-400 hover:scale-105 inline-block transition-transform ${{boldClass}}">${{val}}</a>${{alertHtml}}</td>`;
+                        bodyHtml += `<td class="px-3 py-2 whitespace-nowrap ${{posClass}} ${{boldClass}}"><a href="${{resmanUrl}}" target="_blank" class="text-blue-600 dark:text-blue-400 hover:scale-105 inline-block transition-transform ${{boldClass}}">${{val}}</a>${{indicatorHtml}}</td>`;
                     }} else {{
-                        bodyHtml += `<td class="px-3 py-2 text-slate-700 dark:text-slate-300 whitespace-nowrap ${{posClass}} ${{boldClass}}">${{val}}${{alertHtml}}</td>`;
+                        bodyHtml += `<td class="px-3 py-2 text-slate-700 dark:text-slate-300 whitespace-nowrap ${{posClass}} ${{boldClass}}">${{val}}${{indicatorHtml}}</td>`;
                     }}
                 }});
                 bodyHtml += '</tr>';
@@ -3304,9 +3310,6 @@ def main():
         # Get pending lease data (using pre-fetched leases)
         lease_data = get_pending_leases_data(property_id, leases=all_leases)
         leases_data[abbr] = lease_data
-        # Store all leases for debug purposes (for SJ and ORT)
-        if abbr in ["SJ", "ORT"]:
-            leases_data[abbr]["_all_leases"] = all_leases
         print(f"    Applicants: {lease_data['total_applicants']} (Pending: {lease_data['pending_approval']}, Approved: {lease_data['approved']}, Signed: {lease_data['signed_lease']}, MTD New: {lease_data['signed_leases_mtd']})")
 
         # Get expiring leases data (using pre-fetched leases)
