@@ -49,7 +49,40 @@
 
 ---
 
+## Recent Changes (May 6, 2026)
+
+### Pending Transfer Support
+- "Pending Transfer" leases now appear in Vacant Leased, NTV Leased, and Future MI popups
+- Added yellow dot indicator with "Transfer" tooltip (similar to red alert dot)
+- Transfers are NOT counted in Applicants metrics or popup
+- Red alert dot takes priority if both conditions apply (past move-in date)
+
+### UI Updates
+- Added SNS logo to header (dark/light mode support)
+- Logo size: w-14 h-14 (56px)
+
+---
+
 ## Planned Features
+
+### Financial & Delinquency Data (NEXT SESSION)
+
+**Status:** Data pipeline being prepared
+
+**Plan:**
+1. ResMan scheduled reports export to Google Sheet daily
+2. Dashboard reads from Google Sheet (minimal API calls)
+
+**Data to Include:**
+| Metric | Description |
+|--------|-------------|
+| Current Month Income | Total income for the month |
+| Current Month Credits | Total credits for the month |
+| Resident Delinquency | Delinquent resident balances |
+
+**Google Sheet Access:** Will be provided for next session
+
+---
 
 ### Financial Summary Card (ON HOLD)
 
@@ -146,4 +179,4 @@ SNS Daily Report/
 
 ---
 
-*Last Updated: May 5, 2026*
+*Last Updated: May 6, 2026*
