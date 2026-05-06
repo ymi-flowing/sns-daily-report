@@ -2157,8 +2157,8 @@ def generate_html(properties_data, traffic_data, leases_data):
             let bodyHtml = '';
             popupData.forEach((row, idx) => {{
                 const rowBg = idx % 2 === 0 ? '' : 'bg-slate-50/50 dark:bg-slate-800/30';
-                const rowBold = row.hasAlert ? 'font-semibold' : '';
-                bodyHtml += `<tr class="${{rowBg}} ${{rowBold}} hover:bg-blue-50/50 dark:hover:bg-blue-900/20">`;
+                const boldClass = row.hasAlert ? 'font-semibold' : '';
+                bodyHtml += `<tr class="${{rowBg}} hover:bg-blue-50/50 dark:hover:bg-blue-900/20">`;
                 popupColumns.forEach((col, colIdx) => {{
                     let val = row[col.key] || '';
                     // Format date columns
@@ -2174,13 +2174,13 @@ def generate_html(properties_data, traffic_data, leases_data):
                     // Make unit column a clickable link to ResMan if unitId exists
                     if (col.key === 'unit' && row.unitId) {{
                         const resmanUrl = `https://sns.myresman.com/#/Units/Detail/${{row.unitId}}`;
-                        bodyHtml += `<td class="px-3 py-2 whitespace-nowrap ${{posClass}}"><a href="${{resmanUrl}}" target="_blank" class="text-blue-600 dark:text-blue-400 hover:underline">${{val}}</a>${{alertHtml}}</td>`;
+                        bodyHtml += `<td class="px-3 py-2 whitespace-nowrap ${{posClass}} ${{boldClass}}"><a href="${{resmanUrl}}" target="_blank" class="text-blue-600 dark:text-blue-400 hover:underline ${{boldClass}}">${{val}}</a>${{alertHtml}}</td>`;
                     // Make applicant/resident column a clickable link to ResMan if leaseId exists
                     }} else if ((col.key === 'applicant' || col.key === 'resident' || col.key === 'name') && row.leaseId && val) {{
                         const resmanUrl = `https://sns.myresman.com/#/Residents/Detail/${{row.leaseId}}`;
-                        bodyHtml += `<td class="px-3 py-2 whitespace-nowrap ${{posClass}}"><a href="${{resmanUrl}}" target="_blank" class="text-blue-600 dark:text-blue-400 hover:underline">${{val}}</a>${{alertHtml}}</td>`;
+                        bodyHtml += `<td class="px-3 py-2 whitespace-nowrap ${{posClass}} ${{boldClass}}"><a href="${{resmanUrl}}" target="_blank" class="text-blue-600 dark:text-blue-400 hover:underline ${{boldClass}}">${{val}}</a>${{alertHtml}}</td>`;
                     }} else {{
-                        bodyHtml += `<td class="px-3 py-2 text-slate-700 dark:text-slate-300 whitespace-nowrap ${{posClass}}">${{val}}${{alertHtml}}</td>`;
+                        bodyHtml += `<td class="px-3 py-2 text-slate-700 dark:text-slate-300 whitespace-nowrap ${{posClass}} ${{boldClass}}">${{val}}${{alertHtml}}</td>`;
                     }}
                 }});
                 bodyHtml += '</tr>';
