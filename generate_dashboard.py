@@ -1513,8 +1513,8 @@ def generate_html(properties_data, traffic_data, leases_data):
             position: absolute;
             top: 4px;
             right: 4px;
-            width: 3px;
-            height: 3px;
+            width: 5px;
+            height: 5px;
             background-color: #dc2626;
             border-radius: 50%;
         }}
@@ -2157,7 +2157,8 @@ def generate_html(properties_data, traffic_data, leases_data):
             let bodyHtml = '';
             popupData.forEach((row, idx) => {{
                 const rowBg = idx % 2 === 0 ? '' : 'bg-slate-50/50 dark:bg-slate-800/30';
-                bodyHtml += `<tr class="${{rowBg}} hover:bg-blue-50/50 dark:hover:bg-blue-900/20">`;
+                const rowBold = row.hasAlert ? 'font-semibold' : '';
+                bodyHtml += `<tr class="${{rowBg}} ${{rowBold}} hover:bg-blue-50/50 dark:hover:bg-blue-900/20">`;
                 popupColumns.forEach((col, colIdx) => {{
                     let val = row[col.key] || '';
                     // Format date columns
