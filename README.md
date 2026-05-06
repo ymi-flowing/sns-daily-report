@@ -4,7 +4,7 @@ Real-time property management dashboard for SNS portfolio using ResMan API and G
 
 **Live Dashboard:** [https://sns-daily-report.vercel.app](https://sns-daily-report.vercel.app)
 
-**Last Updated:** May 5, 2026
+**Last Updated:** May 6, 2026
 
 ## Quick Start
 
@@ -27,6 +27,7 @@ This dashboard provides a unified view of:
 - **Traffic Metrics** - Lead generation, applicants, and lease signing progress
 - **Expiring Leases** - 4-month forecast with renewal tracking
 - **Renovation Status** - Renovated / Partial / Classic breakdown per property
+- **Financial Summary** - Income, credits, net revenue, and delinquency tracking
 
 ## Files
 
@@ -64,6 +65,13 @@ This dashboard provides a unified view of:
 - **Sheet ID**: `1D8eBjdcClYf9L4DNQg2cKDE1Wuwkc5AOSQcRCPmz18A`
 - **Tab**: Traffic (gid=343109953)
 - **Access**: Public (view only)
+
+### Google Sheets (Financial)
+- **Sheet ID**: `1TF3cpVlGcllKMJnkPOB_fHmFgN-wwb1qbiJ05l8JMNU`
+- **Tab**: transactions (gid=0) - Income charges and credits
+- **Tab**: Del (gid=763378106) - Delinquency data (Current, Under Eviction, Formers)
+- **Access**: Public (view only)
+- **Source**: n8n automation from ResMan
 
 ---
 
@@ -209,6 +217,31 @@ Shows unit renovation breakdown per property.
 
 **Data source:** Partners API `GET /Units` - parses `unitType` field
 
+### 5. Financial Summary Table
+Shows income and delinquency data per property.
+
+**Income Section:**
+| Metric | Description |
+|--------|-------------|
+| Total Income | Sum of all charges for the period |
+| Total Credit | Sum of all credits/adjustments |
+| Net | Total Income - Total Credit |
+
+**Delinquency Section:**
+| Metric | Description |
+|--------|-------------|
+| Current | Amount owed by current residents (hover for count) |
+| Under Eviction | Amount owed by residents under eviction (hover for count) |
+| Formers | Amount owed by former residents (hover for count) |
+| Total | Sum of all delinquency categories (hover for count) |
+
+**Data source:** Google Sheets (populated by n8n from ResMan)
+
+**Features:**
+- Hover over delinquency cells to see resident count in tooltip
+- Grey divider separates Income and Delinquency sections
+- Region-grouped columns matching other tables
+
 ---
 
 ## Features
@@ -233,6 +266,17 @@ Shows unit renovation breakdown per property.
 ---
 
 ## Recent Changes
+
+### May 6, 2026
+- **Added:** Financial Summary card with income and delinquency data
+  - Total Income, Total Credit, Net revenue per property
+  - Current, Under Eviction, Formers delinquency amounts
+  - Hover tooltips showing resident count on delinquency cells
+  - Data sourced from Google Sheets (populated by n8n automation)
+- **Added:** Property name mapping (full names to abbreviations)
+- **UI:** Optimized column widths across all tables (120px status column)
+- **UI:** Consistent text sizing across all dashboard cards
+- **Styling:** Added top-center tooltip style for financial data
 
 ### May 5, 2026
 - **Added:** Alert system for date issues:
@@ -300,8 +344,8 @@ Shows unit renovation breakdown per property.
 - [x] ~~Mobile responsive design~~
 - [x] ~~Work order metrics~~
 - [x] ~~Pop-up tables with detailed data~~
-- [ ] **Financial Summary card** - Charges, Credits, Income (via n8n + Google Sheet)
-- [ ] **Delinquency metrics** - Payment tracking and aged receivables
+- [x] ~~Financial Summary card~~ - Income, Credits, Net revenue per property
+- [x] ~~Delinquency metrics~~ - Current, Under Eviction, Formers tracking
 - [ ] Individual property detail pages
 - [ ] Historical trends and charts
 - [ ] Automated daily email reports

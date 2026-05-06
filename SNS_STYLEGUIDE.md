@@ -179,6 +179,42 @@ font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, s
 }
 ```
 
+### Financial Cell Tooltips (Top Center)
+```css
+/* Top-center tooltip for financial cells */
+.fin-cell {
+  position: relative;
+  cursor: default;
+}
+.fin-cell[data-count]:hover::after {
+  content: attr(data-count);
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 8px;
+  background: white;
+  color: #334155;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  border: 1px solid #e2e8f0;
+  z-index: 100;
+}
+.dark .fin-cell[data-count]:hover::after {
+  background: #1e293b;
+  color: #e2e8f0;
+  border-color: #475569;
+}
+```
+
+**Usage:**
+```html
+<span class="fin-cell" data-count="24">$42,465.38</span>
+```
+
 ### Progress Bars
 ```html
 <div class="h-3 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
@@ -226,9 +262,14 @@ font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, s
 - 7 columns: `grid grid-cols-7 gap-3` (KPI cards)
 
 ### Table Column Widths
-- Label column: `w-[140px]`
+- Label/Status column: `w-[120px]`
 - Property columns: `w-[65px]`
 - Total column: `w-[70px]`
+
+### Financial Summary Table
+- Base text size: `text-xs` (titles match other cards)
+- Data values: `text-[10px]` (slightly smaller for currency values)
+- Table class: `min-w-full text-xs table-fixed`
 
 ---
 
