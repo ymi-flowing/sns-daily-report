@@ -1381,9 +1381,9 @@ def generate_html(properties_data, traffic_data, leases_data):
             "occupied": sb.get("Occupied", 0),
             "vacantReady": sb.get("Vacant Ready", 0),  # Includes leased that are ready
             "vacantNotReady": sb.get("Vacant Not Ready", 0),  # Includes leased that are not ready
-            "vacantLeased": sb.get("Vacant Leased", 0),  # Subset: how many are leased
+            "vacantLeased": len(vacant_leased_list),  # Subset: matches popup list
             "ntv": sb.get("NTV", 0),  # Includes NTV Leased
-            "ntvLeased": sb.get("NTV Leased", 0),  # Subset: how many are leased
+            "ntvLeased": len(ntv_leased_list),  # Subset: matches popup list
             "eviction": sb.get("Under Eviction", 0),
             "offMarket": data.get("off_market", 0),  # Units not available for online marketing
             "occupancy": data["occupancy_rate"],
@@ -2097,6 +2097,7 @@ def generate_html(properties_data, traffic_data, leases_data):
             title.textContent = titleText;
             renderPopupTable();
             modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
         }}
 
         function togglePopupFilter(status) {{
@@ -2174,11 +2175,11 @@ def generate_html(properties_data, traffic_data, leases_data):
                     // Make unit column a clickable link to ResMan if unitId exists
                     if (col.key === 'unit' && row.unitId) {{
                         const resmanUrl = `https://sns.myresman.com/#/Units/Detail/${{row.unitId}}`;
-                        bodyHtml += `<td class="px-3 py-2 whitespace-nowrap ${{posClass}} ${{boldClass}}"><a href="${{resmanUrl}}" target="_blank" class="text-blue-600 dark:text-blue-400 hover:underline ${{boldClass}}">${{val}}</a>${{alertHtml}}</td>`;
+                        bodyHtml += `<td class="px-3 py-2 whitespace-nowrap ${{posClass}} ${{boldClass}}"><a href="${{resmanUrl}}" target="_blank" class="text-blue-600 dark:text-blue-400 hover:scale-105 inline-block transition-transform ${{boldClass}}">${{val}}</a>${{alertHtml}}</td>`;
                     // Make applicant/resident column a clickable link to ResMan if leaseId exists
                     }} else if ((col.key === 'applicant' || col.key === 'resident' || col.key === 'name') && row.leaseId && val) {{
                         const resmanUrl = `https://sns.myresman.com/#/Residents/Detail/${{row.leaseId}}`;
-                        bodyHtml += `<td class="px-3 py-2 whitespace-nowrap ${{posClass}} ${{boldClass}}"><a href="${{resmanUrl}}" target="_blank" class="text-blue-600 dark:text-blue-400 hover:underline ${{boldClass}}">${{val}}</a>${{alertHtml}}</td>`;
+                        bodyHtml += `<td class="px-3 py-2 whitespace-nowrap ${{posClass}} ${{boldClass}}"><a href="${{resmanUrl}}" target="_blank" class="text-blue-600 dark:text-blue-400 hover:scale-105 inline-block transition-transform ${{boldClass}}">${{val}}</a>${{alertHtml}}</td>`;
                     }} else {{
                         bodyHtml += `<td class="px-3 py-2 text-slate-700 dark:text-slate-300 whitespace-nowrap ${{posClass}} ${{boldClass}}">${{val}}${{alertHtml}}</td>`;
                     }}
@@ -2232,6 +2233,7 @@ def generate_html(properties_data, traffic_data, leases_data):
 
         function closePopup() {{
             document.getElementById('popup-modal').classList.add('hidden');
+            document.body.style.overflow = '';
         }}
 
         // Close popup on Escape key
