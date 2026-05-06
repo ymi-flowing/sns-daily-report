@@ -173,11 +173,11 @@ def get_pending_leases_data(property_id, leases=None):
         if leases is None:
             leases = fetch_leases(property_id)
 
-        # Filter for Pending status and Pending Transfer (future leases/applicants)
+        # Filter for Pending status and Pending Transfer (for popup lists)
+        # Pending Transfer is included for Vacant Leased/NTV Leased popups but NOT counted as applicants
         pending = [l for l in leases if l.get("leaseStatus") in ["Pending", "Pending Transfer"]]
 
-        # Categorize by approval and signing status
-        total = len(pending)
+        # Categorize by approval and signing status (excluding transfers from counts)
         pending_approval = 0
         approved_not_signed = 0
         signed_lease = 0
@@ -243,8 +243,11 @@ def get_pending_leases_data(property_id, leases=None):
                 if len(history) == 1:  # New lease has exactly 1 history entry
                     signed_leases_mtd += 1
 
+        # Total applicants excludes transfers (they're only for Vacant/NTV Leased popups)
+        total_applicants = pending_approval + approved_not_signed + signed_lease
+
         return {
-            "total_applicants": total,
+            "total_applicants": total_applicants,
             "pending_approval": pending_approval,
             "approved": approved_not_signed,
             "signed_lease": signed_lease,
