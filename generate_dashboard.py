@@ -2040,7 +2040,8 @@ def generate_html(properties_data, traffic_data, leases_data):
                     titleText = `${{abbr}} - Future Move-Outs (${{data.length}})`;
                     break;
                 case 'applicants':
-                    data = l.applicantsList || [];
+                    // Filter out transfers - they only appear in Vacant/NTV Leased popups
+                    data = (l.applicantsList || []).filter(a => !a.isTransfer);
                     columns = [
                         {{key: 'status', label: 'Status'}},
                         {{key: 'unit', label: 'Unit'}},
