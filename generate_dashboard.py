@@ -20,6 +20,26 @@ PARTNERS_API_URL = "https://partners-api.myresman.com"
 # Google Sheets - Traffic Data
 TRAFFIC_SHEET_URL = "https://docs.google.com/spreadsheets/d/1D8eBjdcClYf9L4DNQg2cKDE1Wuwkc5AOSQcRCPmz18A/export?format=csv&gid=343109953"
 
+# Google Sheets - Financial Data (from n8n automation)
+FINANCIAL_INCOME_URL = "https://docs.google.com/spreadsheets/d/1TF3cpVlGcllKMJnkPOB_fHmFgN-wwb1qbiJ05l8JMNU/export?format=csv&gid=0"
+FINANCIAL_DEL_URL = "https://docs.google.com/spreadsheets/d/1TF3cpVlGcllKMJnkPOB_fHmFgN-wwb1qbiJ05l8JMNU/export?format=csv&gid=763378106"
+
+# Property name mapping for Financial data (full names to abbreviations)
+FINANCIAL_PROPERTY_MAP = {
+    'Arbor Place Apartments': 'AP',
+    '49th Street Apartments': '49thStr',
+    'The Morgan at Ocala': 'MOC',
+    'The Mustang at Ocala': 'MUSO',
+    'Marbella Park': 'MP',
+    'The Vista at Winter Park': 'TV',
+    'The Village at San Jose': 'SJ',
+    'Riverside at Orange Park': 'ROP',
+    'The Villas at Ortega': 'ORT',
+    'The Village at Eastpointe Apts': 'EAST',
+    'The River Apartments': 'TRA',
+    'AN3 Investments': 'AN3'
+}
+
 # Property name mapping (Google Sheet names to abbreviations)
 PROPERTY_NAME_MAP = {
     'The Villas at Ortega': 'ORT',
@@ -93,6 +113,82 @@ def get_traffic_data():
     except Exception as e:
         print(f"    Warning: Could not fetch traffic data: {e}")
         return {}
+
+
+def get_financial_data():
+    """Fetch financial data from Google Sheet (income and delinquency)"""
+    try:
+        now = datetime.now()
+        timestamp = now.strftime("%b %d, %Y at %I:%M %p")
+
+        # Fetch income data (charges and credits)
+        income_response = requests.get(FINANCIAL_INCOME_URL, timeout=30)
+        income_response.raise_for_status()
+        income_reader = csv.DictReader(StringIO(income_response.text))
+
+        income_data = {}
+        for row in income_reader:
+            prop_name = row.get('Property', '')
+            abbr = FINANCIAL_PROPERTY_MAP.get(prop_name, '')
+            if not abbr:
+                continue
+
+            category = row.get('Category', '').lower()
+            try:
+                amount = float(row.get('Amount', 0) or 0)
+            except:
+                amount = 0
+
+            if abbr not in income_data:
+                income_data[abbr] = {'charge': 0, 'credit': 0}
+
+            if 'charge' in category:
+                income_data[abbr]['charge'] += amount
+            elif 'credit' in category:
+                income_data[abbr]['credit'] += amount
+
+        # Fetch delinquency data
+        del_response = requests.get(FINANCIAL_DEL_URL, timeout=30)
+        del_response.raise_for_status()
+        del_reader = csv.DictReader(StringIO(del_response.text))
+
+        del_data = {}
+        for row in del_reader:
+            prop_name = row.get('Property', '')
+            abbr = FINANCIAL_PROPERTY_MAP.get(prop_name, '')
+            if not abbr:
+                continue
+
+            category = row.get('Category', '').lower()
+            try:
+                total = float(row.get('Total', 0) or 0)
+                count = int(row.get('Count', 0) or 0)
+            except:
+                total = 0
+                count = 0
+
+            if abbr not in del_data:
+                del_data[abbr] = {
+                    'current': {'amount': 0, 'count': 0},
+                    'eviction': {'amount': 0, 'count': 0},
+                    'formers': {'amount': 0, 'count': 0}
+                }
+
+            if 'current' in category:
+                del_data[abbr]['current'] = {'amount': total, 'count': count}
+            elif 'eviction' in category:
+                del_data[abbr]['eviction'] = {'amount': total, 'count': count}
+            elif 'former' in category:
+                del_data[abbr]['formers'] = {'amount': total, 'count': count}
+
+        return {
+            'income': income_data,
+            'delinquency': del_data,
+            'timestamp': timestamp
+        }
+    except Exception as e:
+        print(f"    Warning: Could not fetch financial data: {e}")
+        return {'income': {}, 'delinquency': {}, 'timestamp': ''}
 
 
 def fetch_leases(property_id):
@@ -1243,7 +1339,7 @@ def get_property_data(property_id, property_name, units_availability=None, lease
         "offMarketList": sorted(detailed_lists["offMarketList"], key=lambda x: x["unit"])
     }
 
-def generate_html(properties_data, traffic_data, leases_data):
+def generate_html(properties_data, traffic_data, leases_data, financial_data):
     """Generate HTML dashboard"""
     # Use Florida time (Eastern Time)
     from zoneinfo import ZoneInfo
@@ -1288,6 +1384,7 @@ def generate_html(properties_data, traffic_data, leases_data):
 
     # Build JS data
     js_data = json.dumps(all_data, indent=2)
+    financial_data_js = json.dumps(financial_data, indent=2)
 
     # Build property summary table data with region grouping
     table_data = {}
@@ -1513,6 +1610,34 @@ def generate_html(properties_data, traffic_data, leases_data):
             z-index: 100;
         }}
         .dark .tip:hover::after {{
+            background: #1e293b;
+            color: #e2e8f0;
+            border-color: #475569;
+        }}
+
+        /* Financial cell tooltips (top-center) */
+        .fin-cell {{
+            position: relative;
+            cursor: default;
+        }}
+        .fin-cell[data-count]:hover::after {{
+            content: attr(data-count);
+            position: absolute;
+            bottom: calc(100% + 4px);
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 4px 8px;
+            background: white;
+            color: #334155;
+            font-size: 11px;
+            font-weight: 600;
+            white-space: nowrap;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border: 1px solid #e2e8f0;
+            z-index: 100;
+        }}
+        .dark .fin-cell[data-count]:hover::after {{
             background: #1e293b;
             color: #e2e8f0;
             border-color: #475569;
@@ -1832,6 +1957,19 @@ def generate_html(properties_data, traffic_data, leases_data):
             </div>
         </div>
 
+        <!-- Financial Summary Table (shown only for ALL) -->
+        <div id="financial-table-section" class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+            <div class="p-4 border-b border-slate-200 dark:border-slate-700">
+                <h2 class="text-lg font-bold text-slate-800 dark:text-white">Financial Summary</h2>
+            </div>
+            <!-- Financial Table -->
+            <div class="overflow-x-auto fancy-scroll">
+                <table class="min-w-full text-xs table-fixed" id="financial-matrix-table">
+                    <!-- Generated by JS -->
+                </table>
+            </div>
+        </div>
+
         <!-- Charts Row -->
         <div id="charts-section" class="grid grid-cols-2 gap-5">
             <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
@@ -1889,6 +2027,7 @@ def generate_html(properties_data, traffic_data, leases_data):
         const trafficData = {traffic_data_js};
         const leasesData = {leases_data_js};
         const trafficMonth = {month_str_js};
+        const financialData = {financial_data_js};
 
         let statusChart;
 
@@ -2915,6 +3054,133 @@ def generate_html(properties_data, traffic_data, leases_data):
             `;
         }}
 
+        function renderFinancialTable() {{
+            const table = document.getElementById('financial-matrix-table');
+            if (!financialData || !financialData.income) {{
+                table.innerHTML = '<tr><td class="p-4 text-slate-500 dark:text-slate-400">No financial data available</td></tr>';
+                return;
+            }}
+
+            const regions = Object.keys(propertyGroups);
+            const allProps = [];
+            regions.forEach(region => {{
+                propertyGroups[region].forEach(abbr => {{
+                    allProps.push({{ abbr, region }});
+                }});
+            }});
+
+            const regionColors = {{
+                'Tampa': 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300',
+                'Orlando': 'bg-sky-100 dark:bg-sky-900/30 text-sky-700 dark:text-sky-300',
+                'Jacksonville': 'bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300',
+                'Ft. Lauderdale': 'bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300'
+            }};
+
+            // Build header row 1 (regions)
+            let headerRow1 = '<tr class="border-b border-slate-200 dark:border-slate-700"><th class="px-3 py-2 text-left font-bold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-700/50 sticky left-0 z-10 w-[120px]"></th>';
+            regions.forEach(region => {{
+                const colspan = propertyGroups[region].length;
+                headerRow1 += `<th colspan="${{colspan}}" class="px-2 py-2 text-center font-bold text-xs uppercase tracking-wide ${{regionColors[region]}}">${{region}}</th>`;
+            }});
+            headerRow1 += '<th class="px-3 py-2 text-center font-bold bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-white w-[70px]">TOTAL</th></tr>';
+
+            // Build header row 2 (properties)
+            let headerRow2 = '<tr class="border-b-2 border-slate-300 dark:border-slate-600"><th class="px-3 py-2 text-left font-semibold text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/50 sticky left-0 z-10 w-[120px]">Metric</th>';
+            regions.forEach(region => {{
+                propertyGroups[region].forEach(abbr => {{
+                    headerRow2 += `<th class="px-2 py-2 text-center w-[65px]"><div class="font-bold text-slate-900 dark:text-white text-xs">${{abbr}}</div></th>`;
+                }});
+            }});
+            headerRow2 += '<th class="px-3 py-2 text-center font-bold bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-white w-[70px]">Portfolio</th></tr>';
+
+            // Format currency
+            const fmt = (v) => v >= 1000000 ? '$' + (v/1000000).toFixed(2) + 'M' : v >= 1000 ? '$' + (v/1000).toFixed(1) + 'K' : '$' + v.toFixed(0);
+
+            // Income section rows
+            const incomeRows = [
+                {{ key: 'charge', label: 'Total Income', color: 'text-emerald-600 dark:text-emerald-400' }},
+                {{ key: 'credit', label: 'Total Credit', color: 'text-red-600 dark:text-red-400' }},
+                {{ key: 'net', label: 'Net', color: 'text-blue-600 dark:text-blue-400 font-bold' }}
+            ];
+
+            let bodyRows = '';
+            incomeRows.forEach((row, idx) => {{
+                const isAlt = idx % 2 === 1;
+                const rowBg = isAlt ? 'bg-slate-50/50 dark:bg-slate-800/30' : '';
+                let tr = `<tr class="${{rowBg}} hover:bg-blue-50/50 dark:hover:bg-blue-900/20">`;
+                tr += `<td class="px-3 py-2 font-medium text-slate-700 dark:text-slate-300 sticky left-0 ${{rowBg}} bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 w-[120px]">${{row.label}}</td>`;
+
+                let rowTotal = 0;
+                regions.forEach(region => {{
+                    propertyGroups[region].forEach(abbr => {{
+                        const incData = financialData.income[abbr] || {{ charge: 0, credit: 0 }};
+                        let val = 0;
+                        if (row.key === 'charge') val = incData.charge || 0;
+                        else if (row.key === 'credit') val = incData.credit || 0;
+                        else if (row.key === 'net') val = (incData.charge || 0) - (incData.credit || 0);
+                        rowTotal += val;
+                        tr += `<td class="px-2 py-2 text-center text-[10px] ${{row.color}}">${{fmt(val)}}</td>`;
+                    }});
+                }});
+                tr += `<td class="px-3 py-2 text-center bg-slate-100 dark:bg-slate-700/50 ${{row.color}} text-[10px]">${{fmt(rowTotal)}}</td>`;
+                tr += '</tr>';
+                bodyRows += tr;
+            }});
+
+            // Add divider before delinquency
+            const colCount = allProps.length + 2;
+            bodyRows += `<tr class="h-2 bg-slate-200 dark:bg-slate-600"><td colspan="${{colCount}}"></td></tr>`;
+
+            // Delinquency section rows
+            const delRows = [
+                {{ key: 'current', label: 'Current', color: 'text-amber-600 dark:text-amber-400' }},
+                {{ key: 'eviction', label: 'Under Eviction', color: 'text-red-600 dark:text-red-400' }},
+                {{ key: 'formers', label: 'Formers', color: 'text-slate-600 dark:text-slate-400' }},
+                {{ key: 'delTotal', label: 'Total', color: 'text-red-700 dark:text-red-300 font-bold' }}
+            ];
+
+            delRows.forEach((row, idx) => {{
+                const isAlt = idx % 2 === 1;
+                const rowBg = isAlt ? 'bg-slate-50/50 dark:bg-slate-800/30' : '';
+                let tr = `<tr class="${{rowBg}} hover:bg-blue-50/50 dark:hover:bg-blue-900/20">`;
+                tr += `<td class="px-3 py-2 font-medium text-slate-700 dark:text-slate-300 sticky left-0 ${{rowBg}} bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 w-[120px]">${{row.label}}</td>`;
+
+                let rowTotal = 0;
+                let rowCount = 0;
+                regions.forEach(region => {{
+                    propertyGroups[region].forEach(abbr => {{
+                        const delData = financialData.delinquency[abbr] || {{}};
+                        let val = 0, cnt = 0;
+                        if (row.key === 'delTotal') {{
+                            val = (delData.current?.amount || 0) + (delData.eviction?.amount || 0) + (delData.formers?.amount || 0);
+                            cnt = (delData.current?.count || 0) + (delData.eviction?.count || 0) + (delData.formers?.count || 0);
+                        }} else {{
+                            val = delData[row.key]?.amount || 0;
+                            cnt = delData[row.key]?.count || 0;
+                        }}
+                        rowTotal += val;
+                        rowCount += cnt;
+                        const tooltip = cnt > 0 ? `data-count="${{cnt}} resident${{cnt > 1 ? 's' : ''}}"` : '';
+                        tr += `<td class="px-2 py-2 text-center text-[10px] ${{row.color}} fin-cell" ${{tooltip}}>${{fmt(val)}}</td>`;
+                    }});
+                }});
+                const totalTooltip = rowCount > 0 ? `data-count="${{rowCount}} resident${{rowCount > 1 ? 's' : ''}}"` : '';
+                tr += `<td class="px-3 py-2 text-center bg-slate-100 dark:bg-slate-700/50 ${{row.color}} text-[10px] fin-cell" ${{totalTooltip}}>${{fmt(rowTotal)}}</td>`;
+                tr += '</tr>';
+                bodyRows += tr;
+            }});
+
+            table.innerHTML = `
+                <thead class="bg-slate-50 dark:bg-slate-800/50">
+                    ${{headerRow1}}
+                    ${{headerRow2}}
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+                    ${{bodyRows}}
+                </tbody>
+            `;
+        }}
+
         function updateDashboard() {{
             const prop = document.getElementById('propertyFilter').value;
             const data = propertiesData[prop];
@@ -2929,6 +3195,7 @@ def generate_html(properties_data, traffic_data, leases_data):
             document.getElementById('traffic-table-section').style.display = isAll ? 'block' : 'none';
             document.getElementById('expiring-table-section').style.display = isAll ? 'block' : 'none';
             document.getElementById('renovation-table-section').style.display = isAll ? 'block' : 'none';
+            document.getElementById('financial-table-section').style.display = isAll ? 'block' : 'none';
             document.getElementById('kpi-section').style.display = isAll ? 'none' : 'grid';
             document.getElementById('charts-section').style.display = isAll ? 'none' : 'grid';
             document.getElementById('unit-lists-section').style.display = isAll ? 'none' : 'grid';
@@ -3267,6 +3534,7 @@ def generate_html(properties_data, traffic_data, leases_data):
             renderTrafficTable();
             renderExpiringTable();
             renderRenovationTable();
+            renderFinancialTable();
             updateDashboard();
 
             // Check if there's a pending refresh
@@ -3357,9 +3625,17 @@ def main():
     else:
         print("    Warning: No traffic data available")
 
+    # Fetch financial data
+    print("\n[4] Fetching financial data...")
+    financial_data = get_financial_data()
+    if financial_data.get('income'):
+        print(f"    Financial data loaded for {len(financial_data['income'])} properties")
+    else:
+        print("    Warning: No financial data available")
+
     # Generate HTML
-    print("\n[4] Generating HTML dashboard...")
-    html = generate_html(properties_data, traffic_data, leases_data)
+    print("\n[5] Generating HTML dashboard...")
+    html = generate_html(properties_data, traffic_data, leases_data, financial_data)
 
     # Save
     output_path = os.path.join(os.path.dirname(__file__), "dashboard_live.html")
