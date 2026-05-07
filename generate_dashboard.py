@@ -21,21 +21,25 @@ PARTNERS_API_URL = "https://partners-api.myresman.com"
 TRAFFIC_SHEET_URL = "https://docs.google.com/spreadsheets/d/1D8eBjdcClYf9L4DNQg2cKDE1Wuwkc5AOSQcRCPmz18A/export?format=csv&gid=343109953"
 
 # Google Sheets - Financial Data (from n8n automation)
-FINANCIAL_INCOME_URL = "https://docs.google.com/spreadsheets/d/1TF3cpVlGcllKMJnkPOB_fHmFgN-wwb1qbiJ05l8JMNU/export?format=csv&gid=0"
-FINANCIAL_DEL_URL = "https://docs.google.com/spreadsheets/d/1TF3cpVlGcllKMJnkPOB_fHmFgN-wwb1qbiJ05l8JMNU/export?format=csv&gid=763378106"
+FINANCIAL_INCOME_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQs0vDSTQyN1O3L7uUdHi9c5FHNWZ5lktmKltsiUQmFJ5CWXuiMgirKqz2MXnS2jY2OSNijGppqdb1B/pub?output=csv"
+FINANCIAL_DEL_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQs0vDSTQyN1O3L7uUdHi9c5FHNWZ5lktmKltsiUQmFJ5CWXuiMgirKqz2MXnS2jY2OSNijGppqdb1B/pub?output=csv&gid=763378106"
 
 # Property name mapping for Financial data (full names to abbreviations)
 FINANCIAL_PROPERTY_MAP = {
     'Arbor Place Apartments': 'AP',
     '49th Street Apartments': '49thStr',
+    '49th St Apartments': '49thStr',
     'The Morgan at Ocala': 'MOC',
+    'The Morgan At Ocala Apartments': 'MOC',
     'The Mustang at Ocala': 'MUSO',
     'Marbella Park': 'MP',
     'The Vista at Winter Park': 'TV',
+    'The Vista At Winter Park': 'TV',
     'The Village at San Jose': 'SJ',
     'Riverside at Orange Park': 'ROP',
     'The Villas at Ortega': 'ORT',
     'The Village at Eastpointe Apts': 'EAST',
+    'The Village at Eastpointe Apartments': 'EAST',
     'The River Apartments': 'TRA',
     'AN3 Investments': 'AN3'
 }
@@ -161,7 +165,9 @@ def get_financial_data():
 
             category = row.get('Category', '').lower()
             try:
-                total = float(row.get('Total', 0) or 0)
+                # Clean currency formatting ($, commas)
+                total_str = row.get('Total', '0').replace('$', '').replace(',', '')
+                total = float(total_str) if total_str else 0
                 count = int(row.get('Count', 0) or 0)
             except:
                 total = 0
