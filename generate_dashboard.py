@@ -3099,8 +3099,8 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data):
             }});
             headerRow2 += '<th class="px-3 py-2 text-center font-bold bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-white w-[70px]">Portfolio</th></tr>';
 
-            // Format currency
-            const fmt = (v) => v >= 1000000 ? '$' + (v/1000000).toFixed(2) + 'M' : v >= 1000 ? '$' + (v/1000).toFixed(1) + 'K' : '$' + v.toFixed(0);
+            // Format currency with commas
+            const fmt = (v) => '$' + v.toLocaleString('en-US', {{ minimumFractionDigits: 2, maximumFractionDigits: 2 }});
 
             // Income section rows
             const incomeRows = [
