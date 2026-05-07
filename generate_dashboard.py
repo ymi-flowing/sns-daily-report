@@ -3181,6 +3181,35 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data):
                 bodyRows += tr;
             }});
 
+            // Add % of Net Income row
+            let pctRow = '<tr class="bg-slate-100 dark:bg-slate-700/30 border-t-2 border-slate-300 dark:border-slate-600">';
+            pctRow += '<td class="px-3 py-2 font-medium text-slate-700 dark:text-slate-300 sticky left-0 bg-slate-100 dark:bg-slate-700/30 border-r border-slate-200 dark:border-slate-700 w-[140px]">% of Net Income</td>';
+
+            let portfolioDelTotal = 0;
+            let portfolioNetTotal = 0;
+
+            regions.forEach(region => {{
+                propertyGroups[region].forEach(abbr => {{
+                    const incData = financialData.income[abbr] || {{ charge: 0, credit: 0 }};
+                    const delData = financialData.delinquency[abbr] || {{}};
+                    const netIncome = (incData.charge || 0) - (incData.credit || 0);
+                    const totalDel = (delData.current?.amount || 0) + (delData.eviction?.amount || 0) + (delData.formers?.amount || 0);
+
+                    portfolioDelTotal += totalDel;
+                    portfolioNetTotal += netIncome;
+
+                    const pct = netIncome > 0 ? (totalDel / netIncome * 100) : 0;
+                    const pctColor = pct > 10 ? 'text-red-600 dark:text-red-400' : pct > 5 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400';
+                    pctRow += `<td class="px-2 py-2 text-center font-semibold ${{pctColor}}">${{pct.toFixed(1)}}%</td>`;
+                }});
+            }});
+
+            const portfolioPct = portfolioNetTotal > 0 ? (portfolioDelTotal / portfolioNetTotal * 100) : 0;
+            const portfolioPctColor = portfolioPct > 10 ? 'text-red-600 dark:text-red-400' : portfolioPct > 5 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400';
+            pctRow += `<td class="px-3 py-2 text-center bg-slate-200 dark:bg-slate-600 font-bold ${{portfolioPctColor}}">${{portfolioPct.toFixed(1)}}%</td>`;
+            pctRow += '</tr>';
+            bodyRows += pctRow;
+
             table.innerHTML = `
                 <thead class="bg-slate-50 dark:bg-slate-800/50">
                     ${{headerRow1}}
