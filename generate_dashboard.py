@@ -3082,25 +3082,28 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data):
                 'Ft. Lauderdale': 'bg-rose-100 dark:bg-rose-900/30 text-rose-700 dark:text-rose-300'
             }};
 
-            // Build header row 1 (regions)
-            let headerRow1 = '<tr class="border-b border-slate-200 dark:border-slate-700"><th class="px-3 py-2 text-left font-bold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-700/50 sticky left-0 z-10 w-[120px]"></th>';
+            // Build header row 1 (regions) - matching Portfolio table
+            let headerRow1 = '<tr class="border-b border-slate-200 dark:border-slate-700"><th class="px-3 py-2 text-left font-bold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-700/50 sticky left-0 z-10 w-[140px]"></th>';
             regions.forEach(region => {{
                 const colspan = propertyGroups[region].length;
                 headerRow1 += `<th colspan="${{colspan}}" class="px-2 py-2 text-center font-bold text-xs uppercase tracking-wide ${{regionColors[region]}}">${{region}}</th>`;
             }});
             headerRow1 += '<th class="px-3 py-2 text-center font-bold bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-white w-[70px]">TOTAL</th></tr>';
 
-            // Build header row 2 (properties)
-            let headerRow2 = '<tr class="border-b-2 border-slate-300 dark:border-slate-600"><th class="px-3 py-2 text-left font-semibold text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/50 sticky left-0 z-10 w-[120px]">Metric</th>';
+            // Build header row 2 (properties) - matching Portfolio table
+            let headerRow2 = '<tr class="border-b-2 border-slate-300 dark:border-slate-600"><th class="px-3 py-2 text-left font-semibold text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/50 sticky left-0 z-10 w-[140px]">Status</th>';
             regions.forEach(region => {{
                 propertyGroups[region].forEach(abbr => {{
-                    headerRow2 += `<th class="px-2 py-2 text-center w-[65px]"><div class="font-bold text-slate-900 dark:text-white text-xs">${{abbr}}</div></th>`;
+                    headerRow2 += `<th class="px-2 py-2 text-center w-[65px]">
+                            <div class="font-bold text-slate-900 dark:text-white text-xs">${{abbr}}</div>
+                        </th>`;
                 }});
             }});
             headerRow2 += '<th class="px-3 py-2 text-center font-bold bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-white w-[70px]">Portfolio</th></tr>';
 
-            // Format currency with commas
-            const fmt = (v) => '$' + v.toLocaleString('en-US', {{ minimumFractionDigits: 2, maximumFractionDigits: 2 }});
+            // Format currency - abbreviated for display, full for tooltip
+            const fmtShort = (v) => v >= 1000000 ? '$' + (v/1000000).toFixed(1) + 'M' : v >= 1000 ? '$' + Math.round(v/1000) + 'K' : '$' + Math.round(v);
+            const fmtFull = (v) => '$' + v.toLocaleString('en-US', {{ minimumFractionDigits: 2, maximumFractionDigits: 2 }});
 
             // Income section rows
             const incomeRows = [
@@ -3114,7 +3117,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data):
                 const isAlt = idx % 2 === 1;
                 const rowBg = isAlt ? 'bg-slate-50/50 dark:bg-slate-800/30' : '';
                 let tr = `<tr class="${{rowBg}} hover:bg-blue-50/50 dark:hover:bg-blue-900/20">`;
-                tr += `<td class="px-3 py-2 font-medium text-slate-700 dark:text-slate-300 sticky left-0 ${{rowBg}} bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 w-[120px]">${{row.label}}</td>`;
+                tr += `<td class="px-3 py-2 font-medium text-slate-700 dark:text-slate-300 sticky left-0 ${{rowBg}} bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 w-[140px]">${{row.label}}</td>`;
 
                 let rowTotal = 0;
                 regions.forEach(region => {{
@@ -3125,10 +3128,12 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data):
                         else if (row.key === 'credit') val = incData.credit || 0;
                         else if (row.key === 'net') val = (incData.charge || 0) - (incData.credit || 0);
                         rowTotal += val;
-                        tr += `<td class="px-2 py-2 text-center text-[10px] ${{row.color}}">${{fmt(val)}}</td>`;
+                        const tooltip = `data-count="${{fmtFull(val)}}"`;
+                        tr += `<td class="px-2 py-2 text-center ${{row.color}} fin-cell" ${{tooltip}}>${{fmtShort(val)}}</td>`;
                     }});
                 }});
-                tr += `<td class="px-3 py-2 text-center bg-slate-100 dark:bg-slate-700/50 ${{row.color}} text-[10px]">${{fmt(rowTotal)}}</td>`;
+                const totalTooltip = `data-count="${{fmtFull(rowTotal)}}"`;
+                tr += `<td class="px-3 py-2 text-center bg-slate-100 dark:bg-slate-700/50 ${{row.color}} fin-cell" ${{totalTooltip}}>${{fmtShort(rowTotal)}}</td>`;
                 tr += '</tr>';
                 bodyRows += tr;
             }});
@@ -3149,7 +3154,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data):
                 const isAlt = idx % 2 === 1;
                 const rowBg = isAlt ? 'bg-slate-50/50 dark:bg-slate-800/30' : '';
                 let tr = `<tr class="${{rowBg}} hover:bg-blue-50/50 dark:hover:bg-blue-900/20">`;
-                tr += `<td class="px-3 py-2 font-medium text-slate-700 dark:text-slate-300 sticky left-0 ${{rowBg}} bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 w-[120px]">${{row.label}}</td>`;
+                tr += `<td class="px-3 py-2 font-medium text-slate-700 dark:text-slate-300 sticky left-0 ${{rowBg}} bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 w-[140px]">${{row.label}}</td>`;
 
                 let rowTotal = 0;
                 let rowCount = 0;
@@ -3166,12 +3171,12 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data):
                         }}
                         rowTotal += val;
                         rowCount += cnt;
-                        const tooltip = cnt > 0 ? `data-count="${{cnt}} resident${{cnt > 1 ? 's' : ''}}"` : '';
-                        tr += `<td class="px-2 py-2 text-center text-[10px] ${{row.color}} fin-cell" ${{tooltip}}>${{fmt(val)}}</td>`;
+                        const tooltip = `data-count="${{fmtFull(val)}}${{cnt > 0 ? ' (' + cnt + ')' : ''}}"`;
+                        tr += `<td class="px-2 py-2 text-center ${{row.color}} fin-cell" ${{tooltip}}>${{fmtShort(val)}}</td>`;
                     }});
                 }});
-                const totalTooltip = rowCount > 0 ? `data-count="${{rowCount}} resident${{rowCount > 1 ? 's' : ''}}"` : '';
-                tr += `<td class="px-3 py-2 text-center bg-slate-100 dark:bg-slate-700/50 ${{row.color}} text-[10px] fin-cell" ${{totalTooltip}}>${{fmt(rowTotal)}}</td>`;
+                const totalTooltip = `data-count="${{fmtFull(rowTotal)}}${{rowCount > 0 ? ' (' + rowCount + ')' : ''}}"`;
+                tr += `<td class="px-3 py-2 text-center bg-slate-100 dark:bg-slate-700/50 ${{row.color}} fin-cell" ${{totalTooltip}}>${{fmtShort(rowTotal)}}</td>`;
                 tr += '</tr>';
                 bodyRows += tr;
             }});
