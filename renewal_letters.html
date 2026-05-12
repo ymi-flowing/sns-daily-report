@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Renewal Letters - ROI Properties</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+    <style>
+        /* Custom Select Dropdown */
+        select {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: none;
+        }
+        select::-ms-expand {
+            display: none;
+        }
+        select option {
+            padding: 12px;
+            background: white;
+            color: #1e293b;
+        }
+        .dark select option {
+            background: #334155;
+            color: white;
+        }
+        .fancy-scroll {
+            scrollbar-width: thin;
+            scrollbar-color: #60a5fa #e2e8f0;
+        }
+        .dark .fancy-scroll {
+            scrollbar-color: #3b82f6 #1e293b;
+        }
+        .fancy-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
+        .fancy-scroll::-webkit-scrollbar-track { background: #e2e8f0; border-radius: 10px; }
+        .dark .fancy-scroll::-webkit-scrollbar-track { background: #1e293b; }
+        .fancy-scroll::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #60a5fa 0%, #3b82f6 100%);
+            border-radius: 10px;
+        }
+
+        /* Custom Scrollbar Styles */
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: #94a3b8 transparent;
+        }
+        .dark * {
+            scrollbar-color: #475569 transparent;
+        }
+        *::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        *::-webkit-scrollbar-track {
+            background: transparent;
+            border-radius: 10px;
+        }
+        *::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #94a3b8 0%, #64748b 100%);
+            border-radius: 10px;
+            border: 2px solid transparent;
+            background-clip: padding-box;
+        }
+        .dark *::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #475569 0%, #334155 100%);
+            background-clip: padding-box;
+        }
+
+        /* Editable cell styling */
+        .editable-cell {
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            padding: 2px 4px;
+            width: 100%;
+            text-align: inherit;
+            color: inherit;
+            font-size: inherit;
+        }
+        .editable-cell:hover {
+            border-color: #3b82f6;
+        }
+        .editable-cell:focus {
+            outline: none;
+            border-color: #3b82f6;
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        /* Table row hover */
+        .table-row:hover {
+            background-color: rgba(59, 130, 246, 0.05);
+        }
+        .dark .table-row:hover {
+            background-color: rgba(59, 130, 246, 0.1);
+        }
+
+        /* Loading spinner */
+        .spinner {
+            border: 3px solid rgba(59, 130, 246, 0.2);
+            border-top-color: #3b82f6;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            body { padding: 12px !important; }
+            .mobile-header {
+                flex-direction: column !important;
+                gap: 12px !important;
+                text-align: center;
+            }
+            table th, table td {
+                padding: 4px 6px !important;
+                font-size: 10px !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-900 p-6 font-sans text-slate-800 dark:text-slate-100 transition-colors duration-200">
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 hidden items-center justify-center">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl p-8 shadow-2xl max-w-sm mx-4 text-center">
+            <div class="relative w-16 h-16 mx-auto mb-4">
+                <div class="absolute inset-0 rounded-full border-4 border-slate-200 dark:border-slate-700"></div>
+                <div class="absolute inset-0 rounded-full border-4 border-blue-500 border-t-transparent animate-spin"></div>
+            </div>
+            <h3 id="loading-title" class="text-lg font-semibold text-slate-900 dark:text-white mb-2">Loading...</h3>
+            <p id="loading-status" class="text-sm text-slate-500 dark:text-slate-400">Please wait...</p>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto space-y-5">
+
+        <!-- Header -->
+        <div class="mobile-header flex justify-between items-center bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
+            <div class="flex items-center gap-3">
+                <div class="w-14 h-14 flex items-center justify-center">
+                    <img src="https://www.dropbox.com/scl/fi/ss6tqrjk1xyldcwl5g3w9/SNS-Blue.png?rlkey=zcsommki78v65qmk6zvzo0jxh&st=ie5tvrph&raw=1" alt="SNS Logo" class="w-14 h-14 object-contain dark:hidden">
+                    <img src="https://www.dropbox.com/scl/fi/8qha3kw2j503jbd037ahh/SNS-White.png?rlkey=s3gjbikiohpe00vpcx8x1td3r&st=efmsepz3&raw=1" alt="SNS Logo" class="w-14 h-14 object-contain hidden dark:block">
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Renewal Letters</h1>
+                    <p class="text-sm text-slate-500 dark:text-slate-400">Generate and push lease renewals to Monday.com</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-3">
+                <!-- Theme Toggle -->
+                <button id="theme-toggle" class="h-11 w-11 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 transition-all outline-none focus:ring-2 focus:ring-blue-400 border-2 border-slate-200 dark:border-slate-600 flex items-center justify-center">
+                    <svg id="theme-toggle-dark-icon" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+                    <svg id="theme-toggle-light-icon" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Step 1: Property & Month Selection -->
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
+            <h2 class="text-lg font-bold text-slate-800 dark:text-white mb-4">Step 1: Select Property & Month</h2>
+            <div class="flex flex-wrap items-end gap-4">
+                <!-- Property Dropdown -->
+                <div class="flex-1 min-w-[200px]">
+                    <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Property</label>
+                    <div class="relative">
+                        <select id="propertySelect" class="block w-full h-11 rounded-xl border-2 border-slate-200 dark:border-slate-600 py-2.5 pl-4 pr-10 bg-white dark:bg-slate-700 text-slate-900 dark:text-white font-medium cursor-pointer text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all">
+                            <option value="">-- Select Property --</option>
+                            <option value="ORT">ORT - The Villas at Ortega</option>
+                            <option value="49thStr">49thStr - 49th St Apartments</option>
+                            <option value="ROP">ROP - Riverside at Orange Park</option>
+                            <option value="AP">AP - Arbor Place Apartments</option>
+                            <option value="SJ">SJ - The Village at San Jose</option>
+                            <option value="EAST">EAST - The Village at Eastpointe</option>
+                            <option value="MOC">MOC - The Morgan at Ocala</option>
+                            <option value="TV">TV - The Vista at Winter Park</option>
+                            <option value="MP">MP - Marbella Park</option>
+                            <option value="MUSO">MUSO - The Mustang at Ocala</option>
+                            <option value="TRA">TRA - The River Apartments</option>
+                            <option value="AN3">AN3 - AN3 Investments</option>
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                            <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Month Picker -->
+                <div class="w-48">
+                    <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Expiration Month</label>
+                    <input type="month" id="monthSelect" class="block w-full h-11 rounded-xl border-2 border-slate-200 dark:border-slate-600 py-2.5 px-4 bg-white dark:bg-slate-700 text-slate-900 dark:text-white font-medium text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all">
+                </div>
+
+                <!-- Fetch Button -->
+                <button id="fetchBtn" onclick="fetchLeases()" class="h-11 px-6 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm transition-all focus:outline-none focus:ring-2 focus:ring-blue-400 flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    Fetch Leases
+                </button>
+            </div>
+        </div>
+
+        <!-- Step 2: Lease Table (hidden initially) -->
+        <div id="leaseTableSection" class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden hidden">
+            <div class="p-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
+                <div>
+                    <h2 class="text-lg font-bold text-slate-800 dark:text-white">Step 2: Review & Edit Lease Data</h2>
+                    <p id="leaseCount" class="text-sm text-slate-500 dark:text-slate-400"></p>
+                </div>
+                <button id="pushBtn" onclick="pushToMonday()" class="h-11 px-6 rounded-xl bg-green-600 hover:bg-green-700 text-white font-semibold text-sm transition-all focus:outline-none focus:ring-2 focus:ring-green-400 flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                    Push to Monday.com
+                </button>
+            </div>
+            <div class="overflow-x-auto fancy-scroll">
+                <table class="min-w-full text-xs" id="leaseTable">
+                    <thead>
+                        <tr class="bg-slate-100 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 uppercase text-[10px] tracking-wider">
+                            <th class="px-3 py-2 text-left font-semibold">Unit</th>
+                            <th class="px-3 py-2 text-left font-semibold">Resident Name</th>
+                            <th class="px-3 py-2 text-left font-semibold">MI Date</th>
+                            <th class="px-3 py-2 text-left font-semibold">Exp Date</th>
+                            <th class="px-3 py-2 text-right font-semibold">Base Rent</th>
+                            <th class="px-3 py-2 text-right font-semibold">Current Total</th>
+                            <th class="px-3 py-2 text-right font-semibold">SQFT</th>
+                            <th class="px-3 py-2 text-center font-semibold">Renovated</th>
+                            <th class="px-3 py-2 text-right font-semibold">Rent & Fees</th>
+                            <th class="px-3 py-2 text-right font-semibold">Deposit</th>
+                            <th class="px-3 py-2 text-right font-semibold">Pet</th>
+                            <th class="px-3 py-2 text-right font-semibold">Parking</th>
+                            <th class="px-3 py-2 text-right font-semibold">WD</th>
+                            <th class="px-3 py-2 text-center font-semibold">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaseTableBody">
+                        <!-- Filled by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Step 3: Push Results (hidden initially) -->
+        <div id="resultsSection" class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 hidden">
+            <h2 class="text-lg font-bold text-slate-800 dark:text-white mb-4">Step 3: Push Results</h2>
+            <div id="resultsContent">
+                <!-- Filled by JavaScript -->
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // =========================================================================
+        // THEME TOGGLE
+        // =========================================================================
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        const themeToggleDarkIcon = document.getElementById('theme-toggle-dark-icon');
+        const themeToggleLightIcon = document.getElementById('theme-toggle-light-icon');
+
+        // Set initial icon based on current theme
+        if (document.documentElement.classList.contains('dark')) {
+            themeToggleLightIcon.classList.remove('hidden');
+        } else {
+            themeToggleDarkIcon.classList.remove('hidden');
+        }
+
+        themeToggleBtn.addEventListener('click', () => {
+            themeToggleDarkIcon.classList.toggle('hidden');
+            themeToggleLightIcon.classList.toggle('hidden');
+            document.documentElement.classList.toggle('dark');
+            localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+        });
+
+        // Check localStorage for theme preference
+        if (localStorage.getItem('theme') === 'light') {
+            document.documentElement.classList.remove('dark');
+            themeToggleDarkIcon.classList.remove('hidden');
+            themeToggleLightIcon.classList.add('hidden');
+        }
+
+        // =========================================================================
+        // INITIALIZE
+        // =========================================================================
+        // Set default month to next month
+        const today = new Date();
+        const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+        document.getElementById('monthSelect').value = nextMonth.toISOString().slice(0, 7);
+
+        // Store leases data
+        let leasesData = [];
+
+        // =========================================================================
+        // LOADING OVERLAY
+        // =========================================================================
+        function showLoading(title, status) {
+            document.getElementById('loading-title').textContent = title;
+            document.getElementById('loading-status').textContent = status;
+            document.getElementById('loading-overlay').classList.remove('hidden');
+            document.getElementById('loading-overlay').classList.add('flex');
+        }
+
+        function hideLoading() {
+            document.getElementById('loading-overlay').classList.add('hidden');
+            document.getElementById('loading-overlay').classList.remove('flex');
+        }
+
+        // =========================================================================
+        // FETCH LEASES
+        // =========================================================================
+        async function fetchLeases() {
+            const property = document.getElementById('propertySelect').value;
+            const month = document.getElementById('monthSelect').value;
+
+            if (!property) {
+                alert('Please select a property');
+                return;
+            }
+            if (!month) {
+                alert('Please select a month');
+                return;
+            }
+
+            showLoading('Fetching Leases', `Loading leases for ${property} expiring in ${month}...`);
+
+            try {
+                const response = await fetch(`/api/get_leases?property=${property}&month=${month}`);
+                const data = await response.json();
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                leasesData = data.leases || [];
+                renderLeaseTable();
+
+                document.getElementById('leaseTableSection').classList.remove('hidden');
+                document.getElementById('leaseCount').textContent = `${leasesData.length} leases found`;
+                document.getElementById('resultsSection').classList.add('hidden');
+
+            } catch (error) {
+                alert('Error fetching leases: ' + error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // =========================================================================
+        // RENDER LEASE TABLE
+        // =========================================================================
+        function renderLeaseTable() {
+            const tbody = document.getElementById('leaseTableBody');
+            tbody.innerHTML = '';
+
+            leasesData.forEach((lease, index) => {
+                const row = document.createElement('tr');
+                row.className = 'table-row border-b border-slate-100 dark:border-slate-700/50';
+
+                // Status badge color
+                let statusColor = 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
+                if (lease.status === 'NTV') {
+                    statusColor = 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400';
+                } else if (lease.status === 'Under Eviction') {
+                    statusColor = 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
+                }
+
+                // Renovated badge color
+                let renovatedColor = 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-400';
+                if (lease.renovated === 'Yes') {
+                    renovatedColor = 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
+                } else if (lease.renovated === 'PR') {
+                    renovatedColor = 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400';
+                }
+
+                row.innerHTML = `
+                    <td class="px-3 py-2 font-semibold text-slate-900 dark:text-white">${lease.unit}</td>
+                    <td class="px-3 py-2"><input type="text" class="editable-cell" data-field="resident" data-index="${index}" value="${lease.resident || ''}"></td>
+                    <td class="px-3 py-2"><input type="date" class="editable-cell" data-field="moveInDate" data-index="${index}" value="${lease.moveInDate || ''}"></td>
+                    <td class="px-3 py-2"><input type="date" class="editable-cell" data-field="expDate" data-index="${index}" value="${lease.expDate || ''}"></td>
+                    <td class="px-3 py-2 text-right"><input type="number" class="editable-cell text-right" data-field="baseRent" data-index="${index}" value="${lease.baseRent || 0}"></td>
+                    <td class="px-3 py-2 text-right"><input type="number" class="editable-cell text-right" data-field="currentTotal" data-index="${index}" value="${lease.currentTotal || 0}"></td>
+                    <td class="px-3 py-2 text-right"><input type="number" class="editable-cell text-right" data-field="sqft" data-index="${index}" value="${lease.sqft || 0}"></td>
+                    <td class="px-3 py-2 text-center">
+                        <select class="editable-cell text-center ${renovatedColor} rounded-lg" data-field="renovated" data-index="${index}">
+                            <option value="No" ${lease.renovated === 'No' ? 'selected' : ''}>No</option>
+                            <option value="PR" ${lease.renovated === 'PR' ? 'selected' : ''}>PR</option>
+                            <option value="Yes" ${lease.renovated === 'Yes' ? 'selected' : ''}>Yes</option>
+                        </select>
+                    </td>
+                    <td class="px-3 py-2 text-right"><input type="number" class="editable-cell text-right" data-field="rentFees" data-index="${index}" value="${lease.rentFees || 0}"></td>
+                    <td class="px-3 py-2 text-right"><input type="number" class="editable-cell text-right" data-field="deposit" data-index="${index}" value="${lease.deposit || 0}"></td>
+                    <td class="px-3 py-2 text-right"><input type="number" class="editable-cell text-right" data-field="pet" data-index="${index}" value="${lease.pet || 0}"></td>
+                    <td class="px-3 py-2 text-right"><input type="number" class="editable-cell text-right" data-field="parking" data-index="${index}" value="${lease.parking || 0}"></td>
+                    <td class="px-3 py-2 text-right"><input type="number" class="editable-cell text-right" data-field="wd" data-index="${index}" value="${lease.wd || 0}"></td>
+                    <td class="px-3 py-2 text-center">
+                        <span class="px-2 py-1 rounded-lg text-[10px] font-semibold ${statusColor}">${lease.status || 'Current'}</span>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            // Add change listeners
+            document.querySelectorAll('.editable-cell').forEach(input => {
+                input.addEventListener('change', (e) => {
+                    const index = parseInt(e.target.dataset.index);
+                    const field = e.target.dataset.field;
+                    let value = e.target.value;
+
+                    // Convert to number for numeric fields
+                    if (['baseRent', 'currentTotal', 'sqft', 'rentFees', 'deposit', 'pet', 'parking', 'wd'].includes(field)) {
+                        value = parseFloat(value) || 0;
+                    }
+
+                    leasesData[index][field] = value;
+                });
+            });
+        }
+
+        // =========================================================================
+        // PUSH TO MONDAY
+        // =========================================================================
+        async function pushToMonday() {
+            const property = document.getElementById('propertySelect').value;
+
+            if (leasesData.length === 0) {
+                alert('No leases to push');
+                return;
+            }
+
+            showLoading('Pushing to Monday.com', `Creating ${leasesData.length} items...`);
+
+            try {
+                const response = await fetch('/api/push_monday', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        property: property,
+                        leases: leasesData
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                // Show results
+                renderResults(data);
+                document.getElementById('resultsSection').classList.remove('hidden');
+
+            } catch (error) {
+                alert('Error pushing to Monday: ' + error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // =========================================================================
+        // RENDER RESULTS
+        // =========================================================================
+        function renderResults(data) {
+            const container = document.getElementById('resultsContent');
+
+            const successCount = data.results?.filter(r => r.success).length || 0;
+            const failCount = data.results?.filter(r => !r.success).length || 0;
+
+            let html = `
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div class="bg-green-100 dark:bg-green-900/30 rounded-xl p-4 text-center">
+                        <div class="text-3xl font-bold text-green-600 dark:text-green-400">${successCount}</div>
+                        <div class="text-sm text-green-800 dark:text-green-300">Created Successfully</div>
+                    </div>
+                    <div class="bg-red-100 dark:bg-red-900/30 rounded-xl p-4 text-center">
+                        <div class="text-3xl font-bold text-red-600 dark:text-red-400">${failCount}</div>
+                        <div class="text-sm text-red-800 dark:text-red-300">Failed</div>
+                    </div>
+                </div>
+            `;
+
+            if (failCount > 0) {
+                html += `
+                    <div class="mt-4">
+                        <h3 class="font-semibold text-red-600 dark:text-red-400 mb-2">Failed Items:</h3>
+                        <ul class="text-sm text-slate-600 dark:text-slate-400">
+                `;
+                data.results.filter(r => !r.success).forEach(r => {
+                    html += `<li class="py-1">Unit ${r.unit}: ${r.error}</li>`;
+                });
+                html += `</ul></div>`;
+            }
+
+            container.innerHTML = html;
+        }
+    </script>
+</body>
+</html>
