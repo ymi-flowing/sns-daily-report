@@ -41,11 +41,11 @@ def make_request(url, headers=None, auth=None):
         return {"error": str(e)}
 
 
-def fetch_deposit(property_id, unit_id):
+def fetch_deposit(property_id, lease_id):
     """Fetch deposit from DepositLedger API"""
     params = urllib.parse.urlencode({
         "propertyId": property_id,
-        "unitId": unit_id
+        "leaseId": lease_id
     })
     url = f"{RESMAN_PARTNERS_URL}/Transactions/DepositLedger?{params}"
 
@@ -118,6 +118,7 @@ class handler(BaseHTTPRequestHandler):
 
             property_id = params.get("propertyId", [""])[0]
             unit_id = params.get("unitId", [""])[0]
+            lease_id = params.get("leaseId", [""])[0]
 
             if not property_id or not unit_id:
                 self.send_response(400)
@@ -127,8 +128,8 @@ class handler(BaseHTTPRequestHandler):
                 self.wfile.write(json.dumps({"error": "Missing propertyId or unitId"}).encode())
                 return
 
-            # Fetch deposit and recurring charges
-            deposit, deposit_err = fetch_deposit(property_id, unit_id)
+            # Fetch deposit (using leaseId) and recurring charges (using unitId)
+            deposit, deposit_err = fetch_deposit(property_id, lease_id) if lease_id else (0, "No leaseId")
             pet, parking, wd, charges_err = fetch_recurring_charges(property_id, unit_id)
 
             # Return response with debug info
