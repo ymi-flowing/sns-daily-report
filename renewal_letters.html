@@ -92,6 +92,31 @@
             background: rgba(59, 130, 246, 0.1);
         }
 
+        /* Remove number input spinners */
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+
+        /* Month input styling */
+        input[type="month"] {
+            color-scheme: light;
+        }
+        .dark input[type="month"] {
+            color-scheme: dark;
+        }
+        input[type="month"]::-webkit-calendar-picker-indicator {
+            filter: invert(0.5);
+            cursor: pointer;
+        }
+        .dark input[type="month"]::-webkit-calendar-picker-indicator {
+            filter: invert(0.7);
+        }
+
         /* Table row hover */
         .table-row:hover {
             background-color: rgba(59, 130, 246, 0.05);
@@ -215,10 +240,16 @@
                     <h2 class="text-lg font-bold text-slate-800 dark:text-white">Step 2: Review & Edit Lease Data</h2>
                     <p id="leaseCount" class="text-sm text-slate-500 dark:text-slate-400"></p>
                 </div>
-                <button id="pushBtn" onclick="pushToMonday()" class="h-11 px-6 rounded-xl bg-green-600 hover:bg-green-700 text-white font-semibold text-sm transition-all focus:outline-none focus:ring-2 focus:ring-green-400 flex items-center gap-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
-                    Push to Monday.com
-                </button>
+                <div class="flex items-center gap-3">
+                    <button id="openAllBtn" onclick="openAllLeases()" class="h-11 px-6 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-semibold text-sm transition-all focus:outline-none focus:ring-2 focus:ring-slate-400 border-2 border-slate-200 dark:border-slate-600 flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                        Open All
+                    </button>
+                    <button id="pushBtn" onclick="pushToMonday()" class="h-11 px-6 rounded-xl bg-green-600 hover:bg-green-700 text-white font-semibold text-sm transition-all focus:outline-none focus:ring-2 focus:ring-green-400 flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                        Push to Monday.com
+                    </button>
+                </div>
             </div>
             <div class="overflow-x-auto fancy-scroll">
                 <table class="min-w-full text-xs" id="leaseTable">
@@ -416,6 +447,31 @@
 
                     leasesData[index][field] = value;
                 });
+            });
+        }
+
+        // =========================================================================
+        // OPEN ALL LEASES
+        // =========================================================================
+        function openAllLeases() {
+            if (leasesData.length === 0) {
+                alert('No leases to open');
+                return;
+            }
+
+            // Confirm if opening many tabs
+            if (leasesData.length > 10) {
+                if (!confirm(`This will open ${leasesData.length} tabs. Continue?`)) {
+                    return;
+                }
+            }
+
+            // Open each lease in a new tab
+            leasesData.forEach(lease => {
+                if (lease.leaseId) {
+                    const url = `https://sns.myresman.com/#/Residents/Detail/${lease.leaseId}`;
+                    window.open(url, '_blank');
+                }
             });
         }
 

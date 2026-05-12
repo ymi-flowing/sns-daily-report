@@ -382,6 +382,7 @@ class handler(BaseHTTPRequestHandler):
                     "status": status,
                     "itemId": item_id,  # For connect_boards column
                     "unitId": unit_id,  # Keep for reference
+                    "leaseId": lease.get("leaseId", ""),  # For opening lease page
                 })
 
             # Sort by unit number
