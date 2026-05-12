@@ -355,9 +355,12 @@ class handler(BaseHTTPRequestHandler):
                 # Get status
                 status = get_status(lease)
 
-                # Fetch additional data from APIs
-                deposit = fetch_deposit(property_id, unit_id)
-                pet, parking, wd = fetch_recurring_charges(property_id, unit_id)
+                # Skip slow API calls - user can manually enter these editable fields
+                # Fetching deposit and recurring charges per unit causes timeout
+                deposit = 0
+                pet = 0
+                parking = 0
+                wd = 0
 
                 # Lookup rent & fees
                 rent_fees = lookup_rent_fees(property_abbr, sqft, renovated)
