@@ -446,6 +446,7 @@
                 textEl.textContent = `Fetching ${i + 1}/${total}...`;
 
                 try {
+                    console.log(`Fetching for ${lease.unit}: leaseId=${lease.leaseId}, unitId=${lease.unitId}`);
                     const response = await fetch(`/api/get_charges?propertyId=${propertyId}&unitId=${lease.unitId}&leaseId=${lease.leaseId}`);
                     const data = await response.json();
 

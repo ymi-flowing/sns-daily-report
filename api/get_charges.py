@@ -146,7 +146,8 @@ class handler(BaseHTTPRequestHandler):
                     "depositError": deposit_err,
                     "chargesError": charges_err,
                     "propertyId": property_id,
-                    "unitId": unit_id
+                    "unitId": unit_id,
+                    "leaseId": lease_id
                 }
             }).encode())
 
