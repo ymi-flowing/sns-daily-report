@@ -276,6 +276,10 @@
                     <p id="leaseCount" class="text-sm text-slate-500 dark:text-slate-400"></p>
                 </div>
                 <div class="flex items-center gap-3">
+                    <button id="fetchChargesBtn" onclick="fetchAllCharges()" class="h-11 px-6 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-semibold text-sm transition-all focus:outline-none focus:ring-2 focus:ring-purple-400 flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <span id="fetchChargesText">Fetch Charges</span>
+                    </button>
                     <button id="openAllBtn" onclick="openAllLeases()" class="h-11 px-6 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-semibold text-sm transition-all focus:outline-none focus:ring-2 focus:ring-slate-400 border-2 border-slate-200 dark:border-slate-600 flex items-center gap-2">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
                         Open All
@@ -362,6 +366,7 @@
 
         // Store leases data
         let leasesData = [];
+        let propertyId = null;
 
         // =========================================================================
         // LOADING OVERLAY
@@ -405,17 +410,73 @@
                 }
 
                 leasesData = data.leases || [];
+                propertyId = data.propertyId;
                 renderLeaseTable();
 
                 document.getElementById('leaseTableSection').classList.remove('hidden');
                 document.getElementById('leaseCount').textContent = `${leasesData.length} leases found`;
                 document.getElementById('resultsSection').classList.add('hidden');
+                document.getElementById('fetchChargesText').textContent = 'Fetch Charges';
 
             } catch (error) {
                 alert('Error fetching leases: ' + error.message);
             } finally {
                 hideLoading();
             }
+        }
+
+        // =========================================================================
+        // FETCH ALL CHARGES (with delay between calls)
+        // =========================================================================
+        async function fetchAllCharges() {
+            if (leasesData.length === 0 || !propertyId) {
+                alert('Please fetch leases first');
+                return;
+            }
+
+            const btn = document.getElementById('fetchChargesBtn');
+            const textEl = document.getElementById('fetchChargesText');
+            btn.disabled = true;
+
+            let completed = 0;
+            const total = leasesData.length;
+
+            for (let i = 0; i < leasesData.length; i++) {
+                const lease = leasesData[i];
+                textEl.textContent = `Fetching ${i + 1}/${total}...`;
+
+                try {
+                    const response = await fetch(`/api/get_charges?propertyId=${propertyId}&unitId=${lease.unitId}`);
+                    const data = await response.json();
+
+                    if (!data.error) {
+                        // Update lease data
+                        leasesData[i].deposit = data.deposit || 0;
+                        leasesData[i].pet = data.pet || 0;
+                        leasesData[i].parking = data.parking || 0;
+                        leasesData[i].wd = data.wd || 0;
+                        completed++;
+                    }
+                } catch (error) {
+                    console.error(`Error fetching charges for ${lease.unit}:`, error);
+                }
+
+                // Re-render table to show updated values
+                renderLeaseTable();
+
+                // Delay 500ms between calls to avoid rate limits
+                if (i < leasesData.length - 1) {
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                }
+            }
+
+            textEl.textContent = `Done (${completed}/${total})`;
+            btn.disabled = false;
+
+            // Reset button text after 3 seconds
+            setTimeout(() => {
+                textEl.textContent = 'Fetch Charges';
+            }, 3000);
         }
 
         // =========================================================================

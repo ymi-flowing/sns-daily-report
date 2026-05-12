@@ -398,6 +398,7 @@ class handler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(json.dumps({
                 "property": property_abbr,
+                "propertyId": property_id,
                 "month": target_month,
                 "count": len(result_leases),
                 "leases": result_leases
