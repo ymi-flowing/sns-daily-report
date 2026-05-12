@@ -381,20 +381,16 @@
 
                 row.innerHTML = `
                     <td class="px-3 py-2 font-semibold text-slate-900 dark:text-white">${lease.unit}</td>
-                    <td class="px-3 py-2"><input type="text" class="editable-cell" data-field="resident" data-index="${index}" value="${lease.resident || ''}"></td>
-                    <td class="px-3 py-2"><input type="date" class="editable-cell" data-field="moveInDate" data-index="${index}" value="${lease.moveInDate || ''}"></td>
-                    <td class="px-3 py-2"><input type="date" class="editable-cell" data-field="expDate" data-index="${index}" value="${lease.expDate || ''}"></td>
-                    <td class="px-3 py-2 text-right"><input type="number" class="editable-cell text-right" data-field="baseRent" data-index="${index}" value="${lease.baseRent || 0}"></td>
-                    <td class="px-3 py-2 text-right"><input type="number" class="editable-cell text-right" data-field="currentTotal" data-index="${index}" value="${lease.currentTotal || 0}"></td>
-                    <td class="px-3 py-2 text-right"><input type="number" class="editable-cell text-right" data-field="sqft" data-index="${index}" value="${lease.sqft || 0}"></td>
+                    <td class="px-3 py-2 text-slate-700 dark:text-slate-300">${lease.resident || ''}</td>
+                    <td class="px-3 py-2 text-slate-700 dark:text-slate-300">${lease.moveInDate || ''}</td>
+                    <td class="px-3 py-2 text-slate-700 dark:text-slate-300">${lease.expDate || ''}</td>
+                    <td class="px-3 py-2 text-right text-slate-700 dark:text-slate-300">$${(lease.baseRent || 0).toLocaleString()}</td>
+                    <td class="px-3 py-2 text-right text-slate-700 dark:text-slate-300">$${(lease.currentTotal || 0).toLocaleString()}</td>
+                    <td class="px-3 py-2 text-right text-slate-700 dark:text-slate-300">${lease.sqft || 0}</td>
                     <td class="px-3 py-2 text-center">
-                        <select class="editable-cell text-center ${renovatedColor} rounded-lg" data-field="renovated" data-index="${index}">
-                            <option value="No" ${lease.renovated === 'No' ? 'selected' : ''}>No</option>
-                            <option value="PR" ${lease.renovated === 'PR' ? 'selected' : ''}>PR</option>
-                            <option value="Yes" ${lease.renovated === 'Yes' ? 'selected' : ''}>Yes</option>
-                        </select>
+                        <span class="px-2 py-1 rounded-lg text-[10px] font-semibold ${renovatedColor}">${lease.renovated || 'No'}</span>
                     </td>
-                    <td class="px-3 py-2 text-right"><input type="number" class="editable-cell text-right" data-field="rentFees" data-index="${index}" value="${lease.rentFees || 0}"></td>
+                    <td class="px-3 py-2 text-right text-slate-700 dark:text-slate-300">$${(lease.rentFees || 0).toLocaleString()}</td>
                     <td class="px-3 py-2 text-right"><input type="number" class="editable-cell text-right" data-field="deposit" data-index="${index}" value="${lease.deposit || 0}"></td>
                     <td class="px-3 py-2 text-right"><input type="number" class="editable-cell text-right" data-field="pet" data-index="${index}" value="${lease.pet || 0}"></td>
                     <td class="px-3 py-2 text-right"><input type="number" class="editable-cell text-right" data-field="parking" data-index="${index}" value="${lease.parking || 0}"></td>
@@ -414,7 +410,7 @@
                     let value = e.target.value;
 
                     // Convert to number for numeric fields
-                    if (['baseRent', 'currentTotal', 'sqft', 'rentFees', 'deposit', 'pet', 'parking', 'wd'].includes(field)) {
+                    if (['deposit', 'pet', 'parking', 'wd'].includes(field)) {
                         value = parseFloat(value) || 0;
                     }
 
