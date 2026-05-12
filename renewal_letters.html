@@ -125,6 +125,41 @@
             background-color: rgba(59, 130, 246, 0.1);
         }
 
+        /* Table no-wrap */
+        #leaseTable th, #leaseTable td {
+            white-space: nowrap;
+        }
+
+        /* Sortable headers */
+        .sortable {
+            cursor: pointer;
+            user-select: none;
+        }
+        .sortable:hover {
+            background-color: rgba(59, 130, 246, 0.1);
+        }
+        .sort-icon {
+            display: inline-block;
+            margin-left: 4px;
+            opacity: 0.4;
+        }
+        .sortable:hover .sort-icon {
+            opacity: 0.7;
+        }
+        .sort-asc .sort-icon, .sort-desc .sort-icon {
+            opacity: 1;
+        }
+
+        /* Clickable resident link */
+        .resident-link {
+            color: #3b82f6;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .resident-link:hover {
+            text-decoration: underline;
+        }
+
         /* Loading spinner */
         .spinner {
             border: 3px solid rgba(59, 130, 246, 0.2);
@@ -255,20 +290,20 @@
                 <table class="min-w-full text-xs" id="leaseTable">
                     <thead>
                         <tr class="bg-slate-100 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 uppercase text-[10px] tracking-wider">
-                            <th class="px-3 py-2 text-left font-semibold">Unit</th>
-                            <th class="px-3 py-2 text-left font-semibold">Resident Name</th>
-                            <th class="px-3 py-2 text-left font-semibold">MI Date</th>
-                            <th class="px-3 py-2 text-left font-semibold">Exp Date</th>
-                            <th class="px-3 py-2 text-right font-semibold">Base Rent</th>
-                            <th class="px-3 py-2 text-right font-semibold">Current Total</th>
-                            <th class="px-3 py-2 text-right font-semibold">SQFT</th>
-                            <th class="px-3 py-2 text-center font-semibold">Renovated</th>
-                            <th class="px-3 py-2 text-right font-semibold">Rent & Fees</th>
+                            <th class="px-3 py-2 text-left font-semibold sortable" onclick="sortTable('unit')">Unit<span class="sort-icon">↕</span></th>
+                            <th class="px-3 py-2 text-left font-semibold sortable" onclick="sortTable('resident')">Resident<span class="sort-icon">↕</span></th>
+                            <th class="px-3 py-2 text-left font-semibold sortable" onclick="sortTable('moveInDate')">MI Date<span class="sort-icon">↕</span></th>
+                            <th class="px-3 py-2 text-left font-semibold sortable" onclick="sortTable('expDate')">Exp Date<span class="sort-icon">↕</span></th>
+                            <th class="px-3 py-2 text-right font-semibold sortable" onclick="sortTable('baseRent')">Base Rent<span class="sort-icon">↕</span></th>
+                            <th class="px-3 py-2 text-right font-semibold sortable" onclick="sortTable('currentTotal')">Current Total<span class="sort-icon">↕</span></th>
+                            <th class="px-3 py-2 text-right font-semibold sortable" onclick="sortTable('sqft')">SQFT<span class="sort-icon">↕</span></th>
+                            <th class="px-3 py-2 text-center font-semibold sortable" onclick="sortTable('renovated')">Renovated<span class="sort-icon">↕</span></th>
+                            <th class="px-3 py-2 text-right font-semibold sortable" onclick="sortTable('rentFees')">Rent&nbsp;&&nbsp;Fees<span class="sort-icon">↕</span></th>
                             <th class="px-3 py-2 text-right font-semibold">Deposit</th>
                             <th class="px-3 py-2 text-right font-semibold">Pet</th>
                             <th class="px-3 py-2 text-right font-semibold">Parking</th>
                             <th class="px-3 py-2 text-right font-semibold">WD</th>
-                            <th class="px-3 py-2 text-center font-semibold">Status</th>
+                            <th class="px-3 py-2 text-center font-semibold sortable" onclick="sortTable('status')">Status<span class="sort-icon">↕</span></th>
                         </tr>
                     </thead>
                     <tbody id="leaseTableBody">
@@ -384,6 +419,53 @@
         }
 
         // =========================================================================
+        // FORMAT DATE (yyyy-mm-dd to mm/dd/yyyy)
+        // =========================================================================
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            const parts = dateStr.split('-');
+            if (parts.length !== 3) return dateStr;
+            return `${parts[1]}/${parts[2]}/${parts[0]}`;
+        }
+
+        // =========================================================================
+        // SORT TABLE
+        // =========================================================================
+        let currentSort = { field: null, asc: true };
+
+        function sortTable(field) {
+            // Toggle direction if same field
+            if (currentSort.field === field) {
+                currentSort.asc = !currentSort.asc;
+            } else {
+                currentSort.field = field;
+                currentSort.asc = true;
+            }
+
+            // Sort the data
+            leasesData.sort((a, b) => {
+                let valA = a[field] || '';
+                let valB = b[field] || '';
+
+                // Handle numbers
+                if (typeof valA === 'number' && typeof valB === 'number') {
+                    return currentSort.asc ? valA - valB : valB - valA;
+                }
+
+                // Handle strings
+                valA = String(valA).toLowerCase();
+                valB = String(valB).toLowerCase();
+
+                if (valA < valB) return currentSort.asc ? -1 : 1;
+                if (valA > valB) return currentSort.asc ? 1 : -1;
+                return 0;
+            });
+
+            // Re-render
+            renderLeaseTable();
+        }
+
+        // =========================================================================
         // RENDER LEASE TABLE
         // =========================================================================
         function renderLeaseTable() {
@@ -410,11 +492,14 @@
                     renovatedColor = 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400';
                 }
 
+                // Build lease URL
+                const leaseUrl = lease.leaseId ? `https://sns.myresman.com/#/Residents/Detail/${lease.leaseId}` : '#';
+
                 row.innerHTML = `
                     <td class="px-3 py-2 font-semibold text-slate-900 dark:text-white">${lease.unit}</td>
-                    <td class="px-3 py-2 text-slate-700 dark:text-slate-300">${lease.resident || ''}</td>
-                    <td class="px-3 py-2 text-slate-700 dark:text-slate-300">${lease.moveInDate || ''}</td>
-                    <td class="px-3 py-2 text-slate-700 dark:text-slate-300">${lease.expDate || ''}</td>
+                    <td class="px-3 py-2"><a href="${leaseUrl}" target="_blank" class="resident-link">${lease.resident || ''}</a></td>
+                    <td class="px-3 py-2 text-slate-700 dark:text-slate-300">${formatDate(lease.moveInDate)}</td>
+                    <td class="px-3 py-2 text-slate-700 dark:text-slate-300">${formatDate(lease.expDate)}</td>
                     <td class="px-3 py-2 text-right text-slate-700 dark:text-slate-300">$${(lease.baseRent || 0).toLocaleString()}</td>
                     <td class="px-3 py-2 text-right text-slate-700 dark:text-slate-300">$${(lease.currentTotal || 0).toLocaleString()}</td>
                     <td class="px-3 py-2 text-right text-slate-700 dark:text-slate-300">${lease.sqft || 0}</td>
