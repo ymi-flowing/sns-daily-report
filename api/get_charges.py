@@ -56,10 +56,11 @@ def fetch_deposit(property_id, unit_id):
     )
 
     if "error" in result:
-        return 0
+        return 0, result.get("error")
 
     transactions = result.get("depositTransactions", [])
-    return sum(t.get("amount", 0) for t in transactions)
+    total = sum(t.get("amount", 0) for t in transactions)
+    return total, None
 
 
 def fetch_recurring_charges(property_id, unit_id):
@@ -79,7 +80,7 @@ def fetch_recurring_charges(property_id, unit_id):
     )
 
     if "error" in result:
-        return 0, 0, 0
+        return 0, 0, 0, result.get("error")
 
     transactions = result.get("transactions", [])
 
@@ -98,7 +99,7 @@ def fetch_recurring_charges(property_id, unit_id):
         elif "washer" in cat or "dryer" in cat or "w/d" in cat:
             wd += amount
 
-    return pet_rent, parking, wd
+    return pet_rent, parking, wd, None
 
 
 class handler(BaseHTTPRequestHandler):
@@ -127,10 +128,10 @@ class handler(BaseHTTPRequestHandler):
                 return
 
             # Fetch deposit and recurring charges
-            deposit = fetch_deposit(property_id, unit_id)
-            pet, parking, wd = fetch_recurring_charges(property_id, unit_id)
+            deposit, deposit_err = fetch_deposit(property_id, unit_id)
+            pet, parking, wd, charges_err = fetch_recurring_charges(property_id, unit_id)
 
-            # Return response
+            # Return response with debug info
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
             self.send_header('Access-Control-Allow-Origin', '*')
@@ -139,7 +140,13 @@ class handler(BaseHTTPRequestHandler):
                 "deposit": deposit,
                 "pet": pet,
                 "parking": parking,
-                "wd": wd
+                "wd": wd,
+                "debug": {
+                    "depositError": deposit_err,
+                    "chargesError": charges_err,
+                    "propertyId": property_id,
+                    "unitId": unit_id
+                }
             }).encode())
 
         except Exception as e:

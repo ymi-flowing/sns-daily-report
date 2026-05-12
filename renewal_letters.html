@@ -449,6 +449,11 @@
                     const response = await fetch(`/api/get_charges?propertyId=${propertyId}&unitId=${lease.unitId}`);
                     const data = await response.json();
 
+                    // Log debug info
+                    if (data.debug) {
+                        console.log(`Unit ${lease.unit}:`, data);
+                    }
+
                     if (!data.error) {
                         // Update lease data
                         leasesData[i].deposit = data.deposit || 0;
@@ -456,6 +461,8 @@
                         leasesData[i].parking = data.parking || 0;
                         leasesData[i].wd = data.wd || 0;
                         completed++;
+                    } else {
+                        console.error(`Error for ${lease.unit}:`, data.error);
                     }
                 } catch (error) {
                     console.error(`Error fetching charges for ${lease.unit}:`, error);
