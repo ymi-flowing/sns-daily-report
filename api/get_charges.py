@@ -80,8 +80,9 @@ def fetch_recurring_charges(property_id, unit_id):
         auth=(RESMAN_PARTNER_ID, RESMAN_API_KEY)
     )
 
+    # Return raw result for debugging
     if "error" in result:
-        return 0, 0, 0, result.get("error")
+        return 0, 0, 0, {"error": result.get("error"), "url": url}
 
     transactions = result.get("transactions", [])
 
@@ -96,7 +97,7 @@ def fetch_recurring_charges(property_id, unit_id):
 
         # Collect all categories for debugging
         if cat and cat not in categories_found:
-            categories_found.append(cat)
+            categories_found.append(f"{cat}:{amount}")
 
         if "pet rent" in cat:
             pet_rent += amount
@@ -105,7 +106,12 @@ def fetch_recurring_charges(property_id, unit_id):
         elif "washer" in cat or "dryer" in cat or "w/d" in cat:
             wd += amount
 
-    return pet_rent, parking, wd, categories_found if categories_found else None
+    return pet_rent, parking, wd, {
+        "txCount": len(transactions),
+        "categories": categories_found,
+        "url": url,
+        "fromDate": from_date
+    }
 
 
 class handler(BaseHTTPRequestHandler):
