@@ -87,19 +87,24 @@ def fetch_recurring_charges(property_id, unit_id):
     pet_rent = 0
     parking = 0
     wd = 0
+    categories_found = []
 
     for t in transactions:
         cat = (t.get("category") or "").lower()
         amount = t.get("amount", 0) or 0
 
+        # Collect all categories for debugging
+        if cat and cat not in categories_found:
+            categories_found.append(cat)
+
         if "pet rent" in cat:
             pet_rent += amount
-        elif "parking" in cat:
+        elif "parking" in cat or "reserved" in cat:
             parking += amount
         elif "washer" in cat or "dryer" in cat or "w/d" in cat:
             wd += amount
 
-    return pet_rent, parking, wd, None
+    return pet_rent, parking, wd, categories_found if categories_found else None
 
 
 class handler(BaseHTTPRequestHandler):
@@ -128,26 +133,23 @@ class handler(BaseHTTPRequestHandler):
                 self.wfile.write(json.dumps({"error": "Missing propertyId or unitId"}).encode())
                 return
 
-            # Fetch deposit (using leaseId) and recurring charges (using unitId)
-            deposit, deposit_err = fetch_deposit(property_id, lease_id) if lease_id else (0, "No leaseId")
+            # Fetch recurring charges only (deposit API not available - user enters manually)
             pet, parking, wd, charges_err = fetch_recurring_charges(property_id, unit_id)
 
-            # Return response with debug info
+            # Return response
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
             self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
             self.wfile.write(json.dumps({
-                "deposit": deposit,
+                "deposit": 0,  # User enters manually
                 "pet": pet,
                 "parking": parking,
                 "wd": wd,
                 "debug": {
-                    "depositError": deposit_err,
-                    "chargesError": charges_err,
+                    "categories": charges_err,  # Now contains list of categories found
                     "propertyId": property_id,
-                    "unitId": unit_id,
-                    "leaseId": lease_id
+                    "unitId": unit_id
                 }
             }).encode())
 
