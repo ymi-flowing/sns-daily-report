@@ -9,7 +9,7 @@ import urllib.request
 import urllib.error
 import urllib.parse
 import base64
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 # ResMan API Credentials
@@ -65,11 +65,12 @@ def fetch_deposit(property_id, lease_id):
 
 def fetch_recurring_charges(property_id, unit_id):
     """Fetch recurring charges (Pet Rent, Parking, WD) from Ledger API"""
-    first_of_month = datetime.now().replace(day=1).strftime("%Y-%m-%d")
+    # Look at last 60 days to find recurring charges
+    from_date = (datetime.now() - timedelta(days=60)).strftime("%Y-%m-%d")
     params = urllib.parse.urlencode({
         "propertyId": property_id,
         "unitId": unit_id,
-        "transactionDateFrom": first_of_month
+        "transactionDateFrom": from_date
     })
     url = f"{RESMAN_PARTNERS_URL}/Transactions/Ledger?{params}"
 
