@@ -3208,7 +3208,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data):
             const portfolioPctColor = portfolioPct > 10 ? 'text-red-600 dark:text-red-400' : portfolioPct > 5 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400';
             pctRow += `<td class="px-3 py-2 text-center bg-slate-200 dark:bg-slate-600 font-bold ${{portfolioPctColor}}">${{portfolioPct.toFixed(1)}}%</td>`;
             pctRow += '</tr>';
-            bodyRows += pctRow;
+            // bodyRows += pctRow;  // HIDDEN: % of Net Income row temporarily disabled
 
             table.innerHTML = `
                 <thead class="bg-slate-50 dark:bg-slate-800/50">
