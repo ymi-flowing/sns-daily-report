@@ -62,7 +62,8 @@ PROPERTY_NAME_MAP = {
 }
 
 # Target properties (now including TRA and AN3)
-TARGET_PROPERTIES = ["MUSO", "ORT", "49thStr", "ROP", "AP", "SJ", "EAST", "MOC", "TV", "MP", "TRA", "AN3"]
+# Ordered by property size (smallest first) to reduce API load and improve success rate
+TARGET_PROPERTIES = ["AN3", "TRA", "ROP", "TV", "MP", "SJ", "MUSO", "MOC", "EAST", "ORT", "49thStr", "AP"]
 
 # Property grouping by region
 PROPERTY_GROUPS = {
@@ -73,10 +74,11 @@ PROPERTY_GROUPS = {
 }
 
 # API Configuration
-API_TIMEOUT = 60  # Increased from 30 to handle slow API responses
+API_TIMEOUT = 90  # Increased timeout for slow API responses
 API_MAX_RETRIES = 3
-API_RETRY_DELAY = 5  # Seconds between retries
-PROPERTY_REQUEST_DELAY = 2  # Seconds between property requests to avoid rate limiting
+API_RETRY_DELAY = 8  # Seconds between retries (longer backoff)
+API_CALL_DELAY = 1  # Seconds between individual API calls to avoid rate limiting
+PROPERTY_REQUEST_DELAY = 3  # Seconds between property requests
 
 def make_partners_api_request(endpoint, params, description="API call"):
     """Make a request to the Partners API with retry logic and increased timeout.
@@ -94,6 +96,9 @@ def make_partners_api_request(endpoint, params, description="API call"):
         "Accept": "application/json",
     }
 
+    # Small delay before each API call to avoid rate limiting
+    time.sleep(API_CALL_DELAY)
+
     for attempt in range(1, API_MAX_RETRIES + 1):
         try:
             resp = requests.get(
@@ -106,6 +111,9 @@ def make_partners_api_request(endpoint, params, description="API call"):
 
             if resp.ok:
                 return resp.json()
+            elif resp.status_code == 502:
+                # Server overload - wait longer before retry
+                print(f"    Warning: {description} returned 502 Bad Gateway (attempt {attempt}/{API_MAX_RETRIES})")
             else:
                 print(f"    Warning: {description} returned {resp.status_code} (attempt {attempt}/{API_MAX_RETRIES})")
 
@@ -116,7 +124,7 @@ def make_partners_api_request(endpoint, params, description="API call"):
 
         # Retry with exponential backoff (except on last attempt)
         if attempt < API_MAX_RETRIES:
-            sleep_time = API_RETRY_DELAY * attempt
+            sleep_time = API_RETRY_DELAY * (2 ** (attempt - 1))  # Exponential: 8s, 16s
             print(f"    Retrying in {sleep_time}s...")
             time.sleep(sleep_time)
 
@@ -3569,11 +3577,12 @@ def main():
     props_data = make_request("Account/GetProperties")
     all_properties = props_data.get("Properties", []) if props_data else []
 
-    # Filter to target properties
-    target_props = {p["Abbreviation"]: p for p in all_properties if p.get("Abbreviation") in TARGET_PROPERTIES}
+    # Filter to target properties (preserving order from TARGET_PROPERTIES - smallest first)
+    props_by_abbr = {p["Abbreviation"]: p for p in all_properties if p.get("Abbreviation") in TARGET_PROPERTIES}
+    target_props = {abbr: props_by_abbr[abbr] for abbr in TARGET_PROPERTIES if abbr in props_by_abbr}
     print(f"    Found {len(target_props)} target properties")
 
-    # Get data for each property
+    # Get data for each property (processing smaller properties first to warm up API)
     properties_data = {}
     leases_data = {}
     for abbr, prop in target_props.items():
