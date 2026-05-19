@@ -74,11 +74,11 @@ PROPERTY_GROUPS = {
 }
 
 # API Configuration
-API_TIMEOUT = 90  # Increased timeout for slow API responses
-API_MAX_RETRIES = 3
-API_RETRY_DELAY = 8  # Seconds between retries (longer backoff)
-API_CALL_DELAY = 1  # Seconds between individual API calls to avoid rate limiting
-PROPERTY_REQUEST_DELAY = 3  # Seconds between property requests
+API_TIMEOUT = 30  # Standard timeout
+API_MAX_RETRIES = 2
+API_RETRY_DELAY = 3  # Seconds between retries
+API_CALL_DELAY = 0.5  # Small delay between API calls
+PROPERTY_REQUEST_DELAY = 1  # Seconds between property requests
 
 def make_partners_api_request(endpoint, params, description="API call"):
     """Make a request to the Partners API with retry logic and increased timeout.
@@ -122,11 +122,10 @@ def make_partners_api_request(endpoint, params, description="API call"):
         except requests.exceptions.RequestException as e:
             print(f"    Warning: {description} failed: {e} (attempt {attempt}/{API_MAX_RETRIES})")
 
-        # Retry with exponential backoff (except on last attempt)
+        # Retry with delay (except on last attempt)
         if attempt < API_MAX_RETRIES:
-            sleep_time = API_RETRY_DELAY * (2 ** (attempt - 1))  # Exponential: 8s, 16s
-            print(f"    Retrying in {sleep_time}s...")
-            time.sleep(sleep_time)
+            print(f"    Retrying in {API_RETRY_DELAY}s...")
+            time.sleep(API_RETRY_DELAY)
 
     return None
 
