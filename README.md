@@ -4,7 +4,7 @@ Real-time property management dashboard for SNS portfolio using ResMan API and G
 
 **Live Dashboard:** [https://sns-daily-report.vercel.app](https://sns-daily-report.vercel.app)
 
-**Last Updated:** May 6, 2026
+**Last Updated:** May 19, 2026
 
 ## Quick Start
 
@@ -36,11 +36,15 @@ This dashboard provides a unified view of:
 | `generate_dashboard.py` | Main script - fetches data and generates HTML |
 | `dashboard_live.html` | Generated dashboard (open in browser) |
 | `SNS_STYLEGUIDE.md` | SNS design system documentation |
-| `Cardentials.txt` | API credentials (keep secure, in .gitignore) |
+| `DEVELOPMENT.md` | Technical documentation and API reference |
 | `.github/workflows/refresh.yml` | GitHub Actions - auto-refresh every 4 hours |
 | `api/index.py` | Vercel serverless function - triggers manual refresh |
+| `api/get_leases.py` | Vercel API - fetch leases for renewal letters |
+| `api/get_charges.py` | Vercel API - fetch deposit and recurring charges |
+| `api/push_monday.py` | Vercel API - push data to Monday.com |
 | `vercel.json` | Vercel deployment configuration |
 | `requirements.txt` | Python dependencies |
+| `renewal_letters.html` | Renewal letter generation tool |
 
 ---
 
@@ -57,9 +61,12 @@ This dashboard provides a unified view of:
 ### ResMan Partners API
 - **Endpoint**: `https://partners-api.myresman.com`
 - **Auth**: GET with Basic Auth (PartnerID:APIKey) + Header `ResMan-Account-Id`
+- **Timeout**: 30 seconds with 2 retries (3-second delay between retries)
 - **Endpoints Used**:
   - `GET /Leasing/Leases` - Lease data with history for renewals
+  - `GET /Units/Availability` - Unit vacancy, occupancy, move-out dates (primary endpoint)
   - `GET /Units` - Unit details, renovation status, `availableForOnlineMarketing` field
+  - `GET /WorkOrders` - Open work orders and new orders in last 24h
 
 ### Google Sheets (Traffic)
 - **Sheet ID**: `1D8eBjdcClYf9L4DNQg2cKDE1Wuwkc5AOSQcRCPmz18A`
@@ -266,6 +273,15 @@ Shows income and delinquency data per property.
 ---
 
 ## Recent Changes
+
+### May 19, 2026
+- **Fixed:** API reliability improvements for ResMan Partners API
+  - Added retry logic (2 retries with 3-second delay)
+  - Added timeout handling (30 seconds per request)
+  - Added delay between API calls to avoid rate limiting
+  - Process smaller properties first to improve success rate
+- **Optimized:** Migrated to `Units/Availability` endpoint (replaces legacy GetUnitStatus)
+- **Added:** Graceful degradation when API is unavailable
 
 ### May 6, 2026
 - **Added:** Financial Summary card with income and delinquency data
