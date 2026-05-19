@@ -9,6 +9,7 @@ import csv
 from io import StringIO
 from datetime import datetime, timedelta
 from collections import defaultdict
+import time
 
 # API Credentials (from environment variables, fallback for local dev)
 API_KEY = os.environ.get("RESMAN_API_KEY", "43XzRFJkhvAJGLvR6GlJUpKy6nyc")
@@ -70,6 +71,56 @@ PROPERTY_GROUPS = {
     "Jacksonville": ["AP", "SJ", "ROP", "ORT"],
     "Ft. Lauderdale": ["EAST", "TRA", "AN3"]
 }
+
+# API Configuration
+API_TIMEOUT = 60  # Increased from 30 to handle slow API responses
+API_MAX_RETRIES = 3
+API_RETRY_DELAY = 5  # Seconds between retries
+PROPERTY_REQUEST_DELAY = 2  # Seconds between property requests to avoid rate limiting
+
+def make_partners_api_request(endpoint, params, description="API call"):
+    """Make a request to the Partners API with retry logic and increased timeout.
+
+    Args:
+        endpoint: API endpoint path (e.g., "/Leasing/Leases")
+        params: Query parameters dict
+        description: Human-readable description for logging
+
+    Returns:
+        Response JSON data or None on failure
+    """
+    headers = {
+        "ResMan-Account-Id": ACCOUNT_ID,
+        "Accept": "application/json",
+    }
+
+    for attempt in range(1, API_MAX_RETRIES + 1):
+        try:
+            resp = requests.get(
+                f"{PARTNERS_API_URL}{endpoint}",
+                headers=headers,
+                params=params,
+                auth=HTTPBasicAuth(PARTNER_ID, API_KEY),
+                timeout=API_TIMEOUT
+            )
+
+            if resp.ok:
+                return resp.json()
+            else:
+                print(f"    Warning: {description} returned {resp.status_code} (attempt {attempt}/{API_MAX_RETRIES})")
+
+        except requests.exceptions.Timeout:
+            print(f"    Warning: {description} timed out (attempt {attempt}/{API_MAX_RETRIES})")
+        except requests.exceptions.RequestException as e:
+            print(f"    Warning: {description} failed: {e} (attempt {attempt}/{API_MAX_RETRIES})")
+
+        # Retry with exponential backoff (except on last attempt)
+        if attempt < API_MAX_RETRIES:
+            sleep_time = API_RETRY_DELAY * attempt
+            print(f"    Retrying in {sleep_time}s...")
+            time.sleep(sleep_time)
+
+    return None
 
 def get_traffic_data():
     """Fetch traffic data from Google Sheet"""
@@ -199,36 +250,16 @@ def get_financial_data():
 
 def fetch_leases(property_id):
     """Fetch all leases with history - single API call for all lease processing"""
-    try:
-        headers = {
-            "ResMan-Account-Id": ACCOUNT_ID,
-            "Accept": "application/json",
-        }
+    # Use 730 days to capture renewed leases (needed for expiring leases)
+    since_date = (datetime.now() - timedelta(days=730)).strftime("%Y-%m-%d")
+    params = {
+        "propertyId": property_id,
+        "includeLeaseHistory": "true",
+        "modifiedSince": since_date
+    }
 
-        # Use 730 days to capture renewed leases (needed for expiring leases)
-        since_date = (datetime.now() - timedelta(days=730)).strftime("%Y-%m-%d")
-        params = {
-            "propertyId": property_id,
-            "includeLeaseHistory": "true",
-            "modifiedSince": since_date
-        }
-
-        resp = requests.get(
-            f"{PARTNERS_API_URL}/Leasing/Leases",
-            headers=headers,
-            params=params,
-            auth=HTTPBasicAuth(PARTNER_ID, API_KEY),
-            timeout=30
-        )
-
-        if not resp.ok:
-            print(f"    Warning: Partners API returned {resp.status_code}")
-            return []
-
-        return resp.json().get("leases", [])
-    except Exception as e:
-        print(f"    Warning: Could not fetch leases: {e}")
-        return []
+    result = make_partners_api_request("/Leasing/Leases", params, "Leases API")
+    return result.get("leases", []) if result else []
 
 
 def fetch_units_availability(property_id):
@@ -238,29 +269,9 @@ def fetch_units_availability(property_id):
     Provides: vacancyStatus, status, availableForOnlineMarketing, unitTypeName,
               occupyingLease.moveOutDate, and more.
     """
-    try:
-        headers = {
-            "ResMan-Account-Id": ACCOUNT_ID,
-            "Accept": "application/json",
-        }
-        params = {"propertyId": property_id}
-
-        resp = requests.get(
-            f"{PARTNERS_API_URL}/Units/Availability",
-            headers=headers,
-            params=params,
-            auth=HTTPBasicAuth(PARTNER_ID, API_KEY),
-            timeout=30
-        )
-
-        if not resp.ok:
-            print(f"    Warning: Units/Availability API returned {resp.status_code}")
-            return []
-
-        return resp.json().get("units", [])
-    except Exception as e:
-        print(f"    Warning: Could not fetch units availability: {e}")
-        return []
+    params = {"propertyId": property_id}
+    result = make_partners_api_request("/Units/Availability", params, "Units/Availability API")
+    return result.get("units", []) if result else []
 
 
 def get_pending_leases_data(property_id, leases=None):
@@ -631,29 +642,9 @@ def get_expiring_leases_data(property_id, leases=None):
 
 def fetch_partners_units(property_id):
     """Fetch units from Partners API - single call for renovation and off-market"""
-    try:
-        headers = {
-            "ResMan-Account-Id": ACCOUNT_ID,
-            "Accept": "application/json",
-        }
-        params = {"propertyId": property_id}
-
-        resp = requests.get(
-            f"{PARTNERS_API_URL}/Units",
-            headers=headers,
-            params=params,
-            auth=HTTPBasicAuth(PARTNER_ID, API_KEY),
-            timeout=30
-        )
-
-        if not resp.ok:
-            print(f"    Warning: Units API returned {resp.status_code}")
-            return []
-
-        return resp.json().get("units", [])
-    except Exception as e:
-        print(f"    Warning: Could not fetch units: {e}")
-        return []
+    params = {"propertyId": property_id}
+    result = make_partners_api_request("/Units", params, "Units API")
+    return result.get("units", []) if result else []
 
 
 def get_units_renovation_data(property_id, units_availability=None):
@@ -709,60 +700,43 @@ def get_units_renovation_data(property_id, units_availability=None):
 
 def get_work_orders_data(property_id):
     """Get open work orders count (excluding make-ready) and new in last 24h"""
-    try:
-        headers = {
-            "ResMan-Account-Id": ACCOUNT_ID,
-            "Accept": "application/json",
-        }
+    # Fetch work orders from past 90 days
+    start_date = (datetime.now() - timedelta(days=90)).strftime("%Y-%m-%d")
+    params = {
+        "propertyId": property_id,
+        "startDate": start_date
+    }
 
-        # Fetch work orders from past 90 days
-        start_date = (datetime.now() - timedelta(days=90)).strftime("%Y-%m-%d")
-        params = {
-            "propertyId": property_id,
-            "startDate": start_date
-        }
-
-        resp = requests.get(
-            f"{PARTNERS_API_URL}/WorkOrders",
-            headers=headers,
-            params=params,
-            auth=HTTPBasicAuth(PARTNER_ID, API_KEY),
-            timeout=30
-        )
-
-        if not resp.ok:
-            print(f"    Warning: WorkOrders API returned {resp.status_code}")
-            return {"open_total": 0, "new_24h": 0}
-
-        work_orders = resp.json().get("workOrders", [])
-
-        # Filter: open statuses AND NOT make-ready
-        open_statuses = ["Submitted", "Not Started", "In Progress", "Scheduled", "On Hold"]
-        open_wos = [wo for wo in work_orders
-                    if wo.get("status") in open_statuses
-                    and wo.get("isMakeReady") == False]
-
-        # Count new in last 24 hours
-        now = datetime.now()
-        yesterday = now - timedelta(hours=24)
-        new_24h = 0
-        for wo in open_wos:
-            reported_str = wo.get("reportedDate", "")
-            if reported_str:
-                try:
-                    reported = datetime.fromisoformat(reported_str.replace("Z", "+00:00").split("+")[0])
-                    if reported >= yesterday:
-                        new_24h += 1
-                except:
-                    pass
-
-        return {
-            "open_total": len(open_wos),
-            "new_24h": new_24h
-        }
-    except Exception as e:
-        print(f"    Warning: Could not fetch work orders: {e}")
+    result = make_partners_api_request("/WorkOrders", params, "WorkOrders API")
+    if not result:
         return {"open_total": 0, "new_24h": 0}
+
+    work_orders = result.get("workOrders", [])
+
+    # Filter: open statuses AND NOT make-ready
+    open_statuses = ["Submitted", "Not Started", "In Progress", "Scheduled", "On Hold"]
+    open_wos = [wo for wo in work_orders
+                if wo.get("status") in open_statuses
+                and wo.get("isMakeReady") == False]
+
+    # Count new in last 24 hours
+    now = datetime.now()
+    yesterday = now - timedelta(hours=24)
+    new_24h = 0
+    for wo in open_wos:
+        reported_str = wo.get("reportedDate", "")
+        if reported_str:
+            try:
+                reported = datetime.fromisoformat(reported_str.replace("Z", "+00:00").split("+")[0])
+                if reported >= yesterday:
+                    new_24h += 1
+            except:
+                pass
+
+    return {
+        "open_total": len(open_wos),
+        "new_24h": new_24h
+    }
 
 
 def get_future_moves_data(property_id, leases=None, units_availability=None):
@@ -3656,6 +3630,9 @@ def main():
         )
         properties_data[abbr]["off_market"] = off_market_count
         print(f"    Off Market: {off_market_count}")
+
+        # Add delay between property requests to avoid rate limiting
+        time.sleep(PROPERTY_REQUEST_DELAY)
 
     # Fetch traffic data
     print("\n[3] Fetching traffic data...")
