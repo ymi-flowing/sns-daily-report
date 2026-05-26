@@ -2,7 +2,7 @@
 
 ## API Configuration
 
-### Current Settings (as of May 19, 2026)
+### Current Settings (as of May 26, 2026)
 
 ```python
 API_TIMEOUT = 30          # Seconds per request
@@ -30,7 +30,7 @@ TARGET_PROPERTIES = ["AN3", "TRA", "ROP", "TV", "MP", "SJ", "MUSO", "MOC", "EAST
 
 ### Current API Calls Per Dashboard Refresh (After Optimization)
 
-**Total: ~50 API calls** (optimized with Units/Availability endpoint)
+**Total: ~53 API calls** (3 global + 12×4 Partners per-property + 2 ResMan Prospects for AN3/TRA)
 
 #### Global Calls (1 time)
 | Call | Endpoint | Type |
@@ -44,10 +44,13 @@ TARGET_PROPERTIES = ["AN3", "TRA", "ROP", "TV", "MP", "SJ", "MUSO", "MOC", "EAST
 | Function | Endpoint | Type | Notes |
 |----------|----------|------|-------|
 | `fetch_leases()` | `GET /Leasing/Leases` | Partners | Shared by pending + expiring + future moves |
-| `fetch_units_availability()` | `GET /Units/Availability` | Partners | **NEW** - Replaces Legacy GetUnitStatus |
+| `fetch_units_availability()` | `GET /Units/Availability` | Partners | Replaces Legacy GetUnitStatus |
 | `get_work_orders_data()` | `GET /WorkOrders` | Partners | Work Orders feature |
+| `get_receivables_mtd()` | `GET /Transactions/Receivables` | Partners | Receivable MTD / Del % (sums today's owed balances) |
 
-**After Optimization:** 3 + (12 x 3) = **39 calls** (plus retries on failure)
+**Per-property:** 4 Partners calls × 12 = 48.
+**Prospects:** `GET /Prospects` for **AN3 & TRA only** = 2 (their traffic isn't in the CRM sheet).
+**Current total:** 3 global + 48 + 2 = **~53 calls** (plus retries on failure).
 
 ### Optimizations Implemented (April 30, 2026)
 
@@ -70,11 +73,20 @@ TARGET_PROPERTIES = ["AN3", "TRA", "ROP", "TV", "MP", "SJ", "MUSO", "MOC", "EAST
 - New `get_work_orders_data()` function
 - **Added:** 12 calls
 
-**Net Result:** 74 - 36 + 12 = **62 calls** (16% reduction + new feature)
+**Net Result (April 30):** the optimizations cut per-refresh calls ~16%. Later features (Work Orders, then Receivables + Prospects) added calls back — see the **Current total** above for the live figure.
 
 ---
 
 ## Recent Changes
+
+### May 26, 2026 - ResMan Traffic for AN3/TRA, Daily AVG method, Receivables
+- **Added:** `RESMAN_TRAFFIC_PROPERTIES = ["AN3", "TRA"]` with `fetch_prospects()` /
+  `get_resman_traffic_for_property()` — AN3 & TRA traffic comes from Partners `GET /Prospects`
+  (MTD by first-contact date, including Lost), since they aren't in the CRM Google Sheet.
+- **Changed:** Traffic Daily AVG = MTD total ÷ days elapsed in the month (`now.day`) for ALL
+  properties (was: distinct days with ≥1 lead). Zero-lead days now lower the average.
+- **Added:** `get_receivables_mtd()` (Partners `GET /Transactions/Receivables?date=<today>`) →
+  "Receivable MTD" ($) and "Del %" (Receivable ÷ Net) rows in the Financial Summary card, all 12 properties.
 
 ### May 19, 2026 - API Reliability Improvements
 - **Added:** Retry logic with exponential backoff for Partners API
@@ -96,56 +108,20 @@ TARGET_PROPERTIES = ["AN3", "TRA", "ROP", "TV", "MP", "SJ", "MUSO", "MOC", "EAST
 
 ---
 
-## Planned Features
+## Planned / Future Ideas
 
-### Financial & Delinquency Data (NEXT SESSION)
+The Financial Summary card (income, credits, net, delinquency) and the **Receivable MTD / Del %**
+metrics are now **shipped** — see Recent Changes. Remaining ideas:
 
-**Status:** Data pipeline being prepared
+- Individual property detail pages
+- Historical trends and charts
+- Automated daily email reports
 
-**Plan:**
-1. ResMan scheduled reports export to Google Sheet daily
-2. Dashboard reads from Google Sheet (minimal API calls)
-
-**Data to Include:**
-| Metric | Description |
-|--------|-------------|
-| Current Month Income | Total income for the month |
-| Current Month Credits | Total credits for the month |
-| Resident Delinquency | Delinquent resident balances |
-
-**Google Sheet Access:** Will be provided for next session
-
----
-
-### Financial Summary Card (ON HOLD)
-
-**Status:** Waiting for data pipeline
-
-**Plan:**
-1. ResMan scheduled report exports financial data
-2. n8n workflow processes and sends to Google Sheet
-3. Dashboard reads from Google Sheet (1 API call vs 6,000+)
-
-**Data Required:**
-| Metric | Description |
-|--------|-------------|
-| Total Charges | Sum of all charges for the month |
-| Total Credits | Sum of all credits for the month |
-| Total Income | Charges - Credits |
-
-**Why Not Direct API:**
-- ResMan `/Transactions/Ledger` requires `billingAccountId` parameter
-- No bulk property-level endpoint exists
-- Would require ~500 calls per property (one per billing account)
-- 12 properties x 500 accounts = 6,000+ API calls
-- Tested alternatives: `/Accounting/Balances`, `GetBudgetAndActual` - return empty
-
-**Google Sheet Format (TBD):**
-```
-Property | Charges | Credits | Income | Month
-EAST     | 596939  | 18410   | 578529 | 2026-04
-...
-```
+> **Note on direct GL pulls:** per-account ledger endpoints (`/Transactions/Ledger`,
+> `/Accounting/Balances`) remain impractical for bulk income — they require `billingAccountId`
+> and would be thousands of calls per refresh. Income/credit totals therefore stay sourced from
+> the n8n → Google Sheet pipeline; only the as-of-date **owed balances** are pulled live via
+> `/Transactions/Receivables` (1 call per property).
 
 ---
 
@@ -158,7 +134,7 @@ EAST     | 596939  | 18410   | 578529 | 2026-04
 | Endpoint | Purpose |
 |----------|---------|
 | `Account/GetProperties` | List all properties |
-| `Property/GetUnitStatus` | Unit vacancy & ready status |
+| `Property/GetUnitStatus` | Unit vacancy & ready status _(legacy — replaced by Partners `/Units/Availability`)_ |
 | `Leasing/GetApplicantsAndCurrentResidents` | Resident status (evictions) |
 
 ### Partners API
@@ -172,6 +148,8 @@ EAST     | 596939  | 18410   | 578529 | 2026-04
 | `GET /Leasing/Leases` | Lease data with history | Use `modifiedSince` param |
 | `GET /Units` | Unit details, renovation, marketing status | |
 | `GET /WorkOrders` | Work orders with status | Filter by `startDate` |
+| `GET /Prospects` | MTD prospects by first contact | Used for AN3 & TRA traffic; filter `firstContactDateFrom` |
+| `GET /Transactions/Receivables` | Owed account balances as of a date | Used for Receivable MTD / Del %; params `propertyId`, `date` |
 | `GET /Transactions/Ledger` | Transactions | Requires billingAccountId |
 | `GET /Accounting/Balances` | GL balances | Not working for us |
 
@@ -180,7 +158,7 @@ EAST     | 596939  | 18410   | 578529 | 2026-04
 ## Target Properties (12)
 
 ```python
-TARGET_PROPERTIES = ["MUSO", "ORT", "49thStr", "ROP", "AP", "SJ", "EAST", "MOC", "TV", "MP", "TRA", "AN3"]
+TARGET_PROPERTIES = ["AN3", "TRA", "ROP", "TV", "MP", "SJ", "MUSO", "MOC", "EAST", "ORT", "49thStr", "AP"]
 ```
 
 | Region | Properties |
@@ -218,4 +196,4 @@ SNS Daily Report/
 
 ---
 
-*Last Updated: May 19, 2026*
+*Last Updated: May 26, 2026*

@@ -4,7 +4,7 @@ Real-time property management dashboard for SNS portfolio using ResMan API and G
 
 **Live Dashboard:** [https://sns-daily-report.vercel.app](https://sns-daily-report.vercel.app)
 
-**Last Updated:** May 19, 2026
+**Last Updated:** May 26, 2026
 
 ## Quick Start
 
@@ -13,7 +13,7 @@ Visit [sns-daily-report.vercel.app](https://sns-daily-report.vercel.app)
 
 **Local Development:**
 ```bash
-cd "C:\Users\ymosh\ROI\SNS Daily Report"
+cd "C:\Users\ymosh\Claude\ROI\SNS Daily Report"
 python generate_dashboard.py
 ```
 Then open `dashboard_live.html` in a browser.
@@ -67,6 +67,8 @@ This dashboard provides a unified view of:
   - `GET /Units/Availability` - Unit vacancy, occupancy, move-out dates (primary endpoint)
   - `GET /Units` - Unit details, renovation status, `availableForOnlineMarketing` field
   - `GET /WorkOrders` - Open work orders and new orders in last 24h
+  - `GET /Prospects` - MTD prospects by first-contact date (used for **AN3 & TRA** traffic, which are not in the CRM sheet)
+  - `GET /Transactions/Receivables` - Owed account balances as of a date (used for **Receivable MTD** / **Del %**)
 
 ### Google Sheets (Traffic)
 - **Sheet ID**: `1D8eBjdcClYf9L4DNQg2cKDE1Wuwkc5AOSQcRCPmz18A`
@@ -184,12 +186,14 @@ Includes pre-leased vacant units as "rented".
 ### 2. Traffic Summary Table
 | Metric | Source | Description |
 |--------|--------|-------------|
-| Total Prospects | Google Sheets | MTD leads per property |
-| Daily AVG | Google Sheets | Average leads per day |
+| Total Prospects | Google Sheets¹ | MTD leads per property |
+| Daily AVG | Google Sheets¹ | MTD prospects ÷ calendar days elapsed this month (zero-lead days included) |
 | **Total Applicants** | Partners API | Pending leases (future move-ins) |
 | Pending Approval | Partners API | `approvalDate` is null |
 | Approved | Partners API | Has `approvalDate`, no `leaseSignedDate` |
 | Signed Lease | Partners API | Has `leaseSignedDate` |
+
+¹ **AN3 & TRA** are not in the CRM Google Sheet — their Total Prospects / Daily AVG come from the ResMan Partners API `GET /Prospects` (prospects with first contact since the 1st of the month, **including Lost**).
 
 ### 3. Expiring Leases Table
 Shows leases expiring in current month + next 3 months (4 total).
@@ -233,6 +237,8 @@ Shows income and delinquency data per property.
 | Total Income | Sum of all charges for the period |
 | Total Credit | Sum of all credits/adjustments |
 | Net | Total Income - Total Credit |
+| Receivable MTD | Owed to the property **as of today** — sum of positive account balances (ResMan Partners API `GET /Transactions/Receivables`) |
+| Del % | Receivable MTD ÷ Net × 100, color-coded (>10% red, >5% amber, else green) |
 
 **Delinquency Section:**
 | Metric | Description |
@@ -273,6 +279,11 @@ Shows income and delinquency data per property.
 ---
 
 ## Recent Changes
+
+### May 26, 2026
+- **Added:** ResMan prospect traffic for **AN3 & TRA** — these two properties are not in the CRM Google Sheet, so their Total Prospects / Daily AVG now come from the Partners API `GET /Prospects` (MTD count by first-contact date, including Lost).
+- **Changed:** Traffic **Daily AVG** for all properties is now MTD prospects ÷ calendar days elapsed in the month (zero-lead days included), replacing the old divide-by-distinct-lead-days method.
+- **Added:** **Receivable MTD** and **Del %** rows in the Financial Summary card (under Net), for all 12 properties. Receivable MTD = today's owed balances from Partners API `GET /Transactions/Receivables`; Del % = Receivable MTD ÷ Net.
 
 ### May 19, 2026
 - **Fixed:** API reliability improvements for ResMan Partners API

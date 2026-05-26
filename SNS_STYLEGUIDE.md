@@ -375,3 +375,7 @@ SNS Daily Report/
   Cardentials.txt         # API credentials (keep secure)
   archive/                # Old exploration scripts and data
 ```
+
+---
+
+*Last Updated: May 26, 2026*
