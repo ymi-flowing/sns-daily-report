@@ -208,6 +208,17 @@ def get_resman_traffic_for_property(property_id):
     return {"total": total, "daily_avg": round(total / elapsed_days, 1)}
 
 
+def get_receivables_mtd(property_id):
+    """Sum of positive account balances (money owed to the property) as of today,
+    from ResMan /Transactions/Receivables. This is the 'Receivable MTD' figure
+    shown under Net in the Financial Summary card."""
+    today = datetime.now().strftime("%Y-%m-%d")
+    params = {"propertyId": property_id, "date": today}
+    data = make_partners_api_request("/Transactions/Receivables", params, f"Receivables {property_id}")
+    accounts = (data or {}).get("accounts", []) or []
+    return round(sum((a.get("balance") or 0) for a in accounts if (a.get("balance") or 0) > 0), 2)
+
+
 def get_financial_data():
     """Fetch financial data from Google Sheet (income and delinquency)"""
     try:
@@ -3121,7 +3132,8 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data):
             const incomeRows = [
                 {{ key: 'charge', label: 'Total Income', color: 'text-emerald-600 dark:text-emerald-400' }},
                 {{ key: 'credit', label: 'Total Credit', color: 'text-red-600 dark:text-red-400' }},
-                {{ key: 'net', label: 'Net', color: 'text-blue-600 dark:text-blue-400 font-bold' }}
+                {{ key: 'net', label: 'Net', color: 'text-blue-600 dark:text-blue-400 font-bold' }},
+                {{ key: 'receivable', label: 'Receivable MTD', color: 'text-purple-600 dark:text-purple-400 font-semibold' }}
             ];
 
             let bodyRows = '';
@@ -3139,6 +3151,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data):
                         if (row.key === 'charge') val = incData.charge || 0;
                         else if (row.key === 'credit') val = incData.credit || 0;
                         else if (row.key === 'net') val = (incData.charge || 0) - (incData.credit || 0);
+                        else if (row.key === 'receivable') val = incData.receivable_mtd || 0;
                         rowTotal += val;
                         const tooltip = `data-count="${{fmtFull(val)}}"`;
                         tr += `<td class="px-2 py-2 text-center ${{row.color}} fin-cell" ${{tooltip}}>${{fmtShort(val)}}</td>`;
@@ -3149,6 +3162,27 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data):
                 tr += '</tr>';
                 bodyRows += tr;
             }});
+
+            // Del %: Receivable MTD as a percentage of Net (charge - credit)
+            let delPctRow = '<tr class="hover:bg-blue-50/50 dark:hover:bg-blue-900/20">';
+            delPctRow += '<td class="px-3 py-2 font-medium text-slate-700 dark:text-slate-300 sticky left-0 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 w-[140px]">Del %</td>';
+            let dpRec = 0, dpNet = 0;
+            regions.forEach(region => {{
+                propertyGroups[region].forEach(abbr => {{
+                    const incData = financialData.income[abbr] || {{ charge: 0, credit: 0 }};
+                    const net = (incData.charge || 0) - (incData.credit || 0);
+                    const rec = incData.receivable_mtd || 0;
+                    dpRec += rec; dpNet += net;
+                    const pct = net > 0 ? (rec / net * 100) : 0;
+                    const c = pct > 10 ? 'text-red-600 dark:text-red-400' : pct > 5 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400';
+                    delPctRow += `<td class="px-2 py-2 text-center font-semibold ${{c}}">${{net > 0 ? pct.toFixed(1) + '%' : '—'}}</td>`;
+                }});
+            }});
+            const dpPct = dpNet > 0 ? (dpRec / dpNet * 100) : 0;
+            const dpc = dpPct > 10 ? 'text-red-600 dark:text-red-400' : dpPct > 5 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400';
+            delPctRow += `<td class="px-3 py-2 text-center bg-slate-100 dark:bg-slate-700/50 font-bold ${{dpc}}">${{dpNet > 0 ? dpPct.toFixed(1) + '%' : '—'}}</td>`;
+            delPctRow += '</tr>';
+            bodyRows += delPctRow;
 
             // Add divider before delinquency
             const colCount = allProps.length + 2;
@@ -3695,6 +3729,14 @@ def main():
         print(f"    Financial data loaded for {len(financial_data['income'])} properties")
     else:
         print("    Warning: No financial data available")
+
+    # Receivable MTD (as-of-today owed balances) from ResMan, for ALL properties
+    for abbr in TARGET_PROPERTIES:
+        pid = properties_data.get(abbr, {}).get("property_id")
+        if pid:
+            income = financial_data.setdefault('income', {}).setdefault(abbr, {'charge': 0, 'credit': 0})
+            income['receivable_mtd'] = get_receivables_mtd(pid)
+            print(f"    Receivable MTD for {abbr}: ${income['receivable_mtd']:,.2f}")
 
     # Generate HTML
     print("\n[5] Generating HTML dashboard...")
