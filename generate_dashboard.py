@@ -65,6 +65,9 @@ PROPERTY_NAME_MAP = {
 # Ordered by property size (smallest first) to reduce API load and improve success rate
 TARGET_PROPERTIES = ["AN3", "TRA", "ROP", "TV", "MP", "SJ", "MUSO", "MOC", "EAST", "ORT", "49thStr", "AP"]
 
+# Properties whose traffic comes from the ResMan Prospects API instead of the CRM Google Sheet
+RESMAN_TRAFFIC_PROPERTIES = ["AN3", "TRA"]
+
 # Property grouping by region
 PROPERTY_GROUPS = {
     "Tampa": ["49thStr"],
@@ -143,7 +146,7 @@ def get_traffic_data():
         current_month = now.strftime("%m/%Y")
 
         # Aggregate by property
-        traffic_by_prop = defaultdict(lambda: {"total": 0, "days": set()})
+        traffic_by_prop = defaultdict(lambda: {"total": 0})
 
         for r in rows:
             date_str = r.get('Formatted Create Date', '')[:10]  # MM/DD/YYYY
@@ -158,23 +161,51 @@ def get_traffic_data():
                         row_month = f"{parts[0]}/{parts[2]}"
                         if row_month == current_month:
                             traffic_by_prop[abbr]["total"] += 1
-                            traffic_by_prop[abbr]["days"].add(date_str)
                 except:
                     pass
 
-        # Calculate daily average
+        # Calculate daily average (per day elapsed in the month, incl. zero-lead days)
+        elapsed_days = now.day  # days since the 1st of the current month (inclusive)
         result = {}
         for abbr, data in traffic_by_prop.items():
-            days_count = len(data["days"]) or 1
             result[abbr] = {
                 "total": data["total"],
-                "daily_avg": round(data["total"] / days_count, 1)
+                "daily_avg": round(data["total"] / elapsed_days, 1)
             }
 
         return result
     except Exception as e:
         print(f"    Warning: Could not fetch traffic data: {e}")
         return {}
+
+
+def fetch_prospects(property_id):
+    """Fetch prospects with first contact since the 1st of the current month.
+
+    Used for properties not present in the CRM Google Sheet (see
+    RESMAN_TRAFFIC_PROPERTIES). Returns the list of prospect records (or []).
+    """
+    first_of_month = datetime.now().replace(day=1).strftime("%Y-%m-%d 00:00:00")
+    params = {
+        "propertyid": property_id,                 # lowercase, per ResMan /Prospects
+        "modifiedSince": "2024-01-01 00:00:00",     # broad; real filter is firstContactDateFrom
+        "firstContactDateFrom": first_of_month,
+        "includeCommunicationLog": "false",
+    }
+    data = make_partners_api_request("/Prospects", params, f"Prospects {property_id}")
+    return (data or {}).get("prospects", []) or []
+
+
+def get_resman_traffic_for_property(property_id):
+    """Build a traffic entry ({"total", "daily_avg"}) from ResMan prospects.
+
+    Counts ALL prospects (including Lost) with first contact this month. Daily
+    average uses days elapsed in the month (matching get_traffic_data()).
+    """
+    prospects = fetch_prospects(property_id)
+    total = len(prospects)
+    elapsed_days = datetime.now().day
+    return {"total": total, "daily_avg": round(total / elapsed_days, 1)}
 
 
 def get_financial_data():
@@ -3649,6 +3680,13 @@ def main():
         print(f"    Traffic data loaded for {len(traffic_data)} properties")
     else:
         print("    Warning: No traffic data available")
+
+    # AN3 & TRA traffic comes from the ResMan Prospects API (not in the CRM sheet)
+    for abbr in RESMAN_TRAFFIC_PROPERTIES:
+        pid = properties_data.get(abbr, {}).get("property_id")
+        if pid:
+            traffic_data[abbr] = get_resman_traffic_for_property(pid)
+            print(f"    ResMan traffic for {abbr}: {traffic_data[abbr]}")
 
     # Fetch financial data
     print("\n[4] Fetching financial data...")
