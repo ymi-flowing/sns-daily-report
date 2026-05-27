@@ -3142,7 +3142,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data):
                 const rowBg = isAlt ? 'bg-slate-50/50 dark:bg-slate-800/30' : '';
                 let tr = `<tr class="${{rowBg}} hover:bg-blue-50/50 dark:hover:bg-blue-900/20">`;
                 const tipHtml = row.tip ? `<span class="tip" data-tip="${{row.tip}}">?</span>` : '';
-                tr += `<td class="px-3 py-2 font-medium text-slate-700 dark:text-slate-300 sticky left-0 ${{rowBg}} bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 w-[140px]">${{row.label}}${{tipHtml}}</td>`;
+                tr += `<td class="px-3 py-2 font-medium text-slate-700 dark:text-slate-300 sticky left-0 ${{rowBg}} bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 w-[140px] whitespace-nowrap">${{row.label}}${{tipHtml}}</td>`;
 
                 let rowTotal = 0;
                 regions.forEach(region => {{
