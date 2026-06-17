@@ -1923,6 +1923,14 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data):
                         <svg id="refresh-spinner" class="w-5 h-5 hidden animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                     </button>
                 </div>
+                <!-- Alerts Bell -->
+                <div>
+                    <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">&nbsp;</label>
+                    <button id="alerts-btn" onclick="showAlertsModal()" class="relative h-11 w-11 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 transition-all outline-none focus:ring-2 focus:ring-blue-400 border-2 border-slate-200 dark:border-slate-600 flex items-center justify-center" title="Alerts">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                        <span id="alerts-badge" class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] px-1 flex items-center justify-center border-2 border-white dark:border-slate-800">0</span>
+                    </button>
+                </div>
                 <!-- Theme Toggle -->
                 <div>
                     <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">&nbsp;</label>
@@ -2043,6 +2051,49 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data):
                     <table id="popup-table" class="min-w-full text-sm">
                         <thead id="popup-thead" class="bg-slate-50 dark:bg-slate-700/50"></thead>
                         <tbody id="popup-tbody" class="divide-y divide-slate-100 dark:divide-slate-700"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alerts Modal -->
+    <div id="alerts-modal" class="hidden fixed inset-0 z-50 overflow-y-auto" onclick="if(event.target===this)closeAlertsModal()">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="fixed inset-0 bg-black/50 dark:bg-black/70"></div>
+            <div class="relative bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-fit max-w-[95vw] max-h-[85vh] overflow-hidden">
+                <div class="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700">
+                    <h3 class="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                        <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                        Alerts <span id="alerts-modal-count" class="text-sm font-semibold text-white bg-red-500 rounded-full px-2 py-0.5">0</span>
+                    </h3>
+                    <button onclick="closeAlertsModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-2xl leading-none">&times;</button>
+                </div>
+                <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/30">
+                    <div class="flex flex-wrap gap-3 items-center">
+                        <label for="alerts-property-filter" class="text-sm font-medium text-slate-600 dark:text-slate-300">Property:</label>
+                        <div class="relative">
+                            <select id="alerts-property-filter" onchange="renderAlertsTable(this.value)" class="block w-64 h-10 rounded-xl border-2 border-slate-200 dark:border-slate-600 py-2 pl-4 pr-10 bg-white dark:bg-slate-700 text-slate-900 dark:text-white font-medium cursor-pointer text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all">
+                                <option value="ALL">All Properties</option>
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                                <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-4 overflow-auto max-h-[calc(85vh-160px)]">
+                    <table class="min-w-full text-sm">
+                        <thead class="bg-slate-50 dark:bg-slate-700/50">
+                            <tr>
+                                <th class="px-3 py-2 text-left font-semibold text-slate-600 dark:text-slate-300">Property</th>
+                                <th class="px-3 py-2 text-left font-semibold text-slate-600 dark:text-slate-300">Category</th>
+                                <th class="px-3 py-2 text-left font-semibold text-slate-600 dark:text-slate-300">Unit</th>
+                                <th class="px-3 py-2 text-left font-semibold text-slate-600 dark:text-slate-300">Resident / Applicant</th>
+                                <th class="px-3 py-2 text-left font-semibold text-slate-600 dark:text-slate-300">Alert</th>
+                            </tr>
+                        </thead>
+                        <tbody id="alerts-tbody" class="divide-y divide-slate-100 dark:divide-slate-700"></tbody>
                     </table>
                 </div>
             </div>
@@ -2442,9 +2493,118 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data):
             document.body.style.overflow = '';
         }}
 
+        // ============ Alerts (bell) modal ============
+        const ALERT_CATEGORY_LABELS = {{
+            vacantNotReadyList: 'Vacant – Not Ready',
+            ntvList: 'NTV',
+            vacantLeasedList: 'Vacant – Leased'
+        }};
+
+        function collectAllAlerts() {{
+            const out = [];
+            Object.keys(propertyTableData).forEach(abbr => {{
+                const p = propertyTableData[abbr];
+                if (!p) return;
+                ['vacantNotReadyList', 'ntvList', 'vacantLeasedList'].forEach(listKey => {{
+                    const items = p[listKey] || [];
+                    items.forEach(item => {{
+                        if (!item.hasAlert) return;
+                        out.push({{
+                            abbr: abbr,
+                            propertyName: p.name || abbr,
+                            category: ALERT_CATEGORY_LABELS[listKey],
+                            unit: item.unit || '',
+                            unitId: item.unitId || '',
+                            resident: item.applicant || item.name || item.resident || '',
+                            leaseId: item.leaseId || '',
+                            alertMsg: item.alertMsg || 'Needs attention'
+                        }});
+                    }});
+                }});
+            }});
+            return out;
+        }}
+
+        function updateAlertsBadge() {{
+            const alerts = collectAllAlerts();
+            const badge = document.getElementById('alerts-badge');
+            if (!badge) return;
+            if (alerts.length > 0) {{
+                badge.textContent = alerts.length > 99 ? '99+' : String(alerts.length);
+                badge.classList.remove('hidden');
+            }} else {{
+                badge.classList.add('hidden');
+            }}
+        }}
+
+        let alertsFilterPopulated = false;
+        function populateAlertsFilter() {{
+            if (alertsFilterPopulated) return;
+            const sel = document.getElementById('alerts-property-filter');
+            if (!sel) return;
+            const abbrs = Object.keys(propertyTableData).sort();
+            abbrs.forEach(abbr => {{
+                const p = propertyTableData[abbr];
+                const opt = document.createElement('option');
+                opt.value = abbr;
+                opt.textContent = `${{abbr}} - ${{p.name || abbr}}`;
+                sel.appendChild(opt);
+            }});
+            alertsFilterPopulated = true;
+        }}
+
+        function renderAlertsTable(filterAbbr) {{
+            const tbody = document.getElementById('alerts-tbody');
+            const countChip = document.getElementById('alerts-modal-count');
+            if (!tbody) return;
+            const all = collectAllAlerts();
+            const filtered = (filterAbbr && filterAbbr !== 'ALL')
+                ? all.filter(a => a.abbr === filterAbbr)
+                : all;
+            if (countChip) countChip.textContent = String(filtered.length);
+            if (filtered.length === 0) {{
+                tbody.innerHTML = '<tr><td colspan="5" class="px-3 py-6 text-center text-slate-500 dark:text-slate-400">No alerts</td></tr>';
+                return;
+            }}
+            let html = '';
+            filtered.forEach(a => {{
+                const unitCell = a.unitId
+                    ? `<a href="https://sns.myresman.com/#/Units/Detail/${{a.unitId}}" target="_blank" class="text-blue-600 dark:text-blue-400 hover:scale-105 inline-block transition-transform">${{a.unit}}</a>`
+                    : a.unit;
+                const residentCell = (a.leaseId && a.resident)
+                    ? `<a href="https://sns.myresman.com/#/Residents/Detail/${{a.leaseId}}" target="_blank" class="text-blue-600 dark:text-blue-400 hover:scale-105 inline-block transition-transform">${{a.resident}}</a>`
+                    : (a.resident || '<span class="text-slate-400">—</span>');
+                html += `<tr class="hover:bg-slate-50 dark:hover:bg-slate-700/40">`
+                    + `<td class="px-3 py-2 whitespace-nowrap font-medium text-slate-700 dark:text-slate-200">${{a.abbr}} <span class="text-slate-400 dark:text-slate-500 text-xs">${{a.propertyName}}</span></td>`
+                    + `<td class="px-3 py-2 whitespace-nowrap text-slate-700 dark:text-slate-300">${{a.category}}</td>`
+                    + `<td class="px-3 py-2 whitespace-nowrap">${{unitCell}}</td>`
+                    + `<td class="px-3 py-2 whitespace-nowrap">${{residentCell}}</td>`
+                    + `<td class="px-3 py-2 whitespace-nowrap"><span class="inline-flex items-center gap-1.5"><span class="alert-dot"></span><span class="text-red-600 dark:text-red-400 font-medium">${{a.alertMsg}}</span></span></td>`
+                    + `</tr>`;
+            }});
+            tbody.innerHTML = html;
+        }}
+
+        function showAlertsModal() {{
+            populateAlertsFilter();
+            const sel = document.getElementById('alerts-property-filter');
+            if (sel) sel.value = 'ALL';
+            renderAlertsTable('ALL');
+            document.getElementById('alerts-modal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }}
+
+        function closeAlertsModal() {{
+            document.getElementById('alerts-modal').classList.add('hidden');
+            document.body.style.overflow = '';
+        }}
+
         // Close popup on Escape key
         document.addEventListener('keydown', function(e) {{
-            if (e.key === 'Escape') closePopup();
+            if (e.key === 'Escape') {{
+                closePopup();
+                closeAlertsModal();
+            }}
         }});
 
         function getColors() {{
@@ -3624,6 +3784,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data):
             renderRenovationTable();
             renderFinancialTable();
             updateDashboard();
+            updateAlertsBadge();
 
             // Check if there's a pending refresh
             checkPendingRefresh();
