@@ -1553,7 +1553,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SNS Daily Report - Unit Status Dashboard</title>
+    <title>SNS Daily KPIs</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {{
@@ -1892,7 +1892,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data):
                     <img src="https://www.dropbox.com/scl/fi/8qha3kw2j503jbd037ahh/SNS-White.png?rlkey=s3gjbikiohpe00vpcx8x1td3r&st=efmsepz3&raw=1" alt="SNS Logo" class="w-14 h-14 object-contain hidden dark:block">
                 </div>
                 <div>
-                    <h1 class="text-2xl font-bold text-slate-900 dark:text-white">SNS Daily Report</h1>
+                    <h1 class="text-2xl font-bold text-slate-900 dark:text-white">SNS Daily KPIs</h1>
                 </div>
             </div>
             <div class="mobile-controls flex items-center space-x-3">
