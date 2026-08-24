@@ -33,7 +33,6 @@ FINANCIAL_PROPERTY_MAP = {
     'The Morgan at Ocala': 'MOC',
     'The Morgan At Ocala Apartments': 'MOC',
     'The Mustang at Ocala': 'MUSO',
-    'Marbella Park': 'MP',
     'The Vista at Winter Park': 'TV',
     'The Vista At Winter Park': 'TV',
     'The Village at San Jose': 'SJ',
@@ -56,14 +55,13 @@ PROPERTY_NAME_MAP = {
     'Arbor Place Apartments': 'AP',
     'Riverside at Orange Park': 'ROP',
     'The Vista at Winter Park': 'TV',
-    'Marbella Park': 'MP',
     'The River Apartments': 'TRA',
     'AN3 Investments': 'AN3'
 }
 
 # Target properties (now including TRA and AN3)
 # Ordered by property size (smallest first) to reduce API load and improve success rate
-TARGET_PROPERTIES = ["AN3", "TRA", "ROP", "TV", "MP", "SJ", "MUSO", "MOC", "EAST", "ORT", "49thStr", "AP"]
+TARGET_PROPERTIES = ["AN3", "TRA", "ROP", "TV", "SJ", "MUSO", "MOC", "EAST", "ORT", "49thStr", "AP"]
 
 # Properties whose traffic comes from the ResMan Prospects API instead of the CRM Google Sheet
 RESMAN_TRAFFIC_PROPERTIES = ["AN3", "TRA"]
@@ -71,7 +69,7 @@ RESMAN_TRAFFIC_PROPERTIES = ["AN3", "TRA"]
 # Property grouping by region
 PROPERTY_GROUPS = {
     "Tampa": ["49thStr"],
-    "Orlando": ["MP", "TV", "MOC", "MUSO"],
+    "Orlando": ["TV", "MOC", "MUSO"],
     "Jacksonville": ["AP", "SJ", "ROP", "ORT"],
     "Ft. Lauderdale": ["EAST", "TRA", "AN3"]
 }
