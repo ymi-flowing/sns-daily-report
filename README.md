@@ -23,7 +23,7 @@ Then open `dashboard_live.html` in a browser.
 ## Overview
 
 This dashboard provides a unified view of:
-- **Unit Status** - Occupancy, vacancies, NTV, evictions across 12 properties
+- **Unit Status** - Occupancy, vacancies, NTV, evictions across 11 properties
 - **Traffic Metrics** - Lead generation, applicants, and lease signing progress
 - **Expiring Leases** - 4-month forecast with renewal tracking
 - **Renovation Status** - Renovated / Partial / Classic breakdown per property
@@ -84,12 +84,12 @@ This dashboard provides a unified view of:
 
 ---
 
-## Properties (12)
+## Properties (11)
 
 | Region | Properties |
 |--------|------------|
 | Tampa | 49thStr |
-| Orlando | MP, TV, MOC, MUSO |
+| Orlando | TV, MOC, MUSO |
 | Jacksonville | AP, SJ, ROP, ORT |
 | Ft. Lauderdale | EAST, TRA, AN3 |
 

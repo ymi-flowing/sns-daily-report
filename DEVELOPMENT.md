@@ -21,7 +21,7 @@ PROPERTY_REQUEST_DELAY = 1 # Seconds between properties
 ### Property Processing Order
 Properties are processed smallest-first to improve API warm-up:
 ```python
-TARGET_PROPERTIES = ["AN3", "TRA", "ROP", "TV", "MP", "SJ", "MUSO", "MOC", "EAST", "ORT", "49thStr", "AP"]
+TARGET_PROPERTIES = ["AN3", "TRA", "ROP", "TV", "SJ", "MUSO", "MOC", "EAST", "ORT", "49thStr", "AP"]
 ```
 
 ---
@@ -155,16 +155,16 @@ metrics are now **shipped** — see Recent Changes. Remaining ideas:
 
 ---
 
-## Target Properties (12)
+## Target Properties (11)
 
 ```python
-TARGET_PROPERTIES = ["AN3", "TRA", "ROP", "TV", "MP", "SJ", "MUSO", "MOC", "EAST", "ORT", "49thStr", "AP"]
+TARGET_PROPERTIES = ["AN3", "TRA", "ROP", "TV", "SJ", "MUSO", "MOC", "EAST", "ORT", "49thStr", "AP"]
 ```
 
 | Region | Properties |
 |--------|------------|
 | Tampa | 49thStr |
-| Orlando | MP, TV, MOC, MUSO |
+| Orlando | TV, MOC, MUSO |
 | Jacksonville | AP, SJ, ROP, ORT |
 | Ft. Lauderdale | EAST, TRA, AN3 |
 
