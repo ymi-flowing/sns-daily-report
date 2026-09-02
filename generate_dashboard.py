@@ -1157,6 +1157,9 @@ def get_property_data(property_id, property_name, units_availability=None, lease
                             vnr_alert = True
                             vnr_alert_msg = "Past Available Date"
                     except: pass
+                if unit_type and 'classic' in unit_type.lower():
+                    vnr_alert_msg = (vnr_alert_msg + " • " if vnr_alert else "") + "Classic Unit - please update the unit type"
+                    vnr_alert = True
                 detailed_lists["vacantNotReadyList"].append({
                     "unit": unit_num,
                     "unitId": unit_id,
@@ -1187,6 +1190,9 @@ def get_property_data(property_id, property_name, units_availability=None, lease
                             vnr_alert = True
                             vnr_alert_msg = "Past Available Date"
                     except: pass
+                if unit_type and 'classic' in unit_type.lower():
+                    vnr_alert_msg = (vnr_alert_msg + " • " if vnr_alert else "") + "Classic Unit - please update the unit type"
+                    vnr_alert = True
                 detailed_lists["vacantNotReadyList"].append({
                     "unit": unit_num,
                     "unitId": unit_id,
@@ -1224,6 +1230,9 @@ def get_property_data(property_id, property_name, units_availability=None, lease
                                 vnr_alert = True
                                 vnr_alert_msg = "Past Available Date"
                         except: pass
+                    if unit_type and 'classic' in unit_type.lower():
+                        vnr_alert_msg = (vnr_alert_msg + " • " if vnr_alert else "") + "Classic Unit - please update the unit type"
+                        vnr_alert = True
                     detailed_lists["vacantNotReadyList"].append({
                         "unit": unit_num,
                         "unitId": unit_id,
@@ -1234,7 +1243,7 @@ def get_property_data(property_id, property_name, units_availability=None, lease
                     })
             else:
                 status_summary["NTV"].append(unit_num)
-                # Check for NTV alerts: past move-out OR available date less than 7 days after move-out
+                # Check for NTV alerts: past move-out OR available date less than 10 days after move-out
                 ntv_alert = False
                 ntv_alert_msg = ""
                 if mo_date:
@@ -1245,7 +1254,7 @@ def get_property_data(property_id, property_name, units_availability=None, lease
                             ntv_alert_msg = "Past Move-Out Date"
                         elif av_date:
                             av_dt = datetime.strptime(av_date, "%Y-%m-%d").date()
-                            min_ready_date = mo_dt + timedelta(days=7)
+                            min_ready_date = mo_dt + timedelta(days=10)
                             if av_dt < min_ready_date:
                                 days_gap = (av_dt - mo_dt).days
                                 if days_gap < 0:
@@ -1254,6 +1263,9 @@ def get_property_data(property_id, property_name, units_availability=None, lease
                                     ntv_alert_msg = f"Only {days_gap} days to get ready"
                                 ntv_alert = True
                     except: pass
+                if unit_type and 'classic' in unit_type.lower():
+                    ntv_alert_msg = (ntv_alert_msg + " • " if ntv_alert else "") + "Classic Unit - please update the unit type"
+                    ntv_alert = True
                 detailed_lists["ntvList"].append({
                     "unit": unit_num,
                     "unitId": unit_id,
@@ -1292,6 +1304,9 @@ def get_property_data(property_id, property_name, units_availability=None, lease
                                 vnr_alert = True
                                 vnr_alert_msg = "Past Available Date"
                         except: pass
+                    if unit_type and 'classic' in unit_type.lower():
+                        vnr_alert_msg = (vnr_alert_msg + " • " if vnr_alert else "") + "Classic Unit - please update the unit type"
+                        vnr_alert = True
                     detailed_lists["vacantNotReadyList"].append({
                         "unit": unit_num,
                         "unitId": unit_id,
@@ -1304,7 +1319,7 @@ def get_property_data(property_id, property_name, units_availability=None, lease
             else:
                 status_summary["NTV"].append(unit_num)  # Count in NTV total
                 status_summary["NTV Leased"].append(unit_num)  # Also track as leased
-                # Check for NTV alerts: past move-out OR available date less than 7 days after move-out
+                # Check for NTV alerts: past move-out OR available date less than 10 days after move-out
                 ntv_alert = False
                 ntv_alert_msg = ""
                 if mo_date:
@@ -1315,7 +1330,7 @@ def get_property_data(property_id, property_name, units_availability=None, lease
                             ntv_alert_msg = "Past Move-Out Date"
                         elif av_date:
                             av_dt = datetime.strptime(av_date, "%Y-%m-%d").date()
-                            min_ready_date = mo_dt + timedelta(days=7)
+                            min_ready_date = mo_dt + timedelta(days=10)
                             if av_dt < min_ready_date:
                                 days_gap = (av_dt - mo_dt).days
                                 if days_gap < 0:
@@ -1324,6 +1339,9 @@ def get_property_data(property_id, property_name, units_availability=None, lease
                                     ntv_alert_msg = f"Only {days_gap} days to get ready"
                                 ntv_alert = True
                     except: pass
+                if unit_type and 'classic' in unit_type.lower():
+                    ntv_alert_msg = (ntv_alert_msg + " • " if ntv_alert else "") + "Classic Unit - please update the unit type"
+                    ntv_alert = True
                 detailed_lists["ntvList"].append({
                     "unit": unit_num,
                     "unitId": unit_id,
