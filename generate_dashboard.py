@@ -1243,7 +1243,7 @@ def get_property_data(property_id, property_name, units_availability=None, lease
                     })
             else:
                 status_summary["NTV"].append(unit_num)
-                # Check for NTV alerts: past move-out OR available date less than 10 days after move-out
+                # Check for NTV alerts: past move-out, available less than 10 days after move-out, or available more than 20 days after move-out
                 ntv_alert = False
                 ntv_alert_msg = ""
                 if mo_date:
@@ -1255,12 +1255,17 @@ def get_property_data(property_id, property_name, units_availability=None, lease
                         elif av_date:
                             av_dt = datetime.strptime(av_date, "%Y-%m-%d").date()
                             min_ready_date = mo_dt + timedelta(days=10)
+                            max_ready_date = mo_dt + timedelta(days=20)
                             if av_dt < min_ready_date:
                                 days_gap = (av_dt - mo_dt).days
                                 if days_gap < 0:
                                     ntv_alert_msg = f"Available {abs(days_gap)} days BEFORE move-out"
                                 else:
                                     ntv_alert_msg = f"Only {days_gap} days to get ready"
+                                ntv_alert = True
+                            elif av_dt > max_ready_date:
+                                days_gap = (av_dt - mo_dt).days
+                                ntv_alert_msg = f"Available {days_gap} days AFTER move-out"
                                 ntv_alert = True
                     except: pass
                 if unit_type and 'classic' in unit_type.lower():
@@ -1319,7 +1324,7 @@ def get_property_data(property_id, property_name, units_availability=None, lease
             else:
                 status_summary["NTV"].append(unit_num)  # Count in NTV total
                 status_summary["NTV Leased"].append(unit_num)  # Also track as leased
-                # Check for NTV alerts: past move-out OR available date less than 10 days after move-out
+                # Check for NTV alerts: past move-out, available less than 10 days after move-out, or available more than 20 days after move-out
                 ntv_alert = False
                 ntv_alert_msg = ""
                 if mo_date:
@@ -1331,12 +1336,17 @@ def get_property_data(property_id, property_name, units_availability=None, lease
                         elif av_date:
                             av_dt = datetime.strptime(av_date, "%Y-%m-%d").date()
                             min_ready_date = mo_dt + timedelta(days=10)
+                            max_ready_date = mo_dt + timedelta(days=20)
                             if av_dt < min_ready_date:
                                 days_gap = (av_dt - mo_dt).days
                                 if days_gap < 0:
                                     ntv_alert_msg = f"Available {abs(days_gap)} days BEFORE move-out"
                                 else:
                                     ntv_alert_msg = f"Only {days_gap} days to get ready"
+                                ntv_alert = True
+                            elif av_dt > max_ready_date:
+                                days_gap = (av_dt - mo_dt).days
+                                ntv_alert_msg = f"Available {days_gap} days AFTER move-out"
                                 ntv_alert = True
                     except: pass
                 if unit_type and 'classic' in unit_type.lower():
