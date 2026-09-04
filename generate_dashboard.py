@@ -3937,6 +3937,18 @@ def main():
         f.write(html)
 
     print(f"\n    Dashboard saved to: {output_path}")
+
+    # Excel snapshot (single file, overwritten each run) - fetched by n8n
+    print("\n[6] Writing Excel snapshot...")
+    try:
+        from export_excel import export_dashboard_xlsx
+        xlsx_path = os.path.join(os.path.dirname(__file__), "dashboard.xlsx")
+        export_dashboard_xlsx(properties_data, traffic_data, leases_data,
+                              financial_data, xlsx_path)
+        print(f"    Excel saved to: {xlsx_path}")
+    except Exception as e:
+        print(f"    Warning: Excel export failed: {e}")
+
     print("\n" + "=" * 60)
     print("Done! Open dashboard_live.html in a browser to view.")
     print("=" * 60)

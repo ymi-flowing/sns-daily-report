@@ -37,6 +37,6 @@ jobs:
         run: |
           git config user.name "GitHub Actions Bot"
           git config user.email "actions@github.com"
-          git add dashboard_live.html
+          git add dashboard_live.html dashboard.xlsx
           git diff --staged --quiet || git commit -m "Auto-refresh dashboard [$(date -u '+%Y-%m-%d %H:%M UTC')]"
           git push
