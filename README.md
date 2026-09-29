@@ -42,6 +42,7 @@ This dashboard provides a unified view of:
 | `api/get_leases.py` | Vercel API - fetch leases for renewal letters |
 | `api/get_charges.py` | Vercel API - fetch deposit and recurring charges |
 | `api/push_monday.py` | Vercel API - push data to Monday.com |
+| `renewal_summary.json` | Current-month renewal buckets + % per property (regenerated every 4h, consumed by n8n) |
 | `vercel.json` | Vercel deployment configuration |
 | `requirements.txt` | Python dependencies |
 | `renewal_letters.html` | Renewal letter generation tool |
@@ -279,6 +280,9 @@ Shows income and delinquency data per property.
 ---
 
 ## Recent Changes
+
+### September 29, 2026
+- **Added:** `renewal_summary.json` at repo root — machine-readable current-month renewal snapshot for n8n end-of-month email. Contains per-property buckets (Current / Pending Renewal / Renewed / NTV-Formers / Under Eviction), computed `renewalPct` (same formula as the dashboard header: `renewed / (current + renewed + ntvFormers + underEviction)`), and a `portfolio` total row. Regenerated + committed on every 4h refresh alongside `dashboard_live.html`. Consume via `https://raw.githubusercontent.com/ymi-flowing/sns-daily-report/main/renewal_summary.json` with a GitHub PAT (repo is private).
 
 ### May 26, 2026
 - **Added:** ResMan prospect traffic for **AN3 & TRA** — these two properties are not in the CRM Google Sheet, so their Total Prospects / Daily AVG now come from the Partners API `GET /Prospects` (MTD count by first-contact date, including Lost).
