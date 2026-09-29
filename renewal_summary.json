@@ -1,0 +1,115 @@
+{
+  "month": "2026-09",
+  "monthLabel": "September 2026",
+  "generatedAt": "2026-09-29T10:13:47-04:00",
+  "properties": {
+    "AN3": {
+      "current": 0,
+      "pendingRenewal": 0,
+      "renewed": 0,
+      "ntvFormers": 0,
+      "underEviction": 0,
+      "total": 0,
+      "renewalPct": 0.0
+    },
+    "TRA": {
+      "current": 0,
+      "pendingRenewal": 0,
+      "renewed": 1,
+      "ntvFormers": 0,
+      "underEviction": 0,
+      "total": 1,
+      "renewalPct": 100.0
+    },
+    "ROP": {
+      "current": 0,
+      "pendingRenewal": 0,
+      "renewed": 2,
+      "ntvFormers": 2,
+      "underEviction": 0,
+      "total": 4,
+      "renewalPct": 50.0
+    },
+    "TV": {
+      "current": 0,
+      "pendingRenewal": 0,
+      "renewed": 3,
+      "ntvFormers": 5,
+      "underEviction": 0,
+      "total": 8,
+      "renewalPct": 37.5
+    },
+    "SJ": {
+      "current": 0,
+      "pendingRenewal": 0,
+      "renewed": 7,
+      "ntvFormers": 2,
+      "underEviction": 0,
+      "total": 9,
+      "renewalPct": 77.8
+    },
+    "MUSO": {
+      "current": 0,
+      "pendingRenewal": 0,
+      "renewed": 8,
+      "ntvFormers": 4,
+      "underEviction": 0,
+      "total": 12,
+      "renewalPct": 66.7
+    },
+    "MOC": {
+      "current": 0,
+      "pendingRenewal": 0,
+      "renewed": 5,
+      "ntvFormers": 3,
+      "underEviction": 0,
+      "total": 8,
+      "renewalPct": 62.5
+    },
+    "EAST": {
+      "current": 1,
+      "pendingRenewal": 0,
+      "renewed": 16,
+      "ntvFormers": 5,
+      "underEviction": 2,
+      "total": 24,
+      "renewalPct": 66.7
+    },
+    "ORT": {
+      "current": 1,
+      "pendingRenewal": 0,
+      "renewed": 20,
+      "ntvFormers": 10,
+      "underEviction": 1,
+      "total": 32,
+      "renewalPct": 62.5
+    },
+    "49thStr": {
+      "current": 0,
+      "pendingRenewal": 0,
+      "renewed": 18,
+      "ntvFormers": 3,
+      "underEviction": 0,
+      "total": 21,
+      "renewalPct": 85.7
+    },
+    "AP": {
+      "current": 0,
+      "pendingRenewal": 0,
+      "renewed": 13,
+      "ntvFormers": 2,
+      "underEviction": 0,
+      "total": 15,
+      "renewalPct": 86.7
+    }
+  },
+  "portfolio": {
+    "current": 2,
+    "pendingRenewal": 0,
+    "renewed": 93,
+    "ntvFormers": 36,
+    "underEviction": 3,
+    "total": 134,
+    "renewalPct": 69.4
+  }
+}

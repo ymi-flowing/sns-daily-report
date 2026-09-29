@@ -687,6 +687,59 @@ def get_expiring_leases_data(property_id, leases=None):
         return {"month1": {}, "month2": {}, "month3": {}, "month4": {}, "total": {}}
 
 
+def write_renewal_summary(leases_data, output_path):
+    """Write current-month renewal summary as JSON for n8n end-of-month email.
+
+    Renewal % formula matches the dashboard header (generate_dashboard.py ~3021):
+    renewed / (current + renewed + ntvFormers + underEviction) * 100 — excludes
+    Pending Renewal from the denominator.
+    """
+    from zoneinfo import ZoneInfo
+    florida_tz = ZoneInfo("America/New_York")
+    now = datetime.now(florida_tz)
+    month_key = now.strftime("%Y-%m")
+    month_label = now.strftime("%B %Y")
+
+    def bucket_row(month1):
+        current = month1.get("Current", 0)
+        pending = month1.get("Pending Renewal", 0)
+        renewed = month1.get("Renewed", 0)
+        ntv_formers = month1.get("NTV/Formers", 0)
+        under_eviction = month1.get("Under Eviction", 0)
+        total = current + pending + renewed + ntv_formers + under_eviction
+        denom = current + renewed + ntv_formers + under_eviction
+        pct = round(renewed / denom * 100, 1) if denom > 0 else 0.0
+        return {
+            "current": current,
+            "pendingRenewal": pending,
+            "renewed": renewed,
+            "ntvFormers": ntv_formers,
+            "underEviction": under_eviction,
+            "total": total,
+            "renewalPct": pct,
+        }
+
+    properties = {}
+    portfolio_agg = {"Current": 0, "Pending Renewal": 0, "Renewed": 0,
+                     "NTV/Formers": 0, "Under Eviction": 0}
+    for abbr in TARGET_PROPERTIES:
+        month1 = (leases_data.get(abbr, {}).get("expiring") or {}).get("month1") or {}
+        properties[abbr] = bucket_row(month1)
+        for k in portfolio_agg:
+            portfolio_agg[k] += month1.get(k, 0)
+
+    payload = {
+        "month": month_key,
+        "monthLabel": month_label,
+        "generatedAt": now.isoformat(timespec="seconds"),
+        "properties": properties,
+        "portfolio": bucket_row(portfolio_agg),
+    }
+
+    with open(output_path, "w", encoding="utf-8") as f:
+        json.dump(payload, f, indent=2)
+
+
 def fetch_partners_units(property_id):
     """Fetch units from Partners API - single call for renovation and off-market"""
     params = {"propertyId": property_id}
@@ -3937,6 +3990,15 @@ def main():
         f.write(html)
 
     print(f"\n    Dashboard saved to: {output_path}")
+
+    # Renewal summary JSON (current month, per-property) - fetched by n8n end-of-month
+    print("\n[5b] Writing renewal_summary.json...")
+    try:
+        summary_path = os.path.join(os.path.dirname(__file__), "renewal_summary.json")
+        write_renewal_summary(leases_data, summary_path)
+        print(f"    Renewal summary saved to: {summary_path}")
+    except Exception as e:
+        print(f"    Warning: Renewal summary export failed: {e}")
 
     # Excel snapshot (single file, overwritten each run) - fetched by n8n
     print("\n[6] Writing Excel snapshot...")
