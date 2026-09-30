@@ -3067,7 +3067,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data):
                 {{ key: 'Current', color: 'text-slate-600 dark:text-slate-400' }},
                 {{ key: 'Pending Renewal', color: 'text-amber-600 dark:text-amber-400' }},
                 {{ key: 'Renewed', color: 'text-emerald-600 dark:text-emerald-400' }},
-                {{ key: 'NTV/Formers', color: 'text-orange-600 dark:text-orange-400', tooltip: 'Notice to Vacate + Former + Evicted with move-out in past 3 months' }},
+                {{ key: 'NTV/Formers', color: 'text-orange-600 dark:text-orange-400', tooltip: 'NTV + Evicted + Formers with move-out in past 3 months' }},
                 {{ key: 'Under Eviction', color: 'text-red-600 dark:text-red-400' }}
             ];
 
