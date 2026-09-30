@@ -429,6 +429,7 @@ def get_expiring_leases_data(property_id, leases=None):
     - Current leases with leaseEndDate in range
     - Renewed leases found in history (already renewed to next year)
     - Former residents if MO date is within 3 months (counted in NTV/Formers)
+    - Evicted residents if MO date is within 3 months (counted in NTV/Formers)
     """
     try:
         # Use provided leases or fetch
@@ -632,6 +633,10 @@ def get_expiring_leases_data(property_id, leases=None):
                             elif lease_status == "Former":
                                 if is_mo_in_window(mo_date, bucket):
                                     detail_entry["status"] = "Former"
+                                    add_to_bucket(bucket, "NTV/Formers", detail_entry)
+                            elif lease_status == "Evicted":
+                                if is_mo_in_window(mo_date, bucket):
+                                    detail_entry["status"] = "Evicted"
                                     add_to_bucket(bucket, "NTV/Formers", detail_entry)
                             # Skip Cancelled, Denied, etc.
                 except:
@@ -2404,6 +2409,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data):
                     'Renewed': 'text-emerald-600 dark:text-emerald-400',
                     'NTV': 'text-orange-600 dark:text-orange-400',
                     'Former': 'text-orange-600 dark:text-orange-400',
+                    'Evicted': 'text-red-600 dark:text-red-400',
                     'Under Eviction': 'text-red-600 dark:text-red-400'
                 }};
                 statuses.forEach(status => {{
@@ -3061,7 +3067,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data):
                 {{ key: 'Current', color: 'text-slate-600 dark:text-slate-400' }},
                 {{ key: 'Pending Renewal', color: 'text-amber-600 dark:text-amber-400' }},
                 {{ key: 'Renewed', color: 'text-emerald-600 dark:text-emerald-400' }},
-                {{ key: 'NTV/Formers', color: 'text-orange-600 dark:text-orange-400', tooltip: 'Notice to Vacate + Move Outs from past 3 months' }},
+                {{ key: 'NTV/Formers', color: 'text-orange-600 dark:text-orange-400', tooltip: 'Notice to Vacate + Former + Evicted with move-out in past 3 months' }},
                 {{ key: 'Under Eviction', color: 'text-red-600 dark:text-red-400' }}
             ];
 
