@@ -1,7 +1,7 @@
 {
-  "month": "2026-09",
-  "monthLabel": "September 2026",
-  "generatedAt": "2026-09-30T17:50:51-04:00",
+  "month": "2026-10",
+  "monthLabel": "October 2026",
+  "generatedAt": "2026-10-01T00:27:57-04:00",
   "properties": {
     "AN3": {
       "current": 0,
@@ -24,92 +24,92 @@
     "ROP": {
       "current": 0,
       "pendingRenewal": 0,
-      "renewed": 2,
-      "ntvFormers": 2,
+      "renewed": 7,
+      "ntvFormers": 0,
       "underEviction": 0,
-      "total": 4,
-      "renewalPct": 50.0
+      "total": 7,
+      "renewalPct": 100.0
     },
     "TV": {
       "current": 0,
       "pendingRenewal": 0,
-      "renewed": 3,
+      "renewed": 4,
       "ntvFormers": 5,
       "underEviction": 0,
-      "total": 8,
-      "renewalPct": 37.5
+      "total": 9,
+      "renewalPct": 44.4
     },
     "SJ": {
       "current": 0,
       "pendingRenewal": 0,
-      "renewed": 7,
-      "ntvFormers": 2,
-      "underEviction": 0,
-      "total": 9,
-      "renewalPct": 77.8
+      "renewed": 10,
+      "ntvFormers": 5,
+      "underEviction": 1,
+      "total": 16,
+      "renewalPct": 62.5
     },
     "MUSO": {
       "current": 0,
-      "pendingRenewal": 0,
-      "renewed": 8,
-      "ntvFormers": 4,
+      "pendingRenewal": 1,
+      "renewed": 11,
+      "ntvFormers": 5,
       "underEviction": 0,
-      "total": 12,
-      "renewalPct": 66.7
+      "total": 17,
+      "renewalPct": 68.8
     },
     "MOC": {
       "current": 0,
       "pendingRenewal": 0,
-      "renewed": 5,
-      "ntvFormers": 4,
+      "renewed": 7,
+      "ntvFormers": 3,
       "underEviction": 0,
-      "total": 9,
-      "renewalPct": 55.6
+      "total": 10,
+      "renewalPct": 70.0
     },
     "EAST": {
-      "current": 1,
-      "pendingRenewal": 0,
-      "renewed": 16,
-      "ntvFormers": 7,
-      "underEviction": 2,
-      "total": 26,
-      "renewalPct": 61.5
+      "current": 2,
+      "pendingRenewal": 2,
+      "renewed": 15,
+      "ntvFormers": 13,
+      "underEviction": 1,
+      "total": 33,
+      "renewalPct": 48.4
     },
     "ORT": {
       "current": 1,
-      "pendingRenewal": 0,
-      "renewed": 20,
-      "ntvFormers": 12,
-      "underEviction": 1,
-      "total": 34,
-      "renewalPct": 58.8
+      "pendingRenewal": 3,
+      "renewed": 19,
+      "ntvFormers": 7,
+      "underEviction": 0,
+      "total": 30,
+      "renewalPct": 70.4
     },
     "49thStr": {
       "current": 0,
       "pendingRenewal": 0,
-      "renewed": 18,
-      "ntvFormers": 3,
+      "renewed": 16,
+      "ntvFormers": 10,
       "underEviction": 0,
-      "total": 21,
-      "renewalPct": 85.7
+      "total": 26,
+      "renewalPct": 61.5
     },
     "AP": {
       "current": 0,
       "pendingRenewal": 0,
-      "renewed": 13,
-      "ntvFormers": 3,
+      "renewed": 11,
+      "ntvFormers": 9,
       "underEviction": 0,
-      "total": 16,
-      "renewalPct": 81.2
+      "total": 20,
+      "renewalPct": 55.0
     }
   },
   "portfolio": {
-    "current": 2,
-    "pendingRenewal": 0,
-    "renewed": 93,
-    "ntvFormers": 42,
-    "underEviction": 3,
-    "total": 140,
-    "renewalPct": 66.4
+    "current": 3,
+    "pendingRenewal": 6,
+    "renewed": 101,
+    "ntvFormers": 57,
+    "underEviction": 2,
+    "total": 169,
+    "renewalPct": 62.0
   }
 }
