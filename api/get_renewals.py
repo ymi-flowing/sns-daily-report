@@ -105,8 +105,20 @@ class handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         if not SHEETS_WEBHOOK_URL or not SHARED_SECRET:
+            # Diagnostic: show which likely-related vars Vercel is passing in.
+            # Values are NEVER returned, only names + lengths.
+            similar = {}
+            for name, value in os.environ.items():
+                if any(k in name.upper() for k in ("SHEET", "SECRET", "RESMAN", "WEBHOOK")):
+                    similar[name] = f"len={len(value)}"
             self._send_json(500, {
                 "error": "Missing SHEETS_WEBHOOK_URL or SHARED_SECRET env vars",
+                "diagnostic": {
+                    "sheets_webhook_url_present": bool(SHEETS_WEBHOOK_URL),
+                    "shared_secret_present": bool(SHARED_SECRET),
+                    "related_env_vars_seen": similar,
+                    "total_env_var_count": len(os.environ),
+                },
             })
             return
 
