@@ -418,14 +418,11 @@ function fmtTimestamp(iso) {
     return `${dateStr} at ${timeStr}`;
 }
 
-// fetchData: pulls from Sheet via /api/get_renewals. Used on first load and after a full sync.
+// fetchData: pulls from Sheet via /api/get_renewals. Used on first load and
+// after a full sync. Does NOT spin the Refresh button — the "Last Updated"
+// chip shows "Loading..." as the only state cue. The Refresh button spinner
+// is reserved for actual ResMan-sync runs (via refreshData).
 async function fetchData() {
-    const btn = document.getElementById('refresh-btn');
-    const icon = document.getElementById('refresh-icon');
-    const spinner = document.getElementById('refresh-spinner');
-    btn.disabled = true;
-    icon.classList.add('hidden');
-    spinner.classList.remove('hidden');
     try {
         const resp = await fetch('/api/get_renewals', { cache: 'no-store' });
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
@@ -437,10 +434,6 @@ async function fetchData() {
         renderAll();
     } catch (e) {
         document.getElementById('last-updated').textContent = 'ERROR: ' + e.message;
-    } finally {
-        btn.disabled = false;
-        icon.classList.remove('hidden');
-        spinner.classList.add('hidden');
     }
 }
 
