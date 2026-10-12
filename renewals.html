@@ -10,6 +10,21 @@
     </script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        /* Mobile safety: never allow sideways page scroll */
+        html, body { overflow-x: hidden; max-width: 100vw; }
+
+        /* Narrower multi-select triggers on small screens */
+        @media (max-width: 640px) {
+            .multi-trigger { min-width: 140px; padding: 8px 10px; font-size: 12px; }
+            .multi-panel { min-width: 220px; max-height: 300px; }
+        }
+
+        /* Allow .tip to be pinned open via JS (used on tap/click) */
+        .tip.tip-visible::after,
+        [data-hover-tip].hover-tip-visible::after {
+            opacity: 1; visibility: visible;
+        }
+
         /* Fancy scrollbar */
         .fancy-scroll { scrollbar-width: thin; scrollbar-color: #60a5fa #e2e8f0; }
         .dark .fancy-scroll { scrollbar-color: #3b82f6 #1e293b; }
@@ -270,7 +285,7 @@
         }
     </style>
 </head>
-<body class="bg-slate-50 dark:bg-slate-900 p-6 font-sans text-slate-800 dark:text-slate-100 transition-colors duration-200">
+<body class="bg-slate-50 dark:bg-slate-900 p-3 sm:p-6 font-sans text-slate-800 dark:text-slate-100 transition-colors duration-200">
 
 <!-- Loading Overlay (same pattern as Daily KPIs) -->
 <div id="refresh-overlay" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 items-center justify-center">
@@ -291,17 +306,17 @@
 <div class="max-w-7xl mx-auto space-y-5">
 
     <!-- HEADER -->
-    <div class="flex justify-between items-center bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
+    <div class="flex flex-wrap justify-between items-center gap-3 bg-white dark:bg-slate-800 p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
         <div class="flex items-center gap-3">
-            <div class="w-14 h-14 flex items-center justify-center">
-                <img src="https://www.dropbox.com/scl/fi/ss6tqrjk1xyldcwl5g3w9/SNS-Blue.png?rlkey=zcsommki78v65qmk6zvzo0jxh&raw=1" alt="SNS Logo" class="w-14 h-14 object-contain dark:hidden">
-                <img src="https://www.dropbox.com/scl/fi/8qha3kw2j503jbd037ahh/SNS-White.png?rlkey=s3gjbikiohpe00vpcx8x1td3r&raw=1" alt="SNS Logo" class="w-14 h-14 object-contain hidden dark:block">
+            <div class="w-10 h-10 sm:w-14 sm:h-14 flex items-center justify-center">
+                <img src="https://www.dropbox.com/scl/fi/ss6tqrjk1xyldcwl5g3w9/SNS-Blue.png?rlkey=zcsommki78v65qmk6zvzo0jxh&raw=1" alt="SNS Logo" class="w-10 h-10 sm:w-14 sm:h-14 object-contain dark:hidden">
+                <img src="https://www.dropbox.com/scl/fi/8qha3kw2j503jbd037ahh/SNS-White.png?rlkey=s3gjbikiohpe00vpcx8x1td3r&raw=1" alt="SNS Logo" class="w-10 h-10 sm:w-14 sm:h-14 object-contain hidden dark:block">
             </div>
             <div>
-                <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Renewals Dashboard</h1>
+                <h1 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">Renewals Dashboard</h1>
             </div>
         </div>
-        <div class="flex items-center space-x-3">
+        <div class="flex flex-wrap items-center gap-2 sm:gap-3">
             <!-- Last Updated Chip (matches Daily KPIs refresh-timestamp) -->
             <div>
                 <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">&nbsp;</label>
@@ -591,13 +606,45 @@ function statusPillHtml(status) {
 // DATA FETCH + NORMALIZE
 // =============================================================================
 
-// Format timestamp like "Oct 12, 2026 at 1:33 PM ET" (matches Daily KPIs chip)
+// Format timestamp. Compact enough to fit on mobile. e.g. "Oct 12, 1:33 PM"
 function fmtTimestamp(iso) {
     if (!iso) return '—';
     const d = new Date(iso);
-    const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     const timeStr = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-    return `${dateStr} at ${timeStr}`;
+    return `${dateStr}, ${timeStr}`;
+}
+
+// Click vs double-click helper. Single click fires after a short delay (so a
+// double-click can cancel it). Double click fires immediately.
+// Usage: const onClick = clickOrDblClick(single, dbl);
+function clickOrDblClick(singleFn, dblFn, delay = 250) {
+    let timer = null;
+    return {
+        click(e) {
+            if (timer) { clearTimeout(timer); timer = null; return; }
+            timer = setTimeout(() => { timer = null; singleFn(e); }, delay);
+        },
+        dblclick(e) {
+            if (timer) { clearTimeout(timer); timer = null; }
+            dblFn(e);
+        },
+    };
+}
+
+// Chart.js dblclick wrapper -- Chart.js only exposes onClick, so we detect
+// double-click via timestamp comparison.
+function chartDblClick(cb, delay = 400) {
+    let last = 0;
+    return (e, els) => {
+        const now = Date.now();
+        if (now - last < delay) {
+            cb(e, els);
+            last = 0;
+        } else {
+            last = now;
+        }
+    };
 }
 
 // fetchData: pulls from Sheet via /api/get_renewals. Used on first load and
@@ -973,16 +1020,27 @@ function renderKPIs() {
         </div>`;
     }).join('');
     grid.querySelectorAll('.kpi-card').forEach(el => {
-        el.addEventListener('click', () => {
-            const i = Number(el.dataset.kpi);
-            const card = cards[i];
+        const i = Number(el.dataset.kpi);
+        const card = cards[i];
+        const openForCard = () => {
             if (!card.filter) {
                 openModal(card.label, rows);
             } else {
                 const subset = rows.filter(r => card.filter.status.includes(r.statusKey));
                 openModal(card.label, subset);
             }
-        });
+        };
+        const showTip = () => {
+            const tip = el.querySelector('.tip');
+            if (!tip) return openForCard();  // KPIs without tip just open directly
+            // Close any other open tips, then show this one
+            document.querySelectorAll('.tip.tip-visible').forEach(t => { if (t !== tip) t.classList.remove('tip-visible'); });
+            tip.classList.add('tip-visible');
+            setTimeout(() => tip.classList.remove('tip-visible'), 3500);
+        };
+        const h = clickOrDblClick(showTip, openForCard);
+        el.addEventListener('click', h.click);
+        el.addEventListener('dblclick', h.dblclick);
     });
 }
 function pctOf(part, total) {
@@ -1030,14 +1088,14 @@ function renderCharts() {
             plugins: {
                 legend: { position: 'bottom', labels: { color: tc.text, boxWidth: 10, font: { size: 10 } } },
             },
-            onClick: (e, els) => {
+            onClick: chartDblClick((e, els) => {
                 if (!els.length) return;
                 const el = els[0];
                 const month = monthsForBreakdown[el.index];
                 const status = statusesPresent[el.datasetIndex];
                 const subset = rows.filter(r => r.expMonthKey === month && r.statusKey === status);
                 openModal(`${fmtMonthLabel(month)} — ${status}`, subset);
-            },
+            }),
         },
     });
 
@@ -1079,14 +1137,14 @@ function renderCharts() {
                     }
                 },
             },
-            onClick: (e, els) => {
+            onClick: chartDblClick((e, els) => {
                 if (!els.length) return;
                 const el = els[0];
                 const m = monthsPresent[el.index];
                 const kind = el.datasetIndex === 0 ? 'Renewed' : 'Lower Offer';
                 const subset = rows.filter(r => r.expMonthKey === m && r.statusKey === kind);
                 openModal(`${fmtMonthLabel(m)} — ${kind}`, subset);
-            },
+            }),
         },
     });
 
@@ -1113,13 +1171,13 @@ function renderCharts() {
                 y: { ticks: { color: tc.text }, grid: { color: tc.grid }, beginAtZero: true },
             },
             plugins: { legend: { display: false } },
-            onClick: (e, els) => {
+            onClick: chartDblClick((e, els) => {
                 if (!els.length) return;
                 const i = els[0].index;
                 const lo = bins[i], hi = bins[i+1];
                 const subset = rows.filter(r => r.deltaApct !== null && r.deltaApct >= lo && r.deltaApct < hi);
                 openModal(`Offered Δ ${binLabels[i]}`, subset);
-            },
+            }),
         },
     });
 
@@ -1169,12 +1227,12 @@ function renderCharts() {
                     }
                 },
             },
-            onClick: (e, els) => {
+            onClick: chartDblClick((e, els) => {
                 if (!els.length) return;
                 const m = monthsForAvg[els[0].index];
                 const subset = rows.filter(r => r.expMonthKey === m && r.actualRenewal);
                 openModal('Signed renewals ' + fmtMonthLabel(m), subset);
-            },
+            }),
         },
     });
 }
