@@ -312,7 +312,7 @@
             <div class="relative h-72"><canvas id="chart-month-status"></canvas></div>
         </div>
         <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
-            <h3 class="text-sm font-semibold text-slate-800 dark:text-white mb-3">Renewed vs Lower Offer % by expiring month</h3>
+            <h3 class="text-sm font-semibold text-slate-800 dark:text-white mb-3">Signed renewals: Renewed vs Lower Offer by month <span class="text-xs text-slate-500">(% of signed)</span></h3>
             <div class="relative h-72"><canvas id="chart-month"></canvas></div>
         </div>
         <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
@@ -320,8 +320,8 @@
             <div class="relative h-72"><canvas id="chart-delta"></canvas></div>
         </div>
         <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
-            <h3 class="text-sm font-semibold text-slate-800 dark:text-white mb-3">Actual Delta % vs Offered Delta % <span class="text-xs text-slate-500">(renewed only)</span></h3>
-            <div class="relative h-72"><canvas id="chart-scatter"></canvas></div>
+            <h3 class="text-sm font-semibold text-slate-800 dark:text-white mb-3">Avg renewed total by expiring month <span class="text-xs text-slate-500">(trend)</span></h3>
+            <div class="relative h-72"><canvas id="chart-avg-renewed"></canvas></div>
         </div>
     </div>
 
@@ -748,32 +748,37 @@ function computeKPIs(rows) {
     const total = rows.length;
     const renewed = rows.filter(r => r.statusKey === 'Renewed').length;
     const lowerOffer = rows.filter(r => r.statusKey === 'Lower Offer').length;
-    const totalRenewed = renewed + lowerOffer;  // signed-renewal count
+    const signed = renewed + lowerOffer;  // signed renewals (either kind)
     const pending = rows.filter(r => r.statusKey === 'Current').length;
     const lostCount = rows.filter(r => ['NTV','Moved Out','Under Eviction','Evicted','Cancelled','Denied'].includes(r.statusKey)).length;
-    const decided = totalRenewed + lostCount;
-    const retentionPct = decided > 0 ? totalRenewed / decided : 0;
+    const decided = signed + lostCount;
+    const renewalRate = decided > 0 ? signed / decided : 0;
+    const lowerPctOfSigned = signed > 0 ? lowerOffer / signed : 0;
     const offerDeltas = rows.map(r => r.deltaApct).filter(v => v !== null);
     const avgOfferDelta = offerDeltas.length ? offerDeltas.reduce((a,b)=>a+b,0)/offerDeltas.length : 0;
     const actualDeltas = rows.filter(r => r.statusKey === 'Renewed' || r.statusKey === 'Lower Offer')
                              .map(r => r.actualDeltaPct).filter(v => v !== null);
     const avgActualDelta = actualDeltas.length ? actualDeltas.reduce((a,b)=>a+b,0)/actualDeltas.length : 0;
-    const totalRenewalValue = rows.filter(r => r.actualRenewal).reduce((s,r)=>s+r.actualRenewal, 0);
-    return { total, renewed, lowerOffer, totalRenewed, pending, lostCount, retentionPct,
-             avgOfferDelta, avgActualDelta, totalRenewalValue };
+    const renewalAmounts = rows.filter(r => r.actualRenewal).map(r => r.actualRenewal);
+    const avgRenewedTotal = renewalAmounts.length ? renewalAmounts.reduce((a,b)=>a+b,0) / renewalAmounts.length : 0;
+    const uniqueMonths = new Set(rows.map(r => r.expMonthKey).filter(Boolean));
+    const avgPerMonth = uniqueMonths.size > 0 ? total / uniqueMonths.size : 0;
+    return { total, renewed, lowerOffer, signed, decided, lostCount, pending,
+             renewalRate, lowerPctOfSigned, avgOfferDelta, avgActualDelta,
+             avgRenewedTotal, avgPerMonth, monthCount: uniqueMonths.size };
 }
 function renderKPIs() {
     const rows = filtered();
     const k = computeKPIs(rows);
     const cards = [
-        { label: 'Total Expiring',    value: k.total,                            sub: '',                                   accent: 'blue',  filter: null },
-        { label: 'Renewed',           value: k.renewed,                          sub: pctOf(k.renewed, k.total),            accent: 'green', filter: {status: ['Renewed']} },
-        { label: 'Lower Offer',       value: k.lowerOffer,                       sub: pctOf(k.lowerOffer, k.total),         accent: 'amber', filter: {status: ['Lower Offer']} },
-        { label: 'Retention %',       value: fmtPct(k.retentionPct),             sub: `of ${k.totalRenewed+k.lostCount} decided`, accent: 'blue', filter: null },
-        { label: 'Pending Decision',  value: k.pending,                          sub: pctOf(k.pending, k.total),            accent: 'slate', filter: {status: ['Current']} },
-        { label: 'Avg Offered Δ',     value: fmtPct(k.avgOfferDelta),            sub: 'portfolio avg',                      accent: 'blue',  filter: null },
-        { label: 'Avg Actual Δ',      value: fmtPct(k.avgActualDelta),           sub: 'renewed only',                       accent: 'green', filter: {status: ['Renewed','Lower Offer']} },
-        { label: 'Renewal Value',     value: fmtMoney(k.totalRenewalValue),      sub: 'total signed',                       accent: 'blue',  filter: {status: ['Renewed','Lower Offer']} },
+        { label: 'Total Expiring',       value: k.total,                            sub: '',                                       accent: 'blue',  filter: null },
+        { label: 'Renewal Rate',         value: fmtPct(k.renewalRate),              sub: `${k.signed} of ${k.decided} decided`,    accent: 'green', filter: {status: ['Renewed','Lower Offer']} },
+        { label: 'Lower Offer %',        value: fmtPct(k.lowerPctOfSigned),         sub: `${k.lowerOffer} of ${k.signed} signed`,  accent: 'amber', filter: {status: ['Lower Offer']} },
+        { label: 'Avg Renewed Total',    value: fmtMoney(k.avgRenewedTotal),        sub: 'per signed renewal',                     accent: 'green', filter: {status: ['Renewed','Lower Offer']} },
+        { label: 'Pending Decision',     value: k.pending,                          sub: pctOf(k.pending, k.total),                accent: 'slate', filter: {status: ['Current']} },
+        { label: 'Avg Offered Δ',        value: fmtPct(k.avgOfferDelta),            sub: 'portfolio avg',                          accent: 'blue',  filter: null },
+        { label: 'Avg Actual Δ',         value: fmtPct(k.avgActualDelta),           sub: 'renewed only',                           accent: 'green', filter: {status: ['Renewed','Lower Offer']} },
+        { label: 'Avg Expiring / Month', value: k.avgPerMonth.toFixed(1),           sub: `across ${k.monthCount} months`,          accent: 'blue',  filter: null },
     ];
     const accentColors = {
         blue:  { bar: 'bg-blue-500', text: 'text-blue-600 dark:text-blue-400' },
@@ -863,40 +868,51 @@ function renderCharts() {
         },
     });
 
-    // 2. Line: renewed % + lower offer % by expiring month
+    // 2. 100% stacked bar: Renewed vs Lower Offer as share of signed, by month
     const monthsPresent = [...new Set(rows.map(r => r.expMonthKey).filter(Boolean))].sort();
-    const renewedByMonth = monthsPresent.map(m => {
-        const monthRows = rows.filter(r => r.expMonthKey === m);
-        const renewed = monthRows.filter(r => r.statusKey === 'Renewed').length;
-        return monthRows.length ? 100 * renewed / monthRows.length : 0;
-    });
-    const lowerByMonth = monthsPresent.map(m => {
-        const monthRows = rows.filter(r => r.expMonthKey === m);
-        const lower = monthRows.filter(r => r.statusKey === 'Lower Offer').length;
-        return monthRows.length ? 100 * lower / monthRows.length : 0;
+    const signedByMonth = monthsPresent.map(m => {
+        const r = rows.filter(x => x.expMonthKey === m);
+        const renewed = r.filter(x => x.statusKey === 'Renewed').length;
+        const lower = r.filter(x => x.statusKey === 'Lower Offer').length;
+        return { renewed, lower, total: renewed + lower };
     });
     STATE.charts.month = new Chart(document.getElementById('chart-month'), {
-        type: 'line',
+        type: 'bar',
         data: {
             labels: monthsPresent.map(fmtMonthLabel),
             datasets: [
-                { label: 'Renewed %', data: renewedByMonth, borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.1)', tension: 0.3, fill: true },
-                { label: 'Lower Offer %', data: lowerByMonth, borderColor: '#f59e0b', backgroundColor: 'rgba(245,158,11,0.1)', tension: 0.3, fill: true },
+                { label: 'Renewed',     data: signedByMonth.map(d => d.total ? 100 * d.renewed / d.total : 0),
+                  backgroundColor: '#10b981', borderWidth: 0, stack: 'signed' },
+                { label: 'Lower Offer', data: signedByMonth.map(d => d.total ? 100 * d.lower / d.total : 0),
+                  backgroundColor: '#f59e0b', borderWidth: 0, stack: 'signed' },
             ]
         },
         options: {
             responsive: true, maintainAspectRatio: false,
             scales: {
-                x: { ticks: { color: tc.text }, grid: { color: tc.grid } },
-                y: { ticks: { color: tc.text, callback: v => v + '%' }, grid: { color: tc.grid }, beginAtZero: true },
+                x: { stacked: true, ticks: { color: tc.text }, grid: { color: tc.grid } },
+                y: { stacked: true, max: 100, ticks: { color: tc.text, callback: v => v + '%' }, grid: { color: tc.grid }, beginAtZero: true },
             },
-            plugins: { legend: { position: 'bottom', labels: { color: tc.text, boxWidth: 10, font: { size: 10 } } } },
+            plugins: {
+                legend: { position: 'bottom', labels: { color: tc.text, boxWidth: 10, font: { size: 10 } } },
+                tooltip: {
+                    callbacks: {
+                        label: ctx => {
+                            const d = signedByMonth[ctx.dataIndex];
+                            if (!d.total) return `${ctx.dataset.label}: no signed`;
+                            if (ctx.datasetIndex === 0) return `Renewed: ${d.renewed} of ${d.total} (${(100*d.renewed/d.total).toFixed(1)}%)`;
+                            return `Lower Offer: ${d.lower} of ${d.total} (${(100*d.lower/d.total).toFixed(1)}%)`;
+                        }
+                    }
+                },
+            },
             onClick: (e, els) => {
                 if (!els.length) return;
                 const el = els[0];
                 const m = monthsPresent[el.index];
-                const subset = rows.filter(r => r.expMonthKey === m);
-                openModal('Expiring ' + fmtMonthLabel(m), subset);
+                const kind = el.datasetIndex === 0 ? 'Renewed' : 'Lower Offer';
+                const subset = rows.filter(r => r.expMonthKey === m && r.statusKey === kind);
+                openModal(`${fmtMonthLabel(m)} — ${kind}`, subset);
             },
         },
     });
@@ -934,59 +950,57 @@ function renderCharts() {
         },
     });
 
-    // 4. Scatter: actual vs offered delta %
-    const renewedRows = rows.filter(r => r.statusKey === 'Renewed' || r.statusKey === 'Lower Offer');
-    const scatterData = renewedRows
-        .filter(r => r.deltaApct !== null && r.actualDeltaPct !== null)
-        .map(r => ({
-            x: 100 * r.deltaApct,
-            y: 100 * r.actualDeltaPct,
-            property: r.property,
-            unit: r['Unit'],
-            resident: r['Resident Name'],
-            status: r.statusKey,
-            raw: r,
-        }));
-    STATE.charts.scatter = new Chart(document.getElementById('chart-scatter'), {
-        type: 'scatter',
+    // 4. Line: avg renewed total by expiring month (trend over time)
+    const monthsForAvg = [...new Set(rows.map(r => r.expMonthKey).filter(Boolean))].sort();
+    const avgRenewalByMonth = monthsForAvg.map(m => {
+        const amts = rows.filter(r => r.expMonthKey === m && r.actualRenewal).map(r => r.actualRenewal);
+        return amts.length ? amts.reduce((a,b)=>a+b,0) / amts.length : null;
+    });
+    STATE.charts.avgRenewed = new Chart(document.getElementById('chart-avg-renewed'), {
+        type: 'line',
         data: {
-            datasets: [
-                {
-                    label: 'Renewed',
-                    data: scatterData.filter(d => d.status === 'Renewed'),
-                    backgroundColor: 'rgba(16,185,129,0.7)',
-                    pointRadius: 5,
-                },
-                {
-                    label: 'Lower Offer',
-                    data: scatterData.filter(d => d.status === 'Lower Offer'),
-                    backgroundColor: 'rgba(245,158,11,0.7)',
-                    pointRadius: 5,
-                },
-            ],
+            labels: monthsForAvg.map(fmtMonthLabel),
+            datasets: [{
+                label: 'Avg Renewed Total',
+                data: avgRenewalByMonth,
+                borderColor: '#1e40af',
+                backgroundColor: 'rgba(30,64,175,0.1)',
+                tension: 0.3,
+                fill: true,
+                spanGaps: true,
+                pointRadius: 4,
+                pointBackgroundColor: '#1e40af',
+            }],
         },
         options: {
             responsive: true, maintainAspectRatio: false,
             scales: {
-                x: { title: { display: true, text: 'Offered Δ %', color: tc.text }, ticks: { color: tc.text, callback: v => v + '%' }, grid: { color: tc.grid } },
-                y: { title: { display: true, text: 'Actual Δ %', color: tc.text }, ticks: { color: tc.text, callback: v => v + '%' }, grid: { color: tc.grid } },
+                x: { ticks: { color: tc.text }, grid: { color: tc.grid } },
+                y: {
+                    ticks: { color: tc.text, callback: v => '$' + Math.round(v).toLocaleString() },
+                    grid: { color: tc.grid },
+                    beginAtZero: false,
+                },
             },
             plugins: {
-                legend: { position: 'bottom', labels: { color: tc.text, boxWidth: 10, font: { size: 10 } } },
+                legend: { display: false },
                 tooltip: {
                     callbacks: {
                         label: ctx => {
-                            const d = ctx.raw;
-                            return `${d.property} ${d.unit} ${d.resident}: offered ${d.x.toFixed(1)}%, actual ${d.y.toFixed(1)}%`;
+                            const m = monthsForAvg[ctx.dataIndex];
+                            const n = rows.filter(r => r.expMonthKey === m && r.actualRenewal).length;
+                            const v = ctx.parsed.y;
+                            return v === null ? 'No signed renewals' :
+                                `$${Math.round(v).toLocaleString()} avg across ${n} signed`;
                         }
                     }
-                }
+                },
             },
             onClick: (e, els) => {
                 if (!els.length) return;
-                const el = els[0];
-                const point = STATE.charts.scatter.data.datasets[el.datasetIndex].data[el.index];
-                openModal(`${point.property} ${point.unit} — ${point.resident}`, [point.raw]);
+                const m = monthsForAvg[els[0].index];
+                const subset = rows.filter(r => r.expMonthKey === m && r.actualRenewal);
+                openModal('Signed renewals ' + fmtMonthLabel(m), subset);
             },
         },
     });
