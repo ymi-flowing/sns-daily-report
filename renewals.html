@@ -56,9 +56,10 @@
 
         .multi-panel {
             position: absolute; top: calc(100% + 6px); left: 0; z-index: 50;
-            min-width: 220px; max-height: 320px; overflow: auto;
+            min-width: 260px; max-height: 420px; overflow: auto;
             background: white; border: 1px solid #e2e8f0; border-radius: 12px;
             box-shadow: 0 10px 30px rgba(15, 23, 42, 0.15); padding: 8px;
+            white-space: nowrap;
         }
         .dark .multi-panel { background: #1e293b; border-color: #334155; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         .multi-panel.hidden { display: none; }
@@ -66,6 +67,7 @@
             display: flex; align-items: center; gap: 8px;
             padding: 7px 10px; border-radius: 8px; cursor: pointer;
             font-size: 13px; color: #334155;
+            white-space: nowrap;
         }
         .dark .multi-item { color: #cbd5e1; }
         .multi-item:hover { background: #eff6ff; }
@@ -619,6 +621,8 @@ function initMulti() {
             document.querySelectorAll('.multi-panel').forEach(p => { if (p !== panel) p.classList.add('hidden'); });
             panel.classList.toggle('hidden');
         });
+        // Keep the panel open when clicking inside it (checkboxes, labels, actions).
+        panel.addEventListener('click', e => e.stopPropagation());
         wrap.querySelectorAll('.multi-actions button').forEach(btn => {
             btn.addEventListener('click', e => {
                 e.stopPropagation();
@@ -636,6 +640,7 @@ function initMulti() {
             });
         });
     });
+    // Close any open panel when clicking anywhere OUTSIDE the panels/triggers.
     document.addEventListener('click', () => {
         document.querySelectorAll('.multi-panel').forEach(p => p.classList.add('hidden'));
     });
