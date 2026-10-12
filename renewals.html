@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SNS Renewals Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { darkMode: 'class' };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Fancy scrollbar */
+        .fancy-scroll { scrollbar-width: thin; scrollbar-color: #60a5fa #e2e8f0; }
+        .dark .fancy-scroll { scrollbar-color: #3b82f6 #1e293b; }
+        .fancy-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
+        .fancy-scroll::-webkit-scrollbar-track { background: #e2e8f0; border-radius: 10px; }
+        .dark .fancy-scroll::-webkit-scrollbar-track { background: #1e293b; }
+        .fancy-scroll::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #60a5fa 0%, #3b82f6 100%); border-radius: 10px;
+        }
+
+        /* KPI card interaction */
+        .kpi-card {
+            transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+            cursor: pointer;
+        }
+        .kpi-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(30, 64, 175, 0.15);
+            border-color: #3b82f6;
+        }
+        .dark .kpi-card:hover {
+            box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.3);
+            border-color: #60a5fa;
+        }
+
+        /* Multi-select pattern (adapted from Real Option Leads) */
+        .multi-wrap { position: relative; }
+        .multi-trigger {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 10px 14px; min-width: 180px;
+            border-radius: 12px; border: 2px solid #e2e8f0; background: white;
+            color: #334155; font-size: 13px; font-weight: 500; cursor: pointer;
+            transition: border-color 0.15s;
+        }
+        .dark .multi-trigger { background: #1e293b; border-color: #334155; color: #cbd5e1; }
+        .multi-trigger:hover { border-color: #3b82f6; }
+        .multi-trigger.active { border-color: #1e40af; background: #eff6ff; }
+        .dark .multi-trigger.active { background: #1e3a8a33; border-color: #60a5fa; }
+        .multi-trigger .count-badge {
+            background: #1e40af; color: white; font-size: 10px; font-weight: 700;
+            border-radius: 10px; padding: 2px 7px; margin-left: 2px;
+        }
+        .multi-trigger svg { opacity: 0.5; }
+
+        .multi-panel {
+            position: absolute; top: calc(100% + 6px); left: 0; z-index: 50;
+            min-width: 220px; max-height: 320px; overflow: auto;
+            background: white; border: 1px solid #e2e8f0; border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.15); padding: 8px;
+        }
+        .dark .multi-panel { background: #1e293b; border-color: #334155; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .multi-panel.hidden { display: none; }
+        .multi-item {
+            display: flex; align-items: center; gap: 8px;
+            padding: 7px 10px; border-radius: 8px; cursor: pointer;
+            font-size: 13px; color: #334155;
+        }
+        .dark .multi-item { color: #cbd5e1; }
+        .multi-item:hover { background: #eff6ff; }
+        .dark .multi-item:hover { background: #1e293b80; }
+        .multi-item input { accent-color: #1e40af; margin: 0; }
+        .multi-actions {
+            display: flex; justify-content: space-between; padding: 6px 10px 2px;
+            font-size: 11px; border-bottom: 1px solid #e2e8f0; margin-bottom: 6px;
+        }
+        .dark .multi-actions { border-color: #334155; }
+        .multi-actions button {
+            background: none; border: none; color: #1e40af; cursor: pointer; font-weight: 600;
+        }
+        .dark .multi-actions button { color: #60a5fa; }
+
+        /* Status pills */
+        .status-pill {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 600;
+            white-space: nowrap;
+        }
+        .status-pill .dot { width: 6px; height: 6px; border-radius: 50%; }
+
+        /* Table hover + sort */
+        .data-row:hover { background-color: rgba(59, 130, 246, 0.06); }
+        .dark .data-row:hover { background-color: rgba(59, 130, 246, 0.12); }
+        th.sortable { cursor: pointer; user-select: none; }
+        th.sortable:hover { color: #1e40af; }
+        .dark th.sortable:hover { color: #60a5fa; }
+        th.sortable .arrow {
+            display: inline-block; width: 10px; margin-left: 3px; opacity: 0.4;
+            font-size: 10px;
+        }
+        th.sortable.sort-active .arrow { opacity: 1; color: #1e40af; }
+        .dark th.sortable.sort-active .arrow { color: #60a5fa; }
+
+        /* Modal */
+        .modal-backdrop {
+            position: fixed; inset: 0; z-index: 100;
+            background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px);
+            display: flex; align-items: center; justify-content: center;
+            padding: 20px;
+        }
+        .modal-backdrop.hidden { display: none; }
+        .modal-box {
+            background: white; border-radius: 16px; max-width: 1200px; width: 100%;
+            max-height: 90vh; display: flex; flex-direction: column; overflow: hidden;
+        }
+        .dark .modal-box { background: #1e293b; }
+
+        /* Spinner */
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .spinner {
+            width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white; border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        /* Scrollbar global */
+        * { scrollbar-width: thin; scrollbar-color: #94a3b8 transparent; }
+        .dark * { scrollbar-color: #475569 transparent; }
+        *::-webkit-scrollbar { width: 8px; height: 8px; }
+        *::-webkit-scrollbar-track { background: transparent; border-radius: 10px; }
+        *::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #94a3b8 0%, #64748b 100%);
+            border-radius: 10px;
+        }
+        .dark *::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #475569 0%, #334155 100%);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-900 p-6 font-sans text-slate-800 dark:text-slate-100 transition-colors duration-200">
+
+<div class="max-w-7xl mx-auto space-y-5">
+
+    <!-- HEADER -->
+    <div class="flex justify-between items-center bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
+        <div class="flex items-center gap-3">
+            <div class="w-14 h-14 flex items-center justify-center">
+                <img src="https://www.dropbox.com/scl/fi/ss6tqrjk1xyldcwl5g3w9/SNS-Blue.png?rlkey=zcsommki78v65qmk6zvzo0jxh&raw=1" alt="SNS Logo" class="w-14 h-14 object-contain dark:hidden">
+                <img src="https://www.dropbox.com/scl/fi/8qha3kw2j503jbd037ahh/SNS-White.png?rlkey=s3gjbikiohpe00vpcx8x1td3r&raw=1" alt="SNS Logo" class="w-14 h-14 object-contain hidden dark:block">
+            </div>
+            <div>
+                <div class="flex items-center gap-2">
+                    <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Renewals Dashboard</h1>
+                    <a href="/" class="text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 underline underline-offset-2">&larr; Daily KPIs</a>
+                </div>
+                <p id="last-synced" class="text-xs text-slate-500 dark:text-slate-400 mt-1">Loading...</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-3">
+            <button id="sync-btn" onclick="syncData()" class="h-11 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm flex items-center gap-2 transition-all shadow-sm">
+                <svg id="sync-icon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                <span id="sync-spinner" class="spinner hidden"></span>
+                <span>Sync Data</span>
+            </button>
+            <button id="theme-toggle" class="h-11 w-11 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 transition-all outline-none focus:ring-2 focus:ring-blue-400 border-2 border-slate-200 dark:border-slate-600 flex items-center justify-center">
+                <svg id="theme-dark-icon" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+                <svg id="theme-light-icon" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- FILTER BAR -->
+    <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
+        <div class="flex flex-wrap items-center gap-3">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 pr-1">Filters</span>
+            <div class="multi-wrap" id="filter-property">
+                <button class="multi-trigger" data-key="property">
+                    <span class="label">Property</span>
+                    <span class="count-badge hidden">0</span>
+                    <svg class="w-3 h-3 ml-auto" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg>
+                </button>
+                <div class="multi-panel hidden">
+                    <div class="multi-actions"><button data-action="all">All</button><button data-action="none">None</button></div>
+                    <div class="multi-list"></div>
+                </div>
+            </div>
+            <div class="multi-wrap" id="filter-status">
+                <button class="multi-trigger" data-key="status">
+                    <span class="label">Status</span>
+                    <span class="count-badge hidden">0</span>
+                    <svg class="w-3 h-3 ml-auto" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg>
+                </button>
+                <div class="multi-panel hidden">
+                    <div class="multi-actions"><button data-action="all">All</button><button data-action="none">None</button></div>
+                    <div class="multi-list"></div>
+                </div>
+            </div>
+            <div class="multi-wrap" id="filter-month">
+                <button class="multi-trigger" data-key="month">
+                    <span class="label">Expiring Month</span>
+                    <span class="count-badge hidden">0</span>
+                    <svg class="w-3 h-3 ml-auto" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg>
+                </button>
+                <div class="multi-panel hidden">
+                    <div class="multi-actions"><button data-action="all">All</button><button data-action="none">None</button></div>
+                    <div class="multi-list"></div>
+                </div>
+            </div>
+            <button id="clear-filters" class="h-10 px-4 rounded-xl text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 border-2 border-slate-200 dark:border-slate-600 hover:border-red-300 dark:hover:border-red-700 transition-colors">Clear all</button>
+            <span id="filter-summary" class="text-xs text-slate-500 dark:text-slate-400 ml-auto"></span>
+        </div>
+    </div>
+
+    <!-- KPI CARDS -->
+    <div id="kpi-grid" class="grid grid-cols-2 md:grid-cols-4 gap-3"></div>
+
+    <!-- CHARTS -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
+            <h3 class="text-sm font-semibold text-slate-800 dark:text-white mb-3">Status breakdown by property</h3>
+            <div class="relative h-72"><canvas id="chart-property"></canvas></div>
+        </div>
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
+            <h3 class="text-sm font-semibold text-slate-800 dark:text-white mb-3">Renewed vs Lower Offer % by expiring month</h3>
+            <div class="relative h-72"><canvas id="chart-month"></canvas></div>
+        </div>
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
+            <h3 class="text-sm font-semibold text-slate-800 dark:text-white mb-3">Offered Delta % distribution</h3>
+            <div class="relative h-72"><canvas id="chart-delta"></canvas></div>
+        </div>
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
+            <h3 class="text-sm font-semibold text-slate-800 dark:text-white mb-3">Actual Delta % vs Offered Delta % <span class="text-xs text-slate-500">(renewed only)</span></h3>
+            <div class="relative h-72"><canvas id="chart-scatter"></canvas></div>
+        </div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+        <div class="p-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+            <div>
+                <h2 class="text-lg font-bold text-slate-800 dark:text-white">Renewal roster <span id="row-count" class="text-sm font-normal text-slate-500 dark:text-slate-400 ml-2"></span></h2>
+            </div>
+            <button id="csv-export" class="h-9 px-3 rounded-lg bg-slate-100 dark:bg-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                Export CSV
+            </button>
+        </div>
+        <div class="overflow-x-auto fancy-scroll max-h-[600px]">
+            <table class="min-w-full text-xs" id="roster-table">
+                <thead class="bg-slate-50 dark:bg-slate-900 sticky top-0 z-10"></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<!-- DRILL-DOWN MODAL -->
+<div id="detail-modal" class="modal-backdrop hidden" onclick="if(event.target===this) closeModal()">
+    <div class="modal-box border border-slate-200 dark:border-slate-700">
+        <div class="p-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+            <h3 id="modal-title" class="text-lg font-bold text-slate-800 dark:text-white"></h3>
+            <div class="flex items-center gap-2">
+                <button id="modal-csv" class="h-8 px-3 rounded-lg bg-slate-100 dark:bg-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600">Export this subset</button>
+                <button onclick="closeModal()" class="h-8 w-8 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 flex items-center justify-center">&times;</button>
+            </div>
+        </div>
+        <div class="overflow-auto fancy-scroll flex-1 p-4">
+            <table class="min-w-full text-xs" id="modal-table">
+                <thead class="bg-slate-50 dark:bg-slate-900 sticky top-0 z-10"></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+// =============================================================================
+// CONSTANTS
+// =============================================================================
+const PROPERTY_NAMES = {
+    '49thStr': '49th St Apartments',
+    'ORT': 'The Villas at Ortega',
+    'AP': 'Arbor Place Apartments',
+    'TV': 'The Vista at Winter Park',
+    'MOC': 'The Morgan at Ocala',
+    'MUSO': 'The Mustang at Ocala',
+    'SJ': 'The Village at San Jose',
+    'ROP': 'Riverside at Orange Park',
+    'EAST': 'The Village at Eastpointe',
+    'TRA-AN3': 'TRA / AN3',
+};
+const PROPERTY_ORDER = ['49thStr','AP','EAST','MOC','MUSO','ORT','ROP','SJ','TRA-AN3','TV'];
+
+const STATUS_COLORS = {
+    'Renewed':        { bg: '#10b981', bgSoft: 'rgba(16,185,129,0.15)',  textLight: '#065f46', textDark: '#6ee7b7' },
+    'Lower Offer':    { bg: '#f59e0b', bgSoft: 'rgba(245,158,11,0.15)',  textLight: '#92400e', textDark: '#fcd34d' },
+    'Current':        { bg: '#64748b', bgSoft: 'rgba(100,116,139,0.15)', textLight: '#334155', textDark: '#cbd5e1' },
+    'NTV':            { bg: '#fb923c', bgSoft: 'rgba(251,146,60,0.15)',  textLight: '#9a3412', textDark: '#fdba74' },
+    'Moved Out':      { bg: '#ef4444', bgSoft: 'rgba(239,68,68,0.15)',   textLight: '#7f1d1d', textDark: '#fca5a5' },
+    'Under Eviction': { bg: '#dc2626', bgSoft: 'rgba(220,38,38,0.18)',   textLight: '#7f1d1d', textDark: '#fca5a5' },
+    'Evicted':        { bg: '#991b1b', bgSoft: 'rgba(153,27,27,0.20)',   textLight: '#450a0a', textDark: '#fca5a5' },
+    'Cancelled':      { bg: '#475569', bgSoft: 'rgba(71,85,105,0.15)',   textLight: '#0f172a', textDark: '#cbd5e1' },
+    'Pending':        { bg: '#3b82f6', bgSoft: 'rgba(59,130,246,0.15)',  textLight: '#1e3a8a', textDark: '#93c5fd' },
+    'Denied':         { bg: '#db2777', bgSoft: 'rgba(219,39,119,0.15)',  textLight: '#831843', textDark: '#f9a8d4' },
+};
+const STATUS_ORDER = ['Renewed','Lower Offer','Current','NTV','Moved Out','Under Eviction','Evicted','Cancelled','Pending','Denied'];
+
+const TABLE_COLUMNS = [
+    { key: 'property',       label: 'Property', align: 'left',  fmt: v => PROPERTY_NAMES[v] || v },
+    { key: 'Unit',           label: 'Unit',     align: 'left',  fmt: v => v ?? '' },
+    { key: 'Resident Name',  label: 'Resident', align: 'left',  fmt: v => v ?? '' },
+    { key: 'expMonthKey',    label: 'Exp Month',align: 'left',  fmt: v => v || '' },
+    { key: 'currentTotal',   label: 'Current',  align: 'right', fmt: fmtMoney },
+    { key: 'totalOfferA',    label: 'Offered',  align: 'right', fmt: fmtMoney },
+    { key: 'deltaA',         label: 'Δ Offer',  align: 'right', fmt: fmtMoney },
+    { key: 'deltaApct',      label: 'Δ Offer %',align: 'right', fmt: fmtPct },
+    { key: 'statusKey',      label: 'Status',   align: 'left',  fmt: v => statusPillHtml(v) },
+    { key: 'actualRenewal',  label: 'Actual',   align: 'right', fmt: v => v ? fmtMoney(v) : '—' },
+    { key: 'actualDelta',    label: 'Δ Actual', align: 'right', fmt: v => v ? fmtMoney(v) : '—' },
+    { key: 'actualDeltaPct', label: 'Δ Actual %',align:'right', fmt: v => v ? fmtPct(v) : '—' },
+    { key: 'monthsInProperty', label: 'Months', align: 'right', fmt: v => v ?? '' },
+];
+
+// =============================================================================
+// STATE
+// =============================================================================
+const STATE = {
+    tabs: {},
+    rows: [],
+    filters: { property: new Set(), status: new Set(), month: new Set() },
+    sort: { col: 'property', dir: 'asc' },
+    charts: {},
+    allMonths: [],
+    allStatuses: [],
+    allProperties: [],
+};
+
+// =============================================================================
+// FORMATTERS
+// =============================================================================
+function toNum(v) {
+    if (v === null || v === undefined || v === '') return null;
+    const n = Number(v);
+    return Number.isFinite(n) ? n : null;
+}
+function fmtMoney(v) {
+    if (v === null || v === undefined || v === '') return '—';
+    const sign = v < 0 ? '-' : '';
+    const absV = Math.abs(v);
+    return sign + '$' + Math.round(absV).toLocaleString('en-US');
+}
+function fmtPct(v) {
+    if (v === null || v === undefined || v === '') return '—';
+    return (v * 100).toFixed(1) + '%';
+}
+function parseExpMonth(v) {
+    if (!v) return '';
+    const s = String(v);
+    // ISO date like "2027-01-01T03:00:00.000Z" or "2027-01-01"
+    const iso = s.match(/^(\d{4})-(\d{2})/);
+    if (iso) return `${iso[1]}-${iso[2]}`;
+    // Already "2027-01"
+    const ym = s.match(/^(\d{4})-(\d{1,2})$/);
+    if (ym) return `${ym[1]}-${ym[2].padStart(2,'0')}`;
+    return s;
+}
+function fmtMonthLabel(k) {
+    if (!k) return '—';
+    const [y, m] = k.split('-');
+    if (!y || !m) return k;
+    const names = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return `${names[Number(m)-1]} ${y}`;
+}
+function statusPillHtml(status) {
+    if (!status) return '<span class="text-slate-400">—</span>';
+    const c = STATUS_COLORS[status] || STATUS_COLORS['Current'];
+    const isDark = document.documentElement.classList.contains('dark');
+    const text = isDark ? c.textDark : c.textLight;
+    return `<span class="status-pill" style="background:${c.bgSoft};color:${text}">
+                <span class="dot" style="background:${c.bg}"></span>${status}
+            </span>`;
+}
+
+// =============================================================================
+// DATA FETCH + NORMALIZE
+// =============================================================================
+async function syncData() {
+    const btn = document.getElementById('sync-btn');
+    const icon = document.getElementById('sync-icon');
+    const spinner = document.getElementById('sync-spinner');
+    btn.disabled = true;
+    icon.classList.add('hidden');
+    spinner.classList.remove('hidden');
+    try {
+        const resp = await fetch('/api/get_renewals', { cache: 'no-store' });
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        const data = await resp.json();
+        STATE.tabs = data.tabs || {};
+        STATE.rows = normalize(data.tabs || {});
+        document.getElementById('last-synced').textContent =
+            'Last synced ' + new Date(data.generatedAt).toLocaleString();
+        buildFilterOptions();
+        renderAll();
+    } catch (e) {
+        document.getElementById('last-synced').textContent = 'ERROR: ' + e.message;
+    } finally {
+        btn.disabled = false;
+        icon.classList.remove('hidden');
+        spinner.classList.add('hidden');
+    }
+}
+function normalize(tabs) {
+    const out = [];
+    for (const [tab, {headers, rows}] of Object.entries(tabs)) {
+        if (!headers || !rows) continue;
+        const idx = {};
+        headers.forEach((h, i) => { idx[h] = i; });
+        for (const r of rows) {
+            const row = { property: tab };
+            for (const h of headers) row[h] = r[idx[h]];
+            row.statusKey = row['Renewal Status'] || '';
+            row.expMonthKey = parseExpMonth(row['Expiring Month']);
+            row.currentTotal = toNum(row['Current Total']);
+            row.totalOfferA = toNum(row['Total Offer A']);
+            row.deltaA = toNum(row['Delta A']);
+            row.deltaApct = toNum(row['Delta A %']);
+            row.actualRenewal = toNum(row['Actual Renewal']);
+            row.actualDelta = toNum(row['Actual Delta']);
+            row.actualDeltaPct = toNum(row['Actual Delta %']);
+            row.monthsInProperty = toNum(row['Months in Property']);
+            out.push(row);
+        }
+    }
+    return out;
+}
+
+// =============================================================================
+// FILTER + DERIVED
+// =============================================================================
+function filtered() {
+    const {property, status, month} = STATE.filters;
+    return STATE.rows.filter(r => {
+        if (property.size > 0 && !property.has(r.property)) return false;
+        if (status.size > 0 && !status.has(r.statusKey)) return false;
+        if (month.size > 0 && !month.has(r.expMonthKey)) return false;
+        return true;
+    });
+}
+
+function buildFilterOptions() {
+    STATE.allProperties = PROPERTY_ORDER.filter(p => STATE.rows.some(r => r.property === p));
+    STATE.allStatuses = STATUS_ORDER.filter(s => STATE.rows.some(r => r.statusKey === s));
+    STATE.allMonths = [...new Set(STATE.rows.map(r => r.expMonthKey).filter(Boolean))].sort();
+    populateMulti('filter-property', STATE.allProperties.map(p => ({ val: p, label: `${p} — ${PROPERTY_NAMES[p]||p}` })));
+    populateMulti('filter-status', STATE.allStatuses.map(s => ({ val: s, label: s })));
+    populateMulti('filter-month', STATE.allMonths.map(m => ({ val: m, label: fmtMonthLabel(m) })));
+}
+
+// =============================================================================
+// MULTI-SELECT
+// =============================================================================
+function populateMulti(wrapperId, items) {
+    const wrap = document.getElementById(wrapperId);
+    const list = wrap.querySelector('.multi-list');
+    const key = wrap.querySelector('.multi-trigger').dataset.key;
+    list.innerHTML = items.map(it => `
+        <label class="multi-item">
+            <input type="checkbox" value="${escapeHtml(it.val)}">
+            <span>${escapeHtml(it.label)}</span>
+        </label>
+    `).join('');
+    list.querySelectorAll('input').forEach(cb => {
+        cb.addEventListener('change', () => {
+            const val = cb.value;
+            if (cb.checked) STATE.filters[key].add(val);
+            else STATE.filters[key].delete(val);
+            updateTriggerBadge(wrap, key);
+            renderAll();
+        });
+    });
+}
+function updateTriggerBadge(wrap, key) {
+    const count = STATE.filters[key].size;
+    const trig = wrap.querySelector('.multi-trigger');
+    const badge = trig.querySelector('.count-badge');
+    if (count > 0) {
+        trig.classList.add('active');
+        badge.classList.remove('hidden');
+        badge.textContent = count;
+    } else {
+        trig.classList.remove('active');
+        badge.classList.add('hidden');
+    }
+}
+function initMulti() {
+    document.querySelectorAll('.multi-wrap').forEach(wrap => {
+        const trig = wrap.querySelector('.multi-trigger');
+        const panel = wrap.querySelector('.multi-panel');
+        trig.addEventListener('click', e => {
+            e.stopPropagation();
+            document.querySelectorAll('.multi-panel').forEach(p => { if (p !== panel) p.classList.add('hidden'); });
+            panel.classList.toggle('hidden');
+        });
+        wrap.querySelectorAll('.multi-actions button').forEach(btn => {
+            btn.addEventListener('click', e => {
+                e.stopPropagation();
+                const action = btn.dataset.action;
+                const key = trig.dataset.key;
+                const cbs = wrap.querySelectorAll('.multi-list input');
+                if (action === 'all') {
+                    cbs.forEach(cb => { cb.checked = true; STATE.filters[key].add(cb.value); });
+                } else {
+                    cbs.forEach(cb => { cb.checked = false; });
+                    STATE.filters[key].clear();
+                }
+                updateTriggerBadge(wrap, key);
+                renderAll();
+            });
+        });
+    });
+    document.addEventListener('click', () => {
+        document.querySelectorAll('.multi-panel').forEach(p => p.classList.add('hidden'));
+    });
+    document.getElementById('clear-filters').addEventListener('click', () => {
+        Object.values(STATE.filters).forEach(s => s.clear());
+        document.querySelectorAll('.multi-list input').forEach(cb => cb.checked = false);
+        document.querySelectorAll('.multi-wrap').forEach(wrap => {
+            const key = wrap.querySelector('.multi-trigger').dataset.key;
+            updateTriggerBadge(wrap, key);
+        });
+        renderAll();
+    });
+}
+
+// =============================================================================
+// KPI CARDS
+// =============================================================================
+function computeKPIs(rows) {
+    const total = rows.length;
+    const renewed = rows.filter(r => r.statusKey === 'Renewed').length;
+    const lowerOffer = rows.filter(r => r.statusKey === 'Lower Offer').length;
+    const totalRenewed = renewed + lowerOffer;  // signed-renewal count
+    const pending = rows.filter(r => r.statusKey === 'Current').length;
+    const lostCount = rows.filter(r => ['NTV','Moved Out','Under Eviction','Evicted','Cancelled','Denied'].includes(r.statusKey)).length;
+    const decided = totalRenewed + lostCount;
+    const retentionPct = decided > 0 ? totalRenewed / decided : 0;
+    const offerDeltas = rows.map(r => r.deltaApct).filter(v => v !== null);
+    const avgOfferDelta = offerDeltas.length ? offerDeltas.reduce((a,b)=>a+b,0)/offerDeltas.length : 0;
+    const actualDeltas = rows.filter(r => r.statusKey === 'Renewed' || r.statusKey === 'Lower Offer')
+                             .map(r => r.actualDeltaPct).filter(v => v !== null);
+    const avgActualDelta = actualDeltas.length ? actualDeltas.reduce((a,b)=>a+b,0)/actualDeltas.length : 0;
+    const totalRenewalValue = rows.filter(r => r.actualRenewal).reduce((s,r)=>s+r.actualRenewal, 0);
+    return { total, renewed, lowerOffer, totalRenewed, pending, lostCount, retentionPct,
+             avgOfferDelta, avgActualDelta, totalRenewalValue };
+}
+function renderKPIs() {
+    const rows = filtered();
+    const k = computeKPIs(rows);
+    const cards = [
+        { label: 'Total Expiring',    value: k.total,                            sub: '',                                   accent: 'blue',  filter: null },
+        { label: 'Renewed',           value: k.renewed,                          sub: pctOf(k.renewed, k.total),            accent: 'green', filter: {status: ['Renewed']} },
+        { label: 'Lower Offer',       value: k.lowerOffer,                       sub: pctOf(k.lowerOffer, k.total),         accent: 'amber', filter: {status: ['Lower Offer']} },
+        { label: 'Retention %',       value: fmtPct(k.retentionPct),             sub: `of ${k.totalRenewed+k.lostCount} decided`, accent: 'blue', filter: null },
+        { label: 'Pending Decision',  value: k.pending,                          sub: pctOf(k.pending, k.total),            accent: 'slate', filter: {status: ['Current']} },
+        { label: 'Avg Offered Δ',     value: fmtPct(k.avgOfferDelta),            sub: 'portfolio avg',                      accent: 'blue',  filter: null },
+        { label: 'Avg Actual Δ',      value: fmtPct(k.avgActualDelta),           sub: 'renewed only',                       accent: 'green', filter: {status: ['Renewed','Lower Offer']} },
+        { label: 'Renewal Value',     value: fmtMoney(k.totalRenewalValue),      sub: 'total signed',                       accent: 'blue',  filter: {status: ['Renewed','Lower Offer']} },
+    ];
+    const accentColors = {
+        blue:  { bar: 'bg-blue-500', text: 'text-blue-600 dark:text-blue-400' },
+        green: { bar: 'bg-emerald-500', text: 'text-emerald-600 dark:text-emerald-400' },
+        amber: { bar: 'bg-amber-500', text: 'text-amber-600 dark:text-amber-400' },
+        slate: { bar: 'bg-slate-400', text: 'text-slate-600 dark:text-slate-400' },
+    };
+    const grid = document.getElementById('kpi-grid');
+    grid.innerHTML = cards.map((c, i) => {
+        const a = accentColors[c.accent];
+        return `
+        <div class="kpi-card bg-white dark:bg-slate-800 p-4 rounded-2xl border-2 border-slate-200 dark:border-slate-700 relative overflow-hidden" data-kpi="${i}">
+            <div class="absolute left-0 top-0 bottom-0 w-1 ${a.bar}"></div>
+            <div class="pl-2">
+                <div class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">${c.label}</div>
+                <div class="text-2xl font-bold text-slate-900 dark:text-white mt-1">${c.value}</div>
+                <div class="text-xs ${a.text} mt-0.5">${c.sub}</div>
+            </div>
+        </div>`;
+    }).join('');
+    grid.querySelectorAll('.kpi-card').forEach(el => {
+        el.addEventListener('click', () => {
+            const i = Number(el.dataset.kpi);
+            const card = cards[i];
+            if (!card.filter) {
+                openModal(card.label, rows);
+            } else {
+                const subset = rows.filter(r => card.filter.status.includes(r.statusKey));
+                openModal(card.label, subset);
+            }
+        });
+    });
+}
+function pctOf(part, total) {
+    if (!total) return '';
+    return (100 * part / total).toFixed(1) + '%';
+}
+
+// =============================================================================
+// CHARTS
+// =============================================================================
+function destroyCharts() {
+    Object.values(STATE.charts).forEach(c => c && c.destroy());
+    STATE.charts = {};
+}
+function themeColors() {
+    const isDark = document.documentElement.classList.contains('dark');
+    return {
+        grid: isDark ? '#334155' : '#e2e8f0',
+        text: isDark ? '#cbd5e1' : '#475569',
+    };
+}
+function renderCharts() {
+    destroyCharts();
+    const rows = filtered();
+    const tc = themeColors();
+
+    // 1. Stacked bar: status breakdown by property
+    const propsPresent = STATE.allProperties.filter(p => rows.some(r => r.property === p));
+    const statusesPresent = STATE.allStatuses;
+    const datasetsByProp = statusesPresent.map(status => ({
+        label: status,
+        data: propsPresent.map(p => rows.filter(r => r.property === p && r.statusKey === status).length),
+        backgroundColor: STATUS_COLORS[status]?.bg || '#94a3b8',
+        borderWidth: 0,
+    }));
+    STATE.charts.property = new Chart(document.getElementById('chart-property'), {
+        type: 'bar',
+        data: { labels: propsPresent, datasets: datasetsByProp },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            scales: {
+                x: { stacked: true, ticks: { color: tc.text }, grid: { color: tc.grid } },
+                y: { stacked: true, ticks: { color: tc.text }, grid: { color: tc.grid } },
+            },
+            plugins: {
+                legend: { position: 'bottom', labels: { color: tc.text, boxWidth: 10, font: { size: 10 } } },
+                tooltip: { callbacks: { title: ctx => PROPERTY_NAMES[ctx[0].label] || ctx[0].label } },
+            },
+            onClick: (e, els) => {
+                if (!els.length) return;
+                const el = els[0];
+                const prop = propsPresent[el.index];
+                const status = statusesPresent[el.datasetIndex];
+                const subset = rows.filter(r => r.property === prop && r.statusKey === status);
+                openModal(`${PROPERTY_NAMES[prop]||prop} — ${status}`, subset);
+            },
+        },
+    });
+
+    // 2. Line: renewed % + lower offer % by expiring month
+    const monthsPresent = [...new Set(rows.map(r => r.expMonthKey).filter(Boolean))].sort();
+    const renewedByMonth = monthsPresent.map(m => {
+        const monthRows = rows.filter(r => r.expMonthKey === m);
+        const renewed = monthRows.filter(r => r.statusKey === 'Renewed').length;
+        return monthRows.length ? 100 * renewed / monthRows.length : 0;
+    });
+    const lowerByMonth = monthsPresent.map(m => {
+        const monthRows = rows.filter(r => r.expMonthKey === m);
+        const lower = monthRows.filter(r => r.statusKey === 'Lower Offer').length;
+        return monthRows.length ? 100 * lower / monthRows.length : 0;
+    });
+    STATE.charts.month = new Chart(document.getElementById('chart-month'), {
+        type: 'line',
+        data: {
+            labels: monthsPresent.map(fmtMonthLabel),
+            datasets: [
+                { label: 'Renewed %', data: renewedByMonth, borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.1)', tension: 0.3, fill: true },
+                { label: 'Lower Offer %', data: lowerByMonth, borderColor: '#f59e0b', backgroundColor: 'rgba(245,158,11,0.1)', tension: 0.3, fill: true },
+            ]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            scales: {
+                x: { ticks: { color: tc.text }, grid: { color: tc.grid } },
+                y: { ticks: { color: tc.text, callback: v => v + '%' }, grid: { color: tc.grid }, beginAtZero: true },
+            },
+            plugins: { legend: { position: 'bottom', labels: { color: tc.text, boxWidth: 10, font: { size: 10 } } } },
+            onClick: (e, els) => {
+                if (!els.length) return;
+                const el = els[0];
+                const m = monthsPresent[el.index];
+                const subset = rows.filter(r => r.expMonthKey === m);
+                openModal('Expiring ' + fmtMonthLabel(m), subset);
+            },
+        },
+    });
+
+    // 3. Histogram: offered delta % distribution
+    const deltas = rows.map(r => r.deltaApct).filter(v => v !== null);
+    const bins = [-Infinity, -0.05, 0, 0.03, 0.05, 0.08, 0.12, Infinity];
+    const binLabels = ['<-5%','-5–0%','0–3%','3–5%','5–8%','8–12%','>12%'];
+    const binCounts = bins.slice(0,-1).map((lo, i) => deltas.filter(d => d >= lo && d < bins[i+1]).length);
+    STATE.charts.delta = new Chart(document.getElementById('chart-delta'), {
+        type: 'bar',
+        data: {
+            labels: binLabels,
+            datasets: [{
+                label: 'Offers',
+                data: binCounts,
+                backgroundColor: binLabels.map((_, i) => i < 2 ? '#f59e0b' : (i < 4 ? '#10b981' : '#1e40af')),
+                borderWidth: 0,
+            }],
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            scales: {
+                x: { ticks: { color: tc.text }, grid: { color: tc.grid } },
+                y: { ticks: { color: tc.text }, grid: { color: tc.grid }, beginAtZero: true },
+            },
+            plugins: { legend: { display: false } },
+            onClick: (e, els) => {
+                if (!els.length) return;
+                const i = els[0].index;
+                const lo = bins[i], hi = bins[i+1];
+                const subset = rows.filter(r => r.deltaApct !== null && r.deltaApct >= lo && r.deltaApct < hi);
+                openModal(`Offered Δ ${binLabels[i]}`, subset);
+            },
+        },
+    });
+
+    // 4. Scatter: actual vs offered delta %
+    const renewedRows = rows.filter(r => r.statusKey === 'Renewed' || r.statusKey === 'Lower Offer');
+    const scatterData = renewedRows
+        .filter(r => r.deltaApct !== null && r.actualDeltaPct !== null)
+        .map(r => ({
+            x: 100 * r.deltaApct,
+            y: 100 * r.actualDeltaPct,
+            property: r.property,
+            unit: r['Unit'],
+            resident: r['Resident Name'],
+            status: r.statusKey,
+            raw: r,
+        }));
+    STATE.charts.scatter = new Chart(document.getElementById('chart-scatter'), {
+        type: 'scatter',
+        data: {
+            datasets: [
+                {
+                    label: 'Renewed',
+                    data: scatterData.filter(d => d.status === 'Renewed'),
+                    backgroundColor: 'rgba(16,185,129,0.7)',
+                    pointRadius: 5,
+                },
+                {
+                    label: 'Lower Offer',
+                    data: scatterData.filter(d => d.status === 'Lower Offer'),
+                    backgroundColor: 'rgba(245,158,11,0.7)',
+                    pointRadius: 5,
+                },
+            ],
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            scales: {
+                x: { title: { display: true, text: 'Offered Δ %', color: tc.text }, ticks: { color: tc.text, callback: v => v + '%' }, grid: { color: tc.grid } },
+                y: { title: { display: true, text: 'Actual Δ %', color: tc.text }, ticks: { color: tc.text, callback: v => v + '%' }, grid: { color: tc.grid } },
+            },
+            plugins: {
+                legend: { position: 'bottom', labels: { color: tc.text, boxWidth: 10, font: { size: 10 } } },
+                tooltip: {
+                    callbacks: {
+                        label: ctx => {
+                            const d = ctx.raw;
+                            return `${d.property} ${d.unit} ${d.resident}: offered ${d.x.toFixed(1)}%, actual ${d.y.toFixed(1)}%`;
+                        }
+                    }
+                }
+            },
+            onClick: (e, els) => {
+                if (!els.length) return;
+                const el = els[0];
+                const point = STATE.charts.scatter.data.datasets[el.datasetIndex].data[el.index];
+                openModal(`${point.property} ${point.unit} — ${point.resident}`, [point.raw]);
+            },
+        },
+    });
+}
+
+// =============================================================================
+// TABLE
+// =============================================================================
+function renderTable() {
+    const rows = sortRows(filtered());
+    const thead = document.querySelector('#roster-table thead');
+    const tbody = document.querySelector('#roster-table tbody');
+    thead.innerHTML = `<tr>${TABLE_COLUMNS.map(c => {
+        const active = STATE.sort.col === c.key;
+        const arrow = active ? (STATE.sort.dir === 'asc' ? '▲' : '▼') : '▲';
+        return `<th class="sortable px-3 py-2.5 text-${c.align} font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 text-[11px] ${active?'sort-active':''}" data-col="${c.key}">
+                    ${c.label}<span class="arrow">${arrow}</span>
+                </th>`;
+    }).join('')}</tr>`;
+    thead.querySelectorAll('th.sortable').forEach(th => {
+        th.addEventListener('click', () => {
+            const col = th.dataset.col;
+            if (STATE.sort.col === col) STATE.sort.dir = STATE.sort.dir === 'asc' ? 'desc' : 'asc';
+            else { STATE.sort.col = col; STATE.sort.dir = 'asc'; }
+            renderTable();
+        });
+    });
+    tbody.innerHTML = rows.map(r => `
+        <tr class="data-row border-b border-slate-100 dark:border-slate-700/40">
+            ${TABLE_COLUMNS.map(c => `<td class="px-3 py-2 text-${c.align} text-slate-700 dark:text-slate-200">${c.fmt(r[c.key])}</td>`).join('')}
+        </tr>
+    `).join('');
+    document.getElementById('row-count').textContent = `(${rows.length} rows)`;
+}
+function sortRows(rows) {
+    const { col, dir } = STATE.sort;
+    const mul = dir === 'asc' ? 1 : -1;
+    return [...rows].sort((a, b) => {
+        const va = a[col], vb = b[col];
+        if (va === null || va === undefined || va === '') return 1;
+        if (vb === null || vb === undefined || vb === '') return -1;
+        if (typeof va === 'number' && typeof vb === 'number') return (va - vb) * mul;
+        return String(va).localeCompare(String(vb)) * mul;
+    });
+}
+
+// =============================================================================
+// CSV EXPORT
+// =============================================================================
+function csvEscape(v) {
+    if (v === null || v === undefined) return '';
+    const s = String(v);
+    if (/[",\n]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+    return s;
+}
+function exportCsv(rows, filename) {
+    const headers = TABLE_COLUMNS.map(c => c.label);
+    const lines = [headers.join(',')];
+    for (const r of rows) {
+        lines.push(TABLE_COLUMNS.map(c => {
+            if (c.key === 'statusKey') return csvEscape(r.statusKey);
+            if (c.key === 'property') return csvEscape(PROPERTY_NAMES[r.property]||r.property);
+            if (c.key === 'expMonthKey') return csvEscape(r.expMonthKey);
+            const v = r[c.key];
+            if (typeof v === 'number' && c.key.includes('pct')) return (v*100).toFixed(2);
+            return csvEscape(v);
+        }).join(','));
+    }
+    const blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename; a.click();
+    URL.revokeObjectURL(url);
+}
+
+// =============================================================================
+// MODAL
+// =============================================================================
+let MODAL_SUBSET = [];
+function openModal(title, rows) {
+    MODAL_SUBSET = rows;
+    document.getElementById('modal-title').textContent = `${title} — ${rows.length} rows`;
+    const thead = document.querySelector('#modal-table thead');
+    const tbody = document.querySelector('#modal-table tbody');
+    thead.innerHTML = `<tr>${TABLE_COLUMNS.map(c =>
+        `<th class="px-3 py-2 text-${c.align} font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 text-[11px]">${c.label}</th>`
+    ).join('')}</tr>`;
+    tbody.innerHTML = rows.map(r => `
+        <tr class="data-row border-b border-slate-100 dark:border-slate-700/40">
+            ${TABLE_COLUMNS.map(c => `<td class="px-3 py-2 text-${c.align} text-slate-700 dark:text-slate-200">${c.fmt(r[c.key])}</td>`).join('')}
+        </tr>
+    `).join('');
+    document.getElementById('detail-modal').classList.remove('hidden');
+}
+function closeModal() { document.getElementById('detail-modal').classList.add('hidden'); }
+
+// =============================================================================
+// RENDER + INIT
+// =============================================================================
+function renderAll() {
+    renderKPIs();
+    renderCharts();
+    renderTable();
+    const parts = [];
+    if (STATE.filters.property.size) parts.push(`${STATE.filters.property.size} props`);
+    if (STATE.filters.status.size) parts.push(`${STATE.filters.status.size} statuses`);
+    if (STATE.filters.month.size) parts.push(`${STATE.filters.month.size} months`);
+    document.getElementById('filter-summary').textContent = parts.length ? 'Showing: ' + parts.join(' · ') : 'No filters applied';
+}
+function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// Theme
+function applyTheme() {
+    const saved = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    document.documentElement.classList.toggle('dark', saved === 'dark');
+    document.documentElement.classList.toggle('light', saved !== 'dark');
+    document.getElementById('theme-dark-icon').classList.toggle('hidden', saved === 'dark');
+    document.getElementById('theme-light-icon').classList.toggle('hidden', saved !== 'dark');
+}
+document.getElementById('theme-toggle').addEventListener('click', () => {
+    const now = document.documentElement.classList.contains('dark') ? 'light' : 'dark';
+    localStorage.setItem('theme', now);
+    applyTheme();
+    // Rerender for theme-aware colors
+    if (STATE.rows.length) renderAll();
+});
+
+document.getElementById('csv-export').addEventListener('click', () => {
+    const stamp = new Date().toISOString().slice(0,10);
+    exportCsv(sortRows(filtered()), `renewals_${stamp}.csv`);
+});
+document.getElementById('modal-csv').addEventListener('click', () => {
+    const stamp = new Date().toISOString().slice(0,10);
+    exportCsv(MODAL_SUBSET, `renewals_subset_${stamp}.csv`);
+});
+
+applyTheme();
+initMulti();
+syncData();
+</script>
+</body>
+</html>

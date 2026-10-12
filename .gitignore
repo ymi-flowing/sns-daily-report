@@ -9,6 +9,7 @@ __pycache__/
 .Python
 venv/
 .env
+.env.local
 
 # IDE
 .vscode/
@@ -29,3 +30,7 @@ archive/
 
 # Browser-test artifacts (Playwright MCP)
 .playwright-mcp/
+
+# Local email-builder previews / renders
+renewal_summary_preview.html
+renewal_summary_*.csv

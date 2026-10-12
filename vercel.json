@@ -3,7 +3,8 @@
   "outputDirectory": ".",
   "framework": null,
   "rewrites": [
-    { "source": "/", "destination": "/dashboard_live.html" }
+    { "source": "/", "destination": "/dashboard_live.html" },
+    { "source": "/renewals", "destination": "/renewals.html" }
   ],
   "headers": [
     {
