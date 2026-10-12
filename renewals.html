@@ -1061,6 +1061,20 @@ function renderCharts() {
             },
             plugins: {
                 legend: { position: 'bottom', labels: { color: tc.text, boxWidth: 10, font: { size: 10 } } },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                    filter: ctx => ctx.parsed.y > 0,
+                    itemSort: (a, b) => b.parsed.y - a.parsed.y,
+                    callbacks: {
+                        title: ctx => ctx[0].label,
+                        label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y}`,
+                        footer: ctx => {
+                            const total = ctx.reduce((s, c) => s + c.parsed.y, 0);
+                            return `Total: ${total}`;
+                        },
+                    },
+                },
             },
             onClick: chartDblClick((e, els) => {
                 if (!els.length) return;
@@ -1101,13 +1115,20 @@ function renderCharts() {
             plugins: {
                 legend: { position: 'bottom', labels: { color: tc.text, boxWidth: 10, font: { size: 10 } } },
                 tooltip: {
+                    mode: 'index',
+                    intersect: false,
                     callbacks: {
+                        title: ctx => ctx[0].label,
                         label: ctx => {
                             const d = signedByMonth[ctx.dataIndex];
                             if (!d.total) return `${ctx.dataset.label}: no signed`;
-                            if (ctx.datasetIndex === 0) return `Renewed: ${d.renewed} of ${d.total} (${(100*d.renewed/d.total).toFixed(1)}%)`;
-                            return `Lower Offer: ${d.lower} of ${d.total} (${(100*d.lower/d.total).toFixed(1)}%)`;
-                        }
+                            if (ctx.datasetIndex === 0) return `Renewed: ${d.renewed} (${(100*d.renewed/d.total).toFixed(1)}%)`;
+                            return `Lower Offer: ${d.lower} (${(100*d.lower/d.total).toFixed(1)}%)`;
+                        },
+                        footer: ctx => {
+                            const d = signedByMonth[ctx[0].dataIndex];
+                            return `Total signed: ${d.total}`;
+                        },
                     }
                 },
             },
@@ -1134,7 +1155,7 @@ function renderCharts() {
             datasets: [{
                 label: 'Offers',
                 data: binCounts,
-                backgroundColor: binLabels.map((_, i) => i < 2 ? '#f59e0b' : (i < 4 ? '#10b981' : '#1e40af')),
+                backgroundColor: binLabels.map((_, i) => i < 2 ? '#f59e0b' : (i < 4 ? '#10b981' : '#60a5fa')),
                 borderWidth: 0,
             }],
         },
@@ -1168,13 +1189,13 @@ function renderCharts() {
             datasets: [{
                 label: 'Avg Renewed Total',
                 data: avgRenewalByMonth,
-                borderColor: '#1e40af',
-                backgroundColor: 'rgba(30,64,175,0.1)',
+                borderColor: '#60a5fa',
+                backgroundColor: 'rgba(96,165,250,0.18)',
                 tension: 0.3,
                 fill: true,
                 spanGaps: true,
                 pointRadius: 4,
-                pointBackgroundColor: '#1e40af',
+                pointBackgroundColor: '#60a5fa',
             }],
         },
         options: {
