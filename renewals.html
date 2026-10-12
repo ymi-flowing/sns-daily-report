@@ -116,13 +116,9 @@
         }
         .dark .modal-box { background: #1e293b; }
 
-        /* Spinner */
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .spinner {
-            width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3);
-            border-top-color: white; border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
+        /* Loading overlay (match Daily KPIs refresh pattern) */
+        #refresh-overlay { display: none; }
+        #refresh-overlay.visible { display: flex; }
 
         /* Scrollbar global */
         * { scrollbar-width: thin; scrollbar-color: #94a3b8 transparent; }
@@ -140,6 +136,22 @@
 </head>
 <body class="bg-slate-50 dark:bg-slate-900 p-6 font-sans text-slate-800 dark:text-slate-100 transition-colors duration-200">
 
+<!-- Loading Overlay (same pattern as Daily KPIs) -->
+<div id="refresh-overlay" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 items-center justify-center">
+    <div class="bg-white dark:bg-slate-800 rounded-2xl p-8 shadow-2xl max-w-sm mx-4 text-center">
+        <div class="relative w-16 h-16 mx-auto mb-4">
+            <div class="absolute inset-0 rounded-full border-4 border-slate-200 dark:border-slate-700"></div>
+            <div class="absolute inset-0 rounded-full border-4 border-blue-500 border-t-transparent animate-spin"></div>
+        </div>
+        <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-2">Refreshing Renewals</h3>
+        <p id="refresh-status" class="text-sm text-slate-500 dark:text-slate-400">Triggering sync...</p>
+        <div class="mt-4 bg-slate-100 dark:bg-slate-700 rounded-full h-2 overflow-hidden">
+            <div id="refresh-progress" class="bg-blue-500 h-full transition-all duration-500" style="width: 5%"></div>
+        </div>
+        <p id="refresh-time" class="text-xs text-slate-400 dark:text-slate-500 mt-2">Pulling ResMan &rarr; Sheet &rarr; Dashboard</p>
+    </div>
+</div>
+
 <div class="max-w-7xl mx-auto space-y-5">
 
     <!-- HEADER -->
@@ -151,19 +163,32 @@
             </div>
             <div>
                 <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Renewals Dashboard</h1>
-                <p id="last-synced" class="text-xs text-slate-500 dark:text-slate-400 mt-1">Loading...</p>
             </div>
         </div>
-        <div class="flex items-center gap-3">
-            <button id="sync-btn" onclick="syncData()" class="h-11 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm flex items-center gap-2 transition-all shadow-sm">
-                <svg id="sync-icon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                <span id="sync-spinner" class="spinner hidden"></span>
-                <span>Sync Data</span>
-            </button>
-            <button id="theme-toggle" class="h-11 w-11 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 transition-all outline-none focus:ring-2 focus:ring-blue-400 border-2 border-slate-200 dark:border-slate-600 flex items-center justify-center">
-                <svg id="theme-dark-icon" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
-                <svg id="theme-light-icon" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
-            </button>
+        <div class="flex items-center space-x-3">
+            <!-- Last Updated Chip (matches Daily KPIs refresh-timestamp) -->
+            <div>
+                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">&nbsp;</label>
+                <div class="h-11 py-2.5 px-4 bg-slate-100 dark:bg-slate-700 rounded-xl border-2 border-slate-200 dark:border-slate-600 flex items-center">
+                    <span id="last-updated" class="font-semibold text-slate-700 dark:text-slate-200 text-sm">Loading...</span>
+                </div>
+            </div>
+            <!-- Refresh Button (icon-only, matches Daily KPIs refresh-btn) -->
+            <div>
+                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">&nbsp;</label>
+                <button id="refresh-btn" onclick="refreshData()" class="h-11 w-11 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 transition-all outline-none focus:ring-2 focus:ring-blue-400 border-2 border-slate-200 dark:border-slate-600 flex items-center justify-center" title="Refresh (ResMan -> Sheet -> Dashboard, ~5-10 min)">
+                    <svg id="refresh-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                    <svg id="refresh-spinner" class="w-5 h-5 hidden animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                </button>
+            </div>
+            <!-- Theme Toggle (matches Daily KPIs) -->
+            <div>
+                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">&nbsp;</label>
+                <button id="theme-toggle" class="h-11 w-11 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 transition-all outline-none focus:ring-2 focus:ring-blue-400 border-2 border-slate-200 dark:border-slate-600 flex items-center justify-center">
+                    <svg id="theme-dark-icon" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+                    <svg id="theme-light-icon" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
+                </button>
+            </div>
         </div>
     </div>
 
@@ -383,10 +408,21 @@ function statusPillHtml(status) {
 // =============================================================================
 // DATA FETCH + NORMALIZE
 // =============================================================================
-async function syncData() {
-    const btn = document.getElementById('sync-btn');
-    const icon = document.getElementById('sync-icon');
-    const spinner = document.getElementById('sync-spinner');
+
+// Format timestamp like "Oct 12, 2026 at 1:33 PM ET" (matches Daily KPIs chip)
+function fmtTimestamp(iso) {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    const timeStr = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+    return `${dateStr} at ${timeStr}`;
+}
+
+// fetchData: pulls from Sheet via /api/get_renewals. Used on first load and after a full sync.
+async function fetchData() {
+    const btn = document.getElementById('refresh-btn');
+    const icon = document.getElementById('refresh-icon');
+    const spinner = document.getElementById('refresh-spinner');
     btn.disabled = true;
     icon.classList.add('hidden');
     spinner.classList.remove('hidden');
@@ -396,13 +432,103 @@ async function syncData() {
         const data = await resp.json();
         STATE.tabs = data.tabs || {};
         STATE.rows = normalize(data.tabs || {});
-        document.getElementById('last-synced').textContent =
-            'Last synced ' + new Date(data.generatedAt).toLocaleString();
+        document.getElementById('last-updated').textContent = fmtTimestamp(data.generatedAt);
         buildFilterOptions();
         renderAll();
     } catch (e) {
-        document.getElementById('last-synced').textContent = 'ERROR: ' + e.message;
+        document.getElementById('last-updated').textContent = 'ERROR: ' + e.message;
     } finally {
+        btn.disabled = false;
+        icon.classList.remove('hidden');
+        spinner.classList.add('hidden');
+    }
+}
+
+// refreshData: full pipeline — ResMan -> Sheet (via GH Actions) -> Dashboard.
+// Triggered by the Refresh button. Takes ~5-10 minutes.
+async function refreshData() {
+    const overlay = document.getElementById('refresh-overlay');
+    const statusEl = document.getElementById('refresh-status');
+    const progressEl = document.getElementById('refresh-progress');
+    const timeEl = document.getElementById('refresh-time');
+    const btn = document.getElementById('refresh-btn');
+    const icon = document.getElementById('refresh-icon');
+    const spinner = document.getElementById('refresh-spinner');
+
+    const showStatus = (text, pct) => {
+        statusEl.textContent = text;
+        progressEl.style.width = pct + '%';
+    };
+
+    overlay.classList.add('visible');
+    btn.disabled = true;
+    icon.classList.add('hidden');
+    spinner.classList.remove('hidden');
+    showStatus('Triggering ResMan sync...', 5);
+
+    const startTime = Date.now();
+    const updateElapsed = () => {
+        const secs = Math.floor((Date.now() - startTime) / 1000);
+        const m = Math.floor(secs / 60);
+        const s = secs % 60;
+        timeEl.textContent = `Elapsed ${m}m ${s.toString().padStart(2, '0')}s — ResMan -> Sheet -> Dashboard`;
+    };
+    const elapsedTimer = setInterval(updateElapsed, 1000);
+
+    try {
+        // Step 1: dispatch the sync-renewals workflow.
+        const triggerResp = await fetch('/api/trigger_renewals_sync', { method: 'POST' });
+        const triggerData = await triggerResp.json();
+        if (!triggerData.success) throw new Error(triggerData.error || 'Trigger failed');
+
+        // Step 2: wait a few seconds for GH to register the run, then poll.
+        showStatus('Workflow dispatched. Waiting for runner...', 10);
+        await new Promise(r => setTimeout(r, 6000));
+
+        const triggerStart = new Date(triggerData.dispatchedAt).getTime();
+        const MAX_WAIT_MS = 20 * 60 * 1000;  // 20 min hard cap
+        const pollStart = Date.now();
+
+        while (true) {
+            if (Date.now() - pollStart > MAX_WAIT_MS) throw new Error('Sync timed out after 20 min');
+            const statusResp = await fetch('/api/sync_status');
+            const statusData = await statusResp.json();
+            // Make sure we're looking at OUR run, not a stale one from before trigger
+            const runStart = statusData.startedAt ? new Date(statusData.startedAt).getTime() : 0;
+            const isOurRun = runStart >= triggerStart - 5000;
+
+            if (!isOurRun || statusData.status === 'queued') {
+                showStatus('Queued on GitHub runner...', 15);
+            } else if (statusData.status === 'in_progress') {
+                // Approximate progress: sync takes ~5-10 min, assume 8 min -> 15-80% over 8 min
+                const secsElapsed = (Date.now() - triggerStart) / 1000;
+                const pct = Math.min(80, 15 + (secsElapsed / 480) * 65);
+                showStatus('Syncing properties from ResMan (10 properties, this takes a few minutes)...', pct);
+            } else if (statusData.status === 'completed') {
+                if (statusData.conclusion === 'success') {
+                    showStatus('Sync complete. Loading fresh data...', 90);
+                    break;
+                } else {
+                    throw new Error(`Workflow ${statusData.conclusion}. See ${statusData.htmlUrl}`);
+                }
+            } else {
+                showStatus('Checking status...', 15);
+            }
+            await new Promise(r => setTimeout(r, 10000));  // poll every 10s
+        }
+
+        // Step 3: re-fetch the sheet into the dashboard.
+        await fetchData();
+        showStatus('Done!', 100);
+        await new Promise(r => setTimeout(r, 500));
+    } catch (e) {
+        showStatus('ERROR: ' + e.message, 0);
+        progressEl.style.background = '#dc2626';
+        await new Promise(r => setTimeout(r, 4000));
+        progressEl.style.background = '';
+    } finally {
+        clearInterval(elapsedTimer);
+        overlay.classList.remove('visible');
         btn.disabled = false;
         icon.classList.remove('hidden');
         spinner.classList.add('hidden');
@@ -918,7 +1044,7 @@ document.getElementById('modal-csv').addEventListener('click', () => {
 
 applyTheme();
 initMulti();
-syncData();
+fetchData();
 </script>
 </body>
 </html>

@@ -1,0 +1,38 @@
+name: Sync Renewals (ResMan -> Sheet)
+
+# Triggered by the "Refresh" button on /renewals via /api/trigger_renewals_sync.
+# Runs sync_all.py which pulls lease data from ResMan Partners API and writes
+# Renewal Status / Actual Renewal / Lease ID back into the Google Sheet.
+# Nothing is committed to the repo — the sheet is the source of truth.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run renewals sync
+        working-directory: renewals_sync
+        env:
+          RESMAN_API_KEY: ${{ secrets.RESMAN_API_KEY }}
+          RESMAN_PARTNER_ID: ${{ secrets.RESMAN_PARTNER_ID }}
+          RESMAN_ACCOUNT_ID: ${{ secrets.RESMAN_ACCOUNT_ID }}
+          SHEETS_WEBHOOK_URL: ${{ secrets.SHEETS_WEBHOOK_URL }}
+          SHARED_SECRET: ${{ secrets.SHARED_SECRET }}
+        run: python sync_all.py
