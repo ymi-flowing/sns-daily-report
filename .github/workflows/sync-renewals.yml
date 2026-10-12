@@ -1,15 +1,15 @@
-name: Sync Renewals (ResMan -> Sheet)
+name: Sync Renewals (ResMan -> Sheet -> renewals_data.json)
 
 # Triggered by the "Refresh" button on /renewals via /api/trigger_renewals_sync.
-# Runs sync_all.py which pulls lease data from ResMan Partners API and writes
-# Renewal Status / Actual Renewal / Lease ID back into the Google Sheet.
-# Nothing is committed to the repo — the sheet is the source of truth.
+# 1. sync_all.py pulls lease data from ResMan Partners API into the sheet.
+# 2. write_renewals_json.py reads the sheet and writes renewals_data.json.
+# 3. The JSON is committed + pushed so the dashboard loads it as a static file.
 
 on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   sync:
@@ -27,7 +27,7 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Run renewals sync
+      - name: Pull ResMan -> Google Sheet
         working-directory: renewals_sync
         env:
           RESMAN_API_KEY: ${{ secrets.RESMAN_API_KEY }}
@@ -36,3 +36,18 @@ jobs:
           SHEETS_WEBHOOK_URL: ${{ secrets.SHEETS_WEBHOOK_URL }}
           SHARED_SECRET: ${{ secrets.SHARED_SECRET }}
         run: python sync_all.py
+
+      - name: Bake Sheet -> renewals_data.json
+        working-directory: renewals_sync
+        env:
+          SHEETS_WEBHOOK_URL: ${{ secrets.SHEETS_WEBHOOK_URL }}
+          SHARED_SECRET: ${{ secrets.SHARED_SECRET }}
+        run: python write_renewals_json.py
+
+      - name: Commit and push renewals_data.json
+        run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+          git add renewals_data.json
+          git diff --staged --quiet || git commit -m "Auto-sync renewals [$(date -u '+%Y-%m-%d %H:%M UTC')]"
+          git push

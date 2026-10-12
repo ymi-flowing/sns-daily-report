@@ -39,15 +39,16 @@
         .kpi-card {
             transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
             cursor: pointer;
+            overflow: visible;  /* let .tip tooltips escape */
         }
         .kpi-card:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 25px -5px rgba(30, 64, 175, 0.15);
-            border-color: #3b82f6;
+            box-shadow: 0 6px 20px -6px rgba(15, 23, 42, 0.15);
+            border-color: #94a3b8;  /* slate-400 -- darker gray, no blue */
         }
         .dark .kpi-card:hover {
-            box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.3);
-            border-color: #60a5fa;
+            box-shadow: 0 6px 20px -6px rgba(0, 0, 0, 0.4);
+            border-color: #64748b;  /* slate-500 */
         }
 
         /* Multi-select pattern (adapted from Real Option Leads) */
@@ -647,43 +648,24 @@ function chartDblClick(cb, delay = 400) {
     };
 }
 
-// fetchData: pulls from Sheet via /api/get_renewals. Used on first load and
-// after a full sync. Does NOT spin the Refresh button — the "Last Updated"
-// chip shows "Loading..." as the only state cue. The Refresh button spinner
-// is reserved for actual ResMan-sync runs (via refreshData).
-//
-// Also fetches /api/last_sync (GH Actions) in parallel to show the last
-// time ResMan was pulled into the Sheet — which is what "Last Updated"
-// should reflect (NOT the time of this sheet fetch).
-async function fetchData() {
+// fetchData: by default reads the baked /renewals_data.json (fast, no API).
+// After a Refresh, pass source='/api/get_renewals' to see the fresh sheet
+// immediately -- the committed JSON takes 30-60s to propagate via Vercel.
+async function fetchData(source = '/renewals_data.json') {
     try {
-        const [sheetResp, syncResp] = await Promise.all([
-            fetch('/api/get_renewals', { cache: 'no-store' }),
-            fetch('/api/last_sync').catch(() => null),
-        ]);
-        if (!sheetResp.ok) throw new Error('HTTP ' + sheetResp.status);
-        const data = await sheetResp.json();
+        const resp = await fetch(source, { cache: 'no-store' });
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        const data = await resp.json();
         STATE.tabs = data.tabs || {};
         STATE.rows = normalize(data.tabs || {});
-        // "Last Updated" = latest successful ResMan sync, NOT sheet fetch time.
-        const chipText = await lastSyncLabel(syncResp);
-        document.getElementById('last-updated').textContent = chipText;
+        document.getElementById('last-updated').textContent = data.generatedAt
+            ? fmtTimestamp(data.generatedAt)
+            : 'Never synced';
         buildFilterOptions();
         renderAll();
     } catch (e) {
         document.getElementById('last-updated').textContent = 'ERROR: ' + e.message;
     }
-}
-
-async function lastSyncLabel(syncResp) {
-    if (!syncResp || !syncResp.ok) return 'Last sync: unknown';
-    try {
-        const sync = await syncResp.json();
-        if (sync && sync.lastSuccessfulRun) {
-            return fmtTimestamp(sync.lastSuccessfulRun);
-        }
-    } catch (_) { /* fall through */ }
-    return 'Never synced';
 }
 
 // refreshData: full pipeline — ResMan -> Sheet (via GH Actions) -> Dashboard.
@@ -759,8 +741,11 @@ async function refreshData() {
             await new Promise(r => setTimeout(r, 10000));  // poll every 10s
         }
 
-        // Step 3: re-fetch the sheet into the dashboard.
-        await fetchData();
+        // Step 3: re-fetch the sheet into the dashboard. The newly-committed
+        // renewals_data.json takes 30-60s to deploy via Vercel, so pull from
+        // the live /api/get_renewals endpoint for immediate feedback. The
+        // next normal page load will serve the baked static JSON.
+        await fetchData('/api/get_renewals');
         showStatus('Done!', 100);
         await new Promise(r => setTimeout(r, 500));
     } catch (e) {
@@ -998,27 +983,16 @@ function renderKPIs() {
         { label: 'Avg Expiring / Month', value: k.avgPerMonth.toFixed(1),           sub: `across ${k.monthCount} months`,          accent: 'blue',  filter: null,
           tip: 'Total expiring leases divided by the number of unique expiring months in the current filter.' },
     ];
-    const accentColors = {
-        blue:  { bar: 'bg-blue-500', text: 'text-blue-600 dark:text-blue-400' },
-        green: { bar: 'bg-emerald-500', text: 'text-emerald-600 dark:text-emerald-400' },
-        amber: { bar: 'bg-amber-500', text: 'text-amber-600 dark:text-amber-400' },
-        slate: { bar: 'bg-slate-400', text: 'text-slate-600 dark:text-slate-400' },
-    };
     const grid = document.getElementById('kpi-grid');
-    grid.innerHTML = cards.map((c, i) => {
-        const a = accentColors[c.accent];
-        return `
-        <div class="kpi-card bg-white dark:bg-slate-800 p-4 rounded-2xl border-2 border-slate-200 dark:border-slate-700 relative overflow-hidden" data-kpi="${i}">
-            <div class="absolute left-0 top-0 bottom-0 w-1 ${a.bar}"></div>
-            <div class="pl-2">
-                <div class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                    ${c.label}${c.tip ? ` <span class="tip" data-tip="${escapeHtml(c.tip)}">?</span>` : ''}
-                </div>
-                <div class="text-2xl font-bold text-slate-900 dark:text-white mt-1">${c.value}</div>
-                <div class="text-xs ${a.text} mt-0.5">${c.sub}</div>
+    grid.innerHTML = cards.map((c, i) => `
+        <div class="kpi-card bg-white dark:bg-slate-800 p-4 rounded-2xl border-2 border-slate-200 dark:border-slate-700" data-kpi="${i}">
+            <div class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                ${c.label}${c.tip ? ` <span class="tip" data-tip="${escapeHtml(c.tip)}">?</span>` : ''}
             </div>
-        </div>`;
-    }).join('');
+            <div class="text-2xl font-bold text-slate-900 dark:text-white mt-1">${c.value}</div>
+            <div class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">${c.sub}</div>
+        </div>
+    `).join('');
     grid.querySelectorAll('.kpi-card').forEach(el => {
         const i = Number(el.dataset.kpi);
         const card = cards[i];
