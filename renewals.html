@@ -518,21 +518,21 @@ const STATUS_COLORS = {
 const STATUS_ORDER = ['Renewed','Lower Offer','Current','NTV','Moved Out','Under Eviction','Evicted','Cancelled','Pending','Denied'];
 
 const TABLE_COLUMNS = [
-    { key: 'property',       label: 'Property',  align: 'left',  fmt: v => v || '' },
-    { key: 'Unit',           label: 'Unit',      align: 'left',  fmt: v => v ?? '' },
-    { key: 'Unit Type',      label: 'Unit Type', align: 'left',  fmt: v => v || '' },
-    { key: 'Floorplan',      label: 'Floorplan', align: 'left',  fmt: v => v || '' },
-    { key: 'Resident Name',  label: 'Resident',  align: 'left',  fmt: v => v ?? '' },
-    { key: 'expMonthKey',    label: 'Exp Month',align: 'left',  fmt: v => v || '' },
-    { key: 'currentTotal',   label: 'Current Rate',   align: 'right', fmt: fmtMoney },
-    { key: 'totalOfferA',    label: 'Renewal Offer',  align: 'right', fmt: fmtMoney },
-    { key: 'deltaA',         label: 'Δ Offer',        align: 'right', fmt: fmtMoney },
-    { key: 'deltaApct',      label: 'Δ Offer %',      align: 'right', fmt: fmtPct },
-    { key: 'statusKey',      label: 'Status',         align: 'left',  fmt: v => statusPillHtml(v) },
-    { key: 'actualRenewal',  label: 'Actual Renewal', align: 'right', fmt: v => v ? fmtMoney(v) : '—' },
-    { key: 'actualDelta',    label: 'Δ Actual',       align: 'right', fmt: v => v ? fmtMoney(v) : '—' },
-    { key: 'actualDeltaPct', label: 'Δ Actual %',     align: 'right', fmt: v => v ? fmtPct(v) : '—' },
-    { key: 'monthsInProperty', label: 'Months', align: 'right', fmt: v => v ?? '' },
+    { key: 'property',       label: 'Property',       align: 'center', fmt: v => v || '' },
+    { key: 'Unit',           label: 'Unit',           align: 'center', fmt: v => v ?? '' },
+    { key: 'Unit Type',      label: 'Unit Type',      align: 'center', fmt: v => v || '' },
+    { key: 'Floorplan',      label: 'Floorplan',      align: 'center', fmt: v => v || '' },
+    { key: 'Resident Name',  label: 'Resident',       align: 'center', fmt: v => v ?? '' },
+    { key: 'expMonthKey',    label: 'Exp Month',      align: 'center', fmt: v => v || '' },
+    { key: 'currentTotal',   label: 'Current Rate',   align: 'center', fmt: fmtMoney },
+    { key: 'totalOfferA',    label: 'Renewal Offer',  align: 'center', fmt: fmtMoney },
+    { key: 'deltaA',         label: 'Δ Offer',        align: 'center', fmt: fmtMoney },
+    { key: 'deltaApct',      label: 'Δ Offer %',      align: 'center', fmt: fmtPct },
+    { key: 'statusKey',      label: 'Status',         align: 'center', fmt: v => statusPillHtml(v) },
+    { key: 'actualRenewal',  label: 'Actual Renewal', align: 'center', fmt: v => v ? fmtMoney(v) : '—' },
+    { key: 'actualDelta',    label: 'Δ Actual',       align: 'center', fmt: v => v ? fmtMoney(v) : '—' },
+    { key: 'actualDeltaPct', label: 'Δ Actual %',     align: 'center', fmt: v => v ? fmtPct(v) : '—' },
+    { key: 'monthsInProperty', label: 'Months',       align: 'center', fmt: v => v ?? '' },
 ];
 
 // =============================================================================
