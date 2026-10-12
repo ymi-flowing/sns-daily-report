@@ -640,9 +640,12 @@ function clickOrDblClick(singleFn, dblFn, delay = 250) {
     };
 }
 
-// Chart.js dblclick wrapper -- Chart.js only exposes onClick, so we detect
-// double-click via timestamp comparison.
+// Chart click handler. Desktop (has fine hover pointer) fires on a single
+// click. Touch devices require a double-tap to prevent accidental drills
+// while scrolling or tapping to see Chart.js's own hover tooltip.
+const IS_DESKTOP = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
 function chartDblClick(cb, delay = 400) {
+    if (IS_DESKTOP) return (e, els) => cb(e, els);
     let last = 0;
     return (e, els) => {
         const now = Date.now();
