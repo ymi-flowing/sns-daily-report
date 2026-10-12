@@ -837,13 +837,22 @@ function filtered() {
     });
 }
 
+// Natural comparator: numeric prefix is sorted as a number (so 500 < 900 < 1000),
+// values with the same numeric prefix fall back to lexicographic.
+function naturalCompare(a, b) {
+    const na = parseInt(a, 10);
+    const nb = parseInt(b, 10);
+    if (!isNaN(na) && !isNaN(nb) && na !== nb) return na - nb;
+    return String(a).localeCompare(String(b), undefined, { numeric: true });
+}
+
 // Compute the universe of values across ALL rows -- used as the "parent" set.
 function buildFilterOptions() {
     STATE.allProperties = PROPERTY_ORDER.filter(p => STATE.rows.some(r => r.property === p));
     STATE.allStatuses   = STATUS_ORDER.filter(s => STATE.rows.some(r => r.statusKey === s));
     STATE.allMonths     = [...new Set(STATE.rows.map(r => r.expMonthKey).filter(Boolean))].sort();
-    STATE.allUnitTypes  = [...new Set(STATE.rows.map(r => r.unitType).filter(Boolean))].sort();
-    STATE.allFloorplans = [...new Set(STATE.rows.map(r => r.floorplan).filter(Boolean))].sort();
+    STATE.allUnitTypes  = [...new Set(STATE.rows.map(r => r.unitType).filter(Boolean))].sort(naturalCompare);
+    STATE.allFloorplans = [...new Set(STATE.rows.map(r => r.floorplan).filter(Boolean))].sort(naturalCompare);
     rebuildMultiOptions();
 }
 
