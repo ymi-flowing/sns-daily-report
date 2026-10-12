@@ -424,19 +424,39 @@ function fmtTimestamp(iso) {
 // after a full sync. Does NOT spin the Refresh button — the "Last Updated"
 // chip shows "Loading..." as the only state cue. The Refresh button spinner
 // is reserved for actual ResMan-sync runs (via refreshData).
+//
+// Also fetches /api/last_sync (GH Actions) in parallel to show the last
+// time ResMan was pulled into the Sheet — which is what "Last Updated"
+// should reflect (NOT the time of this sheet fetch).
 async function fetchData() {
     try {
-        const resp = await fetch('/api/get_renewals', { cache: 'no-store' });
-        if (!resp.ok) throw new Error('HTTP ' + resp.status);
-        const data = await resp.json();
+        const [sheetResp, syncResp] = await Promise.all([
+            fetch('/api/get_renewals', { cache: 'no-store' }),
+            fetch('/api/last_sync').catch(() => null),
+        ]);
+        if (!sheetResp.ok) throw new Error('HTTP ' + sheetResp.status);
+        const data = await sheetResp.json();
         STATE.tabs = data.tabs || {};
         STATE.rows = normalize(data.tabs || {});
-        document.getElementById('last-updated').textContent = fmtTimestamp(data.generatedAt);
+        // "Last Updated" = latest successful ResMan sync, NOT sheet fetch time.
+        const chipText = await lastSyncLabel(syncResp);
+        document.getElementById('last-updated').textContent = chipText;
         buildFilterOptions();
         renderAll();
     } catch (e) {
         document.getElementById('last-updated').textContent = 'ERROR: ' + e.message;
     }
+}
+
+async function lastSyncLabel(syncResp) {
+    if (!syncResp || !syncResp.ok) return 'Last sync: unknown';
+    try {
+        const sync = await syncResp.json();
+        if (sync && sync.lastSuccessfulRun) {
+            return fmtTimestamp(sync.lastSuccessfulRun);
+        }
+    } catch (_) { /* fall through */ }
+    return 'Never synced';
 }
 
 // refreshData: full pipeline — ResMan -> Sheet (via GH Actions) -> Dashboard.
