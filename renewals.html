@@ -565,6 +565,13 @@ function toNum(v) {
     const n = Number(v);
     return Number.isFinite(n) ? n : null;
 }
+// Cell -> trimmed string. Collapses mixed int/str representations of the
+// same value (e.g. 671 vs "671") into a single canonical string so Sets
+// deduplicate correctly in filter dropdowns.
+function normStr(v) {
+    if (v === null || v === undefined || v === '') return '';
+    return String(v).trim();
+}
 function fmtMoney(v) {
     if (v === null || v === undefined || v === '') return '—';
     const sign = v < 0 ? '-' : '';
@@ -779,8 +786,14 @@ function normalize(tabs) {
             for (const h of headers) row[h] = r[idx[h]];
             row.statusKey = row['Renewal Status'] || '';
             row.expMonthKey = parseExpMonth(row['Expiring Month']);
-            row.unitType = row['Unit Type'] || '';
-            row.floorplan = row['Floorplan'] || '';
+            // Normalize Unit Type + Floorplan to trimmed strings. The sheet
+            // sometimes returns the same cell as 671 (int) in one row and
+            // "671" (str) in another; without casting, Set treats them as
+            // distinct and the filter dropdown shows every value twice.
+            row['Unit Type'] = normStr(row['Unit Type']);
+            row['Floorplan'] = normStr(row['Floorplan']);
+            row.unitType = row['Unit Type'];
+            row.floorplan = row['Floorplan'];
             row.currentTotal = toNum(row['Current Total']);
             row.totalOfferA = toNum(row['Total Offer A']);
             row.deltaA = toNum(row['Delta A']);
