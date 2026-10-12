@@ -242,8 +242,8 @@
     <!-- CHARTS -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
-            <h3 class="text-sm font-semibold text-slate-800 dark:text-white mb-3">Status breakdown by property</h3>
-            <div class="relative h-72"><canvas id="chart-property"></canvas></div>
+            <h3 class="text-sm font-semibold text-slate-800 dark:text-white mb-3">Status breakdown by expiring month</h3>
+            <div class="relative h-72"><canvas id="chart-month-status"></canvas></div>
         </div>
         <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
             <h3 class="text-sm font-semibold text-slate-800 dark:text-white mb-3">Renewed vs Lower Offer % by expiring month</h3>
@@ -765,18 +765,18 @@ function renderCharts() {
     const rows = filtered();
     const tc = themeColors();
 
-    // 1. Stacked bar: status breakdown by property
-    const propsPresent = STATE.allProperties.filter(p => rows.some(r => r.property === p));
+    // 1. Stacked bar: status breakdown by expiring month
+    const monthsForBreakdown = [...new Set(rows.map(r => r.expMonthKey).filter(Boolean))].sort();
     const statusesPresent = STATE.allStatuses;
-    const datasetsByProp = statusesPresent.map(status => ({
+    const datasetsByMonth = statusesPresent.map(status => ({
         label: status,
-        data: propsPresent.map(p => rows.filter(r => r.property === p && r.statusKey === status).length),
+        data: monthsForBreakdown.map(m => rows.filter(r => r.expMonthKey === m && r.statusKey === status).length),
         backgroundColor: STATUS_COLORS[status]?.bg || '#94a3b8',
         borderWidth: 0,
     }));
-    STATE.charts.property = new Chart(document.getElementById('chart-property'), {
+    STATE.charts.monthStatus = new Chart(document.getElementById('chart-month-status'), {
         type: 'bar',
-        data: { labels: propsPresent, datasets: datasetsByProp },
+        data: { labels: monthsForBreakdown.map(fmtMonthLabel), datasets: datasetsByMonth },
         options: {
             responsive: true, maintainAspectRatio: false,
             scales: {
@@ -785,15 +785,14 @@ function renderCharts() {
             },
             plugins: {
                 legend: { position: 'bottom', labels: { color: tc.text, boxWidth: 10, font: { size: 10 } } },
-                tooltip: { callbacks: { title: ctx => PROPERTY_NAMES[ctx[0].label] || ctx[0].label } },
             },
             onClick: (e, els) => {
                 if (!els.length) return;
                 const el = els[0];
-                const prop = propsPresent[el.index];
+                const month = monthsForBreakdown[el.index];
                 const status = statusesPresent[el.datasetIndex];
-                const subset = rows.filter(r => r.property === prop && r.statusKey === status);
-                openModal(`${PROPERTY_NAMES[prop]||prop} — ${status}`, subset);
+                const subset = rows.filter(r => r.expMonthKey === month && r.statusKey === status);
+                openModal(`${fmtMonthLabel(month)} — ${status}`, subset);
             },
         },
     });
