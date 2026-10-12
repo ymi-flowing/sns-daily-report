@@ -944,9 +944,10 @@ function initMulti() {
             });
         });
     });
-    // Close any open panel when clicking anywhere OUTSIDE the panels/triggers.
+    // Close any open panels and tapped-open "?" tips when clicking outside.
     document.addEventListener('click', () => {
         document.querySelectorAll('.multi-panel').forEach(p => p.classList.add('hidden'));
+        document.querySelectorAll('.tip.tip-visible').forEach(t => t.classList.remove('tip-visible'));
     });
     document.getElementById('clear-filters').addEventListener('click', () => {
         Object.values(STATE.filters).forEach(s => s.clear());
@@ -1019,25 +1020,26 @@ function renderKPIs() {
     grid.querySelectorAll('.kpi-card').forEach(el => {
         const i = Number(el.dataset.kpi);
         const card = cards[i];
-        const openForCard = () => {
+        // Desktop reveals the tip on hover (:hover CSS). Touch devices toggle
+        // it by tapping the "?" icon directly -- see the click handler below.
+        // Double-click anywhere on the card opens the drill-in modal.
+        el.addEventListener('dblclick', () => {
             if (!card.filter) {
                 openModal(card.label, rows);
             } else {
                 const subset = rows.filter(r => card.filter.status.includes(r.statusKey));
                 openModal(card.label, subset);
             }
-        };
-        const showTip = () => {
-            const tip = el.querySelector('.tip');
-            if (!tip) return openForCard();  // KPIs without tip just open directly
-            // Close any other open tips, then show this one
-            document.querySelectorAll('.tip.tip-visible').forEach(t => { if (t !== tip) t.classList.remove('tip-visible'); });
-            tip.classList.add('tip-visible');
-            setTimeout(() => tip.classList.remove('tip-visible'), 3500);
-        };
-        const h = clickOrDblClick(showTip, openForCard);
-        el.addEventListener('click', h.click);
-        el.addEventListener('dblclick', h.dblclick);
+        });
+        const tip = el.querySelector('.tip');
+        if (tip) {
+            tip.addEventListener('click', (e) => {
+                e.stopPropagation();  // don't trigger dblclick timer / modal
+                // Close any other open tips
+                document.querySelectorAll('.tip.tip-visible').forEach(t => { if (t !== tip) t.classList.remove('tip-visible'); });
+                tip.classList.toggle('tip-visible');
+            });
+        }
     });
 }
 function pctOf(part, total) {
