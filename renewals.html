@@ -365,6 +365,28 @@
                     <div class="multi-list"></div>
                 </div>
             </div>
+            <div class="multi-wrap" id="filter-unitType">
+                <button class="multi-trigger" data-key="unitType">
+                    <span class="label">Unit Type</span>
+                    <span class="count-badge hidden">0</span>
+                    <svg class="w-3 h-3 ml-auto" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg>
+                </button>
+                <div class="multi-panel hidden">
+                    <div class="multi-actions"><button data-action="all">All</button><button data-action="none">None</button></div>
+                    <div class="multi-list"></div>
+                </div>
+            </div>
+            <div class="multi-wrap" id="filter-floorplan">
+                <button class="multi-trigger" data-key="floorplan">
+                    <span class="label">Floorplan</span>
+                    <span class="count-badge hidden">0</span>
+                    <svg class="w-3 h-3 ml-auto" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg>
+                </button>
+                <div class="multi-panel hidden">
+                    <div class="multi-actions"><button data-action="all">All</button><button data-action="none">None</button></div>
+                    <div class="multi-list"></div>
+                </div>
+            </div>
             <button id="clear-filters" class="h-10 px-4 rounded-xl text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 border-2 border-slate-200 dark:border-slate-600 hover:border-red-300 dark:hover:border-red-700 transition-colors">Clear all</button>
             <span id="filter-summary" class="text-xs text-slate-500 dark:text-slate-400 ml-auto"></span>
         </div>
@@ -480,9 +502,11 @@ const STATUS_COLORS = {
 const STATUS_ORDER = ['Renewed','Lower Offer','Current','NTV','Moved Out','Under Eviction','Evicted','Cancelled','Pending','Denied'];
 
 const TABLE_COLUMNS = [
-    { key: 'property',       label: 'Property', align: 'left',  fmt: v => v || '' },
-    { key: 'Unit',           label: 'Unit',     align: 'left',  fmt: v => v ?? '' },
-    { key: 'Resident Name',  label: 'Resident', align: 'left',  fmt: v => v ?? '' },
+    { key: 'property',       label: 'Property',  align: 'left',  fmt: v => v || '' },
+    { key: 'Unit',           label: 'Unit',      align: 'left',  fmt: v => v ?? '' },
+    { key: 'Unit Type',      label: 'Unit Type', align: 'left',  fmt: v => v || '' },
+    { key: 'Floorplan',      label: 'Floorplan', align: 'left',  fmt: v => v || '' },
+    { key: 'Resident Name',  label: 'Resident',  align: 'left',  fmt: v => v ?? '' },
     { key: 'expMonthKey',    label: 'Exp Month',align: 'left',  fmt: v => v || '' },
     { key: 'currentTotal',   label: 'Current Rate',   align: 'right', fmt: fmtMoney },
     { key: 'totalOfferA',    label: 'Renewal Offer',  align: 'right', fmt: fmtMoney },
@@ -501,12 +525,20 @@ const TABLE_COLUMNS = [
 const STATE = {
     tabs: {},
     rows: [],
-    filters: { property: new Set(), status: new Set(), month: new Set() },
+    filters: {
+        property: new Set(),
+        status: new Set(),
+        month: new Set(),
+        unitType: new Set(),
+        floorplan: new Set(),
+    },
     sort: { col: 'property', dir: 'asc' },
     charts: {},
     allMonths: [],
     allStatuses: [],
     allProperties: [],
+    allUnitTypes: [],
+    allFloorplans: [],
 };
 
 // =============================================================================
@@ -708,6 +740,8 @@ function normalize(tabs) {
             for (const h of headers) row[h] = r[idx[h]];
             row.statusKey = row['Renewal Status'] || '';
             row.expMonthKey = parseExpMonth(row['Expiring Month']);
+            row.unitType = row['Unit Type'] || '';
+            row.floorplan = row['Floorplan'] || '';
             row.currentTotal = toNum(row['Current Total']);
             row.totalOfferA = toNum(row['Total Offer A']);
             row.deltaA = toNum(row['Delta A']);
@@ -725,23 +759,68 @@ function normalize(tabs) {
 // =============================================================================
 // FILTER + DERIVED
 // =============================================================================
+// Pick the row field that corresponds to a given filter key.
+function rowFieldFor(r, key) {
+    switch (key) {
+        case 'property':  return r.property;
+        case 'status':    return r.statusKey;
+        case 'month':     return r.expMonthKey;
+        case 'unitType':  return r.unitType;
+        case 'floorplan': return r.floorplan;
+    }
+}
+
 function filtered() {
-    const {property, status, month} = STATE.filters;
+    const f = STATE.filters;
     return STATE.rows.filter(r => {
-        if (property.size > 0 && !property.has(r.property)) return false;
-        if (status.size > 0 && !status.has(r.statusKey)) return false;
-        if (month.size > 0 && !month.has(r.expMonthKey)) return false;
+        if (f.property.size  > 0 && !f.property.has(r.property))      return false;
+        if (f.status.size    > 0 && !f.status.has(r.statusKey))       return false;
+        if (f.month.size     > 0 && !f.month.has(r.expMonthKey))      return false;
+        if (f.unitType.size  > 0 && !f.unitType.has(r.unitType))      return false;
+        if (f.floorplan.size > 0 && !f.floorplan.has(r.floorplan))    return false;
         return true;
     });
 }
 
+// Compute the universe of values across ALL rows -- used as the "parent" set.
 function buildFilterOptions() {
     STATE.allProperties = PROPERTY_ORDER.filter(p => STATE.rows.some(r => r.property === p));
-    STATE.allStatuses = STATUS_ORDER.filter(s => STATE.rows.some(r => r.statusKey === s));
-    STATE.allMonths = [...new Set(STATE.rows.map(r => r.expMonthKey).filter(Boolean))].sort();
-    populateMulti('filter-property', STATE.allProperties.map(p => ({ val: p, label: `${p} — ${PROPERTY_NAMES[p]||p}` })));
-    populateMulti('filter-status', STATE.allStatuses.map(s => ({ val: s, label: s })));
-    populateMulti('filter-month', STATE.allMonths.map(m => ({ val: m, label: fmtMonthLabel(m) })));
+    STATE.allStatuses   = STATUS_ORDER.filter(s => STATE.rows.some(r => r.statusKey === s));
+    STATE.allMonths     = [...new Set(STATE.rows.map(r => r.expMonthKey).filter(Boolean))].sort();
+    STATE.allUnitTypes  = [...new Set(STATE.rows.map(r => r.unitType).filter(Boolean))].sort();
+    STATE.allFloorplans = [...new Set(STATE.rows.map(r => r.floorplan).filter(Boolean))].sort();
+    rebuildMultiOptions();
+}
+
+// Rebuild each dropdown's options from rows passing all OTHER filters, so
+// e.g. picking Property=49thStr narrows Unit Type / Floorplan to just 49thStr's.
+// Any previously-selected value that no longer exists in context is dropped.
+function rebuildMultiOptions() {
+    const configs = [
+        { id: 'filter-property',  key: 'property',  all: STATE.allProperties,  labelFn: v => `${v} — ${PROPERTY_NAMES[v]||v}` },
+        { id: 'filter-status',    key: 'status',    all: STATE.allStatuses,    labelFn: v => v },
+        { id: 'filter-month',     key: 'month',     all: STATE.allMonths,      labelFn: v => fmtMonthLabel(v) },
+        { id: 'filter-unitType',  key: 'unitType',  all: STATE.allUnitTypes,   labelFn: v => v },
+        { id: 'filter-floorplan', key: 'floorplan', all: STATE.allFloorplans,  labelFn: v => v },
+    ];
+    for (const cfg of configs) {
+        const otherKeys = configs.filter(c => c.key !== cfg.key).map(c => c.key);
+        const inContext = STATE.rows.filter(r => otherKeys.every(k => {
+            const sel = STATE.filters[k];
+            if (sel.size === 0) return true;
+            return sel.has(rowFieldFor(r, k));
+        }));
+        const presentSet = new Set(inContext.map(r => rowFieldFor(r, cfg.key)).filter(Boolean));
+        // Preserve canonical ordering (PROPERTY_ORDER / STATUS_ORDER / sorted months etc)
+        const items = cfg.all
+            .filter(v => presentSet.has(v))
+            .map(v => ({ val: v, label: cfg.labelFn(v) }));
+        populateMulti(cfg.id, items);
+        // Drop stuck selections no longer visible
+        for (const v of [...STATE.filters[cfg.key]]) {
+            if (!presentSet.has(v)) STATE.filters[cfg.key].delete(v);
+        }
+    }
 }
 
 // =============================================================================
@@ -751,9 +830,10 @@ function populateMulti(wrapperId, items) {
     const wrap = document.getElementById(wrapperId);
     const list = wrap.querySelector('.multi-list');
     const key = wrap.querySelector('.multi-trigger').dataset.key;
+    const selected = STATE.filters[key];
     list.innerHTML = items.map(it => `
         <label class="multi-item">
-            <input type="checkbox" value="${escapeHtml(it.val)}">
+            <input type="checkbox" value="${escapeHtml(it.val)}" ${selected.has(it.val) ? 'checked' : ''}>
             <span>${escapeHtml(it.label)}</span>
         </label>
     `).join('');
@@ -766,6 +846,7 @@ function populateMulti(wrapperId, items) {
             renderAll();
         });
     });
+    updateTriggerBadge(wrap, key);
 }
 function updateTriggerBadge(wrap, key) {
     const count = STATE.filters[key].size;
@@ -1193,13 +1274,16 @@ function closeModal() { document.getElementById('detail-modal').classList.add('h
 // RENDER + INIT
 // =============================================================================
 function renderAll() {
+    rebuildMultiOptions();  // cascade: narrow dropdowns based on sibling filters
     renderKPIs();
     renderCharts();
     renderTable();
     const parts = [];
-    if (STATE.filters.property.size) parts.push(`${STATE.filters.property.size} props`);
-    if (STATE.filters.status.size) parts.push(`${STATE.filters.status.size} statuses`);
-    if (STATE.filters.month.size) parts.push(`${STATE.filters.month.size} months`);
+    if (STATE.filters.property.size)  parts.push(`${STATE.filters.property.size} props`);
+    if (STATE.filters.status.size)    parts.push(`${STATE.filters.status.size} statuses`);
+    if (STATE.filters.month.size)     parts.push(`${STATE.filters.month.size} months`);
+    if (STATE.filters.unitType.size)  parts.push(`${STATE.filters.unitType.size} unit types`);
+    if (STATE.filters.floorplan.size) parts.push(`${STATE.filters.floorplan.size} floorplans`);
     document.getElementById('filter-summary').textContent = parts.length ? 'Showing: ' + parts.join(' · ') : 'No filters applied';
 }
 function escapeHtml(s) {
