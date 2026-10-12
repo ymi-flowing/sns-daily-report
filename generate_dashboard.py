@@ -1976,10 +1976,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data):
                     <img src="https://www.dropbox.com/scl/fi/8qha3kw2j503jbd037ahh/SNS-White.png?rlkey=s3gjbikiohpe00vpcx8x1td3r&st=efmsepz3&raw=1" alt="SNS Logo" class="w-14 h-14 object-contain hidden dark:block">
                 </div>
                 <div>
-                    <div class="flex items-center gap-2">
-                        <h1 class="text-2xl font-bold text-slate-900 dark:text-white">SNS Daily KPIs</h1>
-                        <a href="/renewals" class="text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 underline underline-offset-2">Renewals &rarr;</a>
-                    </div>
+                    <h1 class="text-2xl font-bold text-slate-900 dark:text-white">SNS Daily KPIs</h1>
                 </div>
             </div>
             <div class="mobile-controls flex items-center space-x-3">
