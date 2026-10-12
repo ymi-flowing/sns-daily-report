@@ -91,9 +91,75 @@
         }
         .status-pill .dot { width: 6px; height: 6px; border-radius: 50%; }
 
-        /* Table hover + sort */
-        .data-row:hover { background-color: rgba(59, 130, 246, 0.06); }
-        .dark .data-row:hover { background-color: rgba(59, 130, 246, 0.12); }
+        /* Table: everything on one line, scroll horizontally if needed */
+        #roster-table th, #roster-table td,
+        #modal-table th, #modal-table td {
+            white-space: nowrap;
+        }
+        /* All body cells get solid bg so frozen cols don't show through on scroll */
+        #roster-table tbody td,
+        #modal-table tbody td {
+            background-color: #ffffff;
+        }
+        .dark #roster-table tbody td,
+        .dark #modal-table tbody td {
+            background-color: #1e293b;
+        }
+        #roster-table tbody tr:hover td,
+        #modal-table tbody tr:hover td {
+            background-color: #eff6ff;
+        }
+        .dark #roster-table tbody tr:hover td,
+        .dark #modal-table tbody tr:hover td {
+            background-color: #253551;
+        }
+        /* Header bg so sticky header doesn't show rows through it */
+        #roster-table thead th,
+        #modal-table thead th {
+            background-color: #f8fafc;
+        }
+        .dark #roster-table thead th,
+        .dark #modal-table thead th {
+            background-color: #0f172a;
+        }
+
+        /* Freeze Property (col 1) and Unit (col 2) in both tables */
+        #roster-table thead th:nth-child(1),
+        #roster-table thead th:nth-child(2),
+        #roster-table tbody td:nth-child(1),
+        #roster-table tbody td:nth-child(2),
+        #modal-table thead th:nth-child(1),
+        #modal-table thead th:nth-child(2),
+        #modal-table tbody td:nth-child(1),
+        #modal-table tbody td:nth-child(2) {
+            position: sticky;
+            z-index: 2;
+        }
+        #roster-table thead th:nth-child(1), #modal-table thead th:nth-child(1) { z-index: 3; }
+        #roster-table thead th:nth-child(2), #modal-table thead th:nth-child(2) { z-index: 3; }
+        #roster-table thead th:nth-child(1),
+        #roster-table tbody td:nth-child(1),
+        #modal-table thead th:nth-child(1),
+        #modal-table tbody td:nth-child(1) {
+            left: 0;
+            min-width: 90px;
+        }
+        #roster-table thead th:nth-child(2),
+        #roster-table tbody td:nth-child(2),
+        #modal-table thead th:nth-child(2),
+        #modal-table tbody td:nth-child(2) {
+            left: 90px;
+            min-width: 70px;
+            border-right: 1px solid rgba(100, 116, 139, 0.25);
+        }
+        .dark #roster-table thead th:nth-child(2),
+        .dark #roster-table tbody td:nth-child(2),
+        .dark #modal-table thead th:nth-child(2),
+        .dark #modal-table tbody td:nth-child(2) {
+            border-right-color: rgba(100, 116, 139, 0.35);
+        }
+
+        /* Sort indicators */
         th.sortable { cursor: pointer; user-select: none; }
         th.sortable:hover { color: #1e40af; }
         .dark th.sortable:hover { color: #60a5fa; }
@@ -332,7 +398,7 @@ const STATUS_COLORS = {
 const STATUS_ORDER = ['Renewed','Lower Offer','Current','NTV','Moved Out','Under Eviction','Evicted','Cancelled','Pending','Denied'];
 
 const TABLE_COLUMNS = [
-    { key: 'property',       label: 'Property', align: 'left',  fmt: v => PROPERTY_NAMES[v] || v },
+    { key: 'property',       label: 'Property', align: 'left',  fmt: v => v || '' },
     { key: 'Unit',           label: 'Unit',     align: 'left',  fmt: v => v ?? '' },
     { key: 'Resident Name',  label: 'Resident', align: 'left',  fmt: v => v ?? '' },
     { key: 'expMonthKey',    label: 'Exp Month',align: 'left',  fmt: v => v || '' },
@@ -982,7 +1048,7 @@ function exportCsv(rows, filename) {
     for (const r of rows) {
         lines.push(TABLE_COLUMNS.map(c => {
             if (c.key === 'statusKey') return csvEscape(r.statusKey);
-            if (c.key === 'property') return csvEscape(PROPERTY_NAMES[r.property]||r.property);
+            if (c.key === 'property') return csvEscape(r.property);
             if (c.key === 'expMonthKey') return csvEscape(r.expMonthKey);
             const v = r[c.key];
             if (typeof v === 'number' && c.key.includes('pct')) return (v*100).toFixed(2);
