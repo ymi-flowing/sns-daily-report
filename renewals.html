@@ -38,7 +38,7 @@
         /* KPI card interaction */
         .kpi-card {
             transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
-            cursor: pointer;
+            cursor: default;
             overflow: visible;  /* let .tip tooltips escape */
         }
         .kpi-card:hover {
@@ -648,6 +648,13 @@ function chartDblClick(cb, delay = 400) {
     };
 }
 
+// Chart.js onHover -> swap cursor to pointer when hovering a clickable element.
+function chartHoverCursor(e, els) {
+    if (e && e.native && e.native.target) {
+        e.native.target.style.cursor = els.length ? 'pointer' : 'default';
+    }
+}
+
 // fetchData: by default reads the baked /renewals_data.json (fast, no API).
 // After a Refresh, pass source='/api/get_renewals' to see the fresh sheet
 // immediately -- the committed JSON takes 30-60s to propagate via Vercel.
@@ -1076,6 +1083,7 @@ function renderCharts() {
                     },
                 },
             },
+            onHover: chartHoverCursor,
             onClick: chartDblClick((e, els) => {
                 if (!els.length) return;
                 const el = els[0];
@@ -1132,6 +1140,7 @@ function renderCharts() {
                     }
                 },
             },
+            onHover: chartHoverCursor,
             onClick: chartDblClick((e, els) => {
                 if (!els.length) return;
                 const el = els[0];
@@ -1166,6 +1175,7 @@ function renderCharts() {
                 y: { ticks: { color: tc.text }, grid: { color: tc.grid }, beginAtZero: true },
             },
             plugins: { legend: { display: false } },
+            onHover: chartHoverCursor,
             onClick: chartDblClick((e, els) => {
                 if (!els.length) return;
                 const i = els[0].index;
@@ -1222,6 +1232,7 @@ function renderCharts() {
                     }
                 },
             },
+            onHover: chartHoverCursor,
             onClick: chartDblClick((e, els) => {
                 if (!els.length) return;
                 const m = monthsForAvg[els[0].index];
