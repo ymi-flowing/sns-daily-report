@@ -188,6 +188,74 @@
         #refresh-overlay { display: none; }
         #refresh-overlay.visible { display: flex; }
 
+        /* Tooltip system (matches Daily KPIs .tip pattern) */
+        /* 1. Inline "?" indicator -- tooltip pops ABOVE */
+        .tip {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 14px; height: 14px;
+            margin-left: 4px;
+            font-size: 9px; font-weight: 700;
+            background: #e2e8f0; color: #64748b;
+            border-radius: 50%;
+            cursor: help;
+            vertical-align: middle;
+        }
+        .dark .tip { background: #475569; color: #94a3b8; }
+        .tip::after {
+            content: attr(data-tip);
+            position: absolute;
+            left: 50%; bottom: calc(100% + 8px);
+            transform: translateX(-50%);
+            padding: 7px 10px;
+            background: #ffffff;
+            color: #334155;
+            font-size: 11px; font-weight: 500; line-height: 1.4;
+            white-space: normal; width: max-content; max-width: 240px;
+            border-radius: 8px;
+            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.15);
+            border: 1px solid #e2e8f0;
+            z-index: 100;
+            opacity: 0; visibility: hidden;
+            transition: opacity 0.15s, visibility 0.15s;
+            pointer-events: none;
+            text-transform: none;
+            letter-spacing: normal;
+        }
+        .dark .tip::after {
+            background: #1e293b; color: #e2e8f0; border-color: #475569;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.45);
+        }
+        .tip:hover::after { opacity: 1; visibility: visible; }
+
+        /* 2. Element-level hover tip (no "?" icon) -- pops BELOW; good for header buttons */
+        [data-hover-tip] { position: relative; }
+        [data-hover-tip]::after {
+            content: attr(data-hover-tip);
+            position: absolute;
+            left: 50%; top: calc(100% + 8px);
+            transform: translateX(-50%);
+            padding: 7px 10px;
+            background: #ffffff;
+            color: #334155;
+            font-size: 11px; font-weight: 500; line-height: 1.4;
+            white-space: normal; width: max-content; max-width: 240px;
+            border-radius: 8px;
+            box-shadow: 0 4px 14px rgba(15, 23, 42, 0.15);
+            border: 1px solid #e2e8f0;
+            z-index: 100;
+            opacity: 0; visibility: hidden;
+            transition: opacity 0.15s 0.1s, visibility 0.15s 0.1s;
+            pointer-events: none;
+        }
+        .dark [data-hover-tip]::after {
+            background: #1e293b; color: #e2e8f0; border-color: #475569;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.45);
+        }
+        [data-hover-tip]:hover::after { opacity: 1; visibility: visible; }
+
         /* Scrollbar global */
         * { scrollbar-width: thin; scrollbar-color: #94a3b8 transparent; }
         .dark * { scrollbar-color: #475569 transparent; }
@@ -237,14 +305,14 @@
             <!-- Last Updated Chip (matches Daily KPIs refresh-timestamp) -->
             <div>
                 <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">&nbsp;</label>
-                <div class="h-11 py-2.5 px-4 bg-slate-100 dark:bg-slate-700 rounded-xl border-2 border-slate-200 dark:border-slate-600 flex items-center">
+                <div class="h-11 py-2.5 px-4 bg-slate-100 dark:bg-slate-700 rounded-xl border-2 border-slate-200 dark:border-slate-600 flex items-center" data-hover-tip="Last successful ResMan -> Sheet sync (not the time you opened this page)">
                     <span id="last-updated" class="font-semibold text-slate-700 dark:text-slate-200 text-sm">Loading...</span>
                 </div>
             </div>
             <!-- Refresh Button (icon-only, matches Daily KPIs refresh-btn) -->
             <div>
                 <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">&nbsp;</label>
-                <button id="refresh-btn" onclick="refreshData()" class="h-11 w-11 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 transition-all outline-none focus:ring-2 focus:ring-blue-400 border-2 border-slate-200 dark:border-slate-600 flex items-center justify-center" title="Refresh (ResMan -> Sheet -> Dashboard, ~5-10 min)">
+                <button id="refresh-btn" onclick="refreshData()" class="h-11 w-11 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 transition-all outline-none focus:ring-2 focus:ring-blue-400 border-2 border-slate-200 dark:border-slate-600 flex items-center justify-center" data-hover-tip="Pull fresh data: ResMan -> Sheet -> Dashboard (~5-10 min)">
                     <svg id="refresh-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                     <svg id="refresh-spinner" class="w-5 h-5 hidden animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                 </button>
@@ -252,7 +320,7 @@
             <!-- Theme Toggle (matches Daily KPIs) -->
             <div>
                 <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">&nbsp;</label>
-                <button id="theme-toggle" class="h-11 w-11 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 transition-all outline-none focus:ring-2 focus:ring-blue-400 border-2 border-slate-200 dark:border-slate-600 flex items-center justify-center">
+                <button id="theme-toggle" data-hover-tip="Toggle light / dark" class="h-11 w-11 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 transition-all outline-none focus:ring-2 focus:ring-blue-400 border-2 border-slate-200 dark:border-slate-600 flex items-center justify-center">
                     <svg id="theme-dark-icon" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
                     <svg id="theme-light-icon" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
                 </button>
@@ -308,19 +376,33 @@
     <!-- CHARTS -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
-            <h3 class="text-sm font-semibold text-slate-800 dark:text-white mb-3">Status breakdown by expiring month</h3>
+            <h3 class="text-sm font-semibold text-slate-800 dark:text-white mb-3">
+                Status breakdown by expiring month
+                <span class="tip" data-tip="Count of leases per status, stacked for each expiring month. Click any segment to drill in.">?</span>
+            </h3>
             <div class="relative h-72"><canvas id="chart-month-status"></canvas></div>
         </div>
         <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
-            <h3 class="text-sm font-semibold text-slate-800 dark:text-white mb-3">Signed renewals: Renewed vs Lower Offer by month <span class="text-xs text-slate-500">(% of signed)</span></h3>
+            <h3 class="text-sm font-semibold text-slate-800 dark:text-white mb-3">
+                Signed renewals: Renewed vs Lower Offer by month
+                <span class="text-xs text-slate-500">(% of signed)</span>
+                <span class="tip" data-tip="For each month, each bar is 100% of SIGNED renewals (Renewed + Lower Offer). Shows what share came in at or above offer vs below.">?</span>
+            </h3>
             <div class="relative h-72"><canvas id="chart-month"></canvas></div>
         </div>
         <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
-            <h3 class="text-sm font-semibold text-slate-800 dark:text-white mb-3">Offered Delta % distribution</h3>
+            <h3 class="text-sm font-semibold text-slate-800 dark:text-white mb-3">
+                Offered Delta % distribution
+                <span class="tip" data-tip="How our offers break down by % increase from current rate. Amber = at/below current, green = +0 to 5%, blue = +5% or more.">?</span>
+            </h3>
             <div class="relative h-72"><canvas id="chart-delta"></canvas></div>
         </div>
         <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
-            <h3 class="text-sm font-semibold text-slate-800 dark:text-white mb-3">Avg renewed total by expiring month <span class="text-xs text-slate-500">(trend)</span></h3>
+            <h3 class="text-sm font-semibold text-slate-800 dark:text-white mb-3">
+                Avg renewed total by expiring month
+                <span class="text-xs text-slate-500">(trend)</span>
+                <span class="tip" data-tip="Average actual renewal amount ($ rent + fees) per signed renewal in that month. Trend tells you whether renewal dollars are moving up or down over time.">?</span>
+            </h3>
             <div class="relative h-72"><canvas id="chart-avg-renewed"></canvas></div>
         </div>
     </div>
@@ -331,7 +413,7 @@
             <div>
                 <h2 class="text-lg font-bold text-slate-800 dark:text-white">Renewal roster <span id="row-count" class="text-sm font-normal text-slate-500 dark:text-slate-400 ml-2"></span></h2>
             </div>
-            <button id="csv-export" class="h-9 px-3 rounded-lg bg-slate-100 dark:bg-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 flex items-center gap-2">
+            <button id="csv-export" data-hover-tip="Download the current filtered table as CSV" class="h-9 px-3 rounded-lg bg-slate-100 dark:bg-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 flex items-center gap-2">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                 Export CSV
             </button>
@@ -771,14 +853,22 @@ function renderKPIs() {
     const rows = filtered();
     const k = computeKPIs(rows);
     const cards = [
-        { label: 'Total Expiring',       value: k.total,                            sub: '',                                       accent: 'blue',  filter: null },
-        { label: 'Renewal Rate',         value: fmtPct(k.renewalRate),              sub: `${k.signed} of ${k.decided} decided`,    accent: 'green', filter: {status: ['Renewed','Lower Offer']} },
-        { label: 'Lower Offer %',        value: fmtPct(k.lowerPctOfSigned),         sub: `${k.lowerOffer} of ${k.signed} signed`,  accent: 'amber', filter: {status: ['Lower Offer']} },
-        { label: 'Avg Renewed Total',    value: fmtMoney(k.avgRenewedTotal),        sub: 'per signed renewal',                     accent: 'green', filter: {status: ['Renewed','Lower Offer']} },
-        { label: 'Pending Decision',     value: k.pending,                          sub: pctOf(k.pending, k.total),                accent: 'slate', filter: {status: ['Current']} },
-        { label: 'Avg Offered Δ',        value: fmtPct(k.avgOfferDelta),            sub: 'portfolio avg',                          accent: 'blue',  filter: null },
-        { label: 'Avg Actual Δ',         value: fmtPct(k.avgActualDelta),           sub: 'renewed only',                           accent: 'green', filter: {status: ['Renewed','Lower Offer']} },
-        { label: 'Avg Expiring / Month', value: k.avgPerMonth.toFixed(1),           sub: `across ${k.monthCount} months`,          accent: 'blue',  filter: null },
+        { label: 'Total Expiring',       value: k.total,                            sub: '',                                       accent: 'blue',  filter: null,
+          tip: 'All leases expiring in the filtered months.' },
+        { label: 'Renewal Rate',         value: fmtPct(k.renewalRate),              sub: `${k.signed} of ${k.decided} decided`,    accent: 'green', filter: {status: ['Renewed','Lower Offer']},
+          tip: 'Signed renewals (Renewed + Lower Offer) as % of decided leases. Excludes Pending/Current.' },
+        { label: 'Lower Offer %',        value: fmtPct(k.lowerPctOfSigned),         sub: `${k.lowerOffer} of ${k.signed} signed`,  accent: 'amber', filter: {status: ['Lower Offer']},
+          tip: 'Share of signed renewals that came in below our offer.' },
+        { label: 'Avg Renewed Total',    value: fmtMoney(k.avgRenewedTotal),        sub: 'per signed renewal',                     accent: 'green', filter: {status: ['Renewed','Lower Offer']},
+          tip: 'Average actual renewal amount (rent + fees) per signed renewal.' },
+        { label: 'Pending Decision',     value: k.pending,                          sub: pctOf(k.pending, k.total),                accent: 'slate', filter: {status: ['Current']},
+          tip: 'Residents who have not yet renewed, given notice, or moved out.' },
+        { label: 'Avg Offered Δ',        value: fmtPct(k.avgOfferDelta),            sub: 'portfolio avg',                          accent: 'blue',  filter: null,
+          tip: 'Average % change between our offer and the current rate across all expiring leases.' },
+        { label: 'Avg Actual Δ',         value: fmtPct(k.avgActualDelta),           sub: 'renewed only',                           accent: 'green', filter: {status: ['Renewed','Lower Offer']},
+          tip: 'Average % change between the actual signed renewal and the current rate (signed renewals only).' },
+        { label: 'Avg Expiring / Month', value: k.avgPerMonth.toFixed(1),           sub: `across ${k.monthCount} months`,          accent: 'blue',  filter: null,
+          tip: 'Total expiring leases divided by the number of unique expiring months in the current filter.' },
     ];
     const accentColors = {
         blue:  { bar: 'bg-blue-500', text: 'text-blue-600 dark:text-blue-400' },
@@ -793,7 +883,9 @@ function renderKPIs() {
         <div class="kpi-card bg-white dark:bg-slate-800 p-4 rounded-2xl border-2 border-slate-200 dark:border-slate-700 relative overflow-hidden" data-kpi="${i}">
             <div class="absolute left-0 top-0 bottom-0 w-1 ${a.bar}"></div>
             <div class="pl-2">
-                <div class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">${c.label}</div>
+                <div class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                    ${c.label}${c.tip ? ` <span class="tip" data-tip="${escapeHtml(c.tip)}">?</span>` : ''}
+                </div>
                 <div class="text-2xl font-bold text-slate-900 dark:text-white mt-1">${c.value}</div>
                 <div class="text-xs ${a.text} mt-0.5">${c.sub}</div>
             </div>
