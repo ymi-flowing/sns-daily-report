@@ -28,7 +28,12 @@ import urllib.error
 from datetime import datetime
 
 
-SHEETS_WEBHOOK_URL = os.environ.get("SHEETS_WEBHOOK_URL", "")
+# Accept either name — SHEETS_* is the canonical name used in Renewal Letters/.env,
+# SHEET_* (singular) is a tolerated alias in case it gets re-typed.
+SHEETS_WEBHOOK_URL = (
+    os.environ.get("SHEETS_WEBHOOK_URL", "")
+    or os.environ.get("SHEET_WEBHOOK_URL", "")
+)
 SHARED_SECRET = os.environ.get("SHARED_SECRET", "")
 
 # Property tab names in the Renewal Letters sheet. Order mirrors sync_all.py.
