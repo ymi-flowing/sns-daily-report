@@ -35,27 +35,52 @@
         #offers-table tbody tr:hover td { background-color: #eff6ff; }
         .dark #offers-table tbody tr:hover td { background-color: #253551; }
 
-        #offers-table thead th:nth-child(-n+3),
-        #offers-table tbody td:nth-child(-n+3) {
+        /* Freeze first 4 columns: checkbox | Property | Unit | Resident */
+        #offers-table thead th:nth-child(-n+4),
+        #offers-table tbody td:nth-child(-n+4),
+        #offers-table tfoot td:nth-child(-n+4) {
             position: sticky; z-index: 2;
         }
-        #offers-table thead th:nth-child(-n+3) { z-index: 3; }
+        #offers-table thead th:nth-child(-n+4) { z-index: 3; }
         #offers-table thead th:nth-child(1),
-        #offers-table tbody td:nth-child(1) { left: 0; min-width: 90px; }
+        #offers-table tbody td:nth-child(1),
+        #offers-table tfoot td:nth-child(1) { left: 0;   min-width: 38px; width: 38px; }
         #offers-table thead th:nth-child(2),
-        #offers-table tbody td:nth-child(2) { left: 90px; min-width: 70px; }
+        #offers-table tbody td:nth-child(2),
+        #offers-table tfoot td:nth-child(2) { left: 38px;  min-width: 90px; }
         #offers-table thead th:nth-child(3),
-        #offers-table tbody td:nth-child(3) {
-            left: 160px; min-width: 180px;
+        #offers-table tbody td:nth-child(3),
+        #offers-table tfoot td:nth-child(3) { left: 128px; min-width: 70px; }
+        #offers-table thead th:nth-child(4),
+        #offers-table tbody td:nth-child(4),
+        #offers-table tfoot td:nth-child(4) {
+            left: 198px; min-width: 180px;
             border-right: 1px solid rgba(100, 116, 139, 0.25);
         }
-        .dark #offers-table thead th:nth-child(3),
-        .dark #offers-table tbody td:nth-child(3) {
+        .dark #offers-table thead th:nth-child(4),
+        .dark #offers-table tbody td:nth-child(4),
+        .dark #offers-table tfoot td:nth-child(4) {
             border-right-color: rgba(100, 116, 139, 0.35);
         }
         #offers-table tbody td { border-right: 1px solid rgba(100, 116, 139, 0.1); }
         #offers-table tbody td:last-child { border-right: 0; }
         .dark #offers-table tbody td { border-right-color: rgba(148, 163, 184, 0.1); }
+
+        /* Offers table summary (sticky footer) */
+        #offers-table tfoot td {
+            background-color: #f1f5f9;
+            font-weight: 700;
+            border-top: 2px solid rgba(100, 116, 139, 0.3);
+            position: sticky; bottom: 0; z-index: 2;
+        }
+        .dark #offers-table tfoot td {
+            background-color: #0f172a;
+            border-top-color: rgba(148, 163, 184, 0.3);
+        }
+        #offers-table tfoot td:nth-child(-n+4) { z-index: 3; }
+
+        /* Checkbox in Offers table */
+        .offer-chk { accent-color: #06b6d4; cursor: pointer; width: 16px; height: 16px; }
 
         /* Resident name as a "letter link" inside Offers table */
         .offer-letter-link {
@@ -582,14 +607,19 @@
         <div class="p-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
             <h3 id="offers-title" class="text-lg font-bold text-slate-800 dark:text-white">Renewal Offers</h3>
             <div class="flex items-center gap-2">
+                <button id="offers-print" data-hover-tip="Print all selected (or all visible if none selected)" class="h-8 px-3 rounded-lg bg-cyan-600 hover:bg-cyan-700 text-xs font-semibold text-white border border-cyan-700 flex items-center gap-1.5">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                    <span id="offers-print-label">Print Letters</span>
+                </button>
                 <button id="offers-csv" data-hover-tip="Export the Offers subset as CSV" class="h-8 px-3 rounded-lg bg-slate-100 dark:bg-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600">Export CSV</button>
                 <button onclick="closeOffersModal()" class="h-8 w-8 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 flex items-center justify-center">&times;</button>
             </div>
         </div>
-        <div class="overflow-auto fancy-scroll flex-1 py-4 px-0">
+        <div class="overflow-auto fancy-scroll flex-1 pb-0 px-0">
             <table class="min-w-full text-xs" id="offers-table">
                 <thead class="bg-slate-50 dark:bg-slate-900 sticky top-0 z-10"></thead>
                 <tbody></tbody>
+                <tfoot></tfoot>
             </table>
         </div>
     </div>
@@ -1885,7 +1915,11 @@ function rentDelta(row) {
 }
 
 // Column spec for the Offers modal table.
+// Columns are rendered left-to-right. The first column (__chk) is a special
+// checkbox column: skipped by sort / CSV / totals / scrolling-arrow logic.
 const OFFER_COLUMNS = [
+    { key: '__chk',          label: '',          align: 'center', isCheckbox: true,
+      fmt: (v, row) => `<input type="checkbox" class="offer-chk" data-offer-row="${row.__offerIdx}" ${OFFERS_SELECTED.has(row.__offerIdx) ? 'checked' : ''}>` },
     { key: 'property',       label: 'Property',  align: 'center', fmt: v => v || '' },
     { key: 'Unit',           label: 'Unit',      align: 'center', fmt: v => v ?? '' },
     { key: 'Resident Name',  label: 'Resident',  align: 'center',
@@ -1915,6 +1949,7 @@ const OFFER_COLUMNS = [
 
 let OFFERS_SUBSET = [];
 let OFFERS_SORT = { col: 'property', dir: 'asc' };
+let OFFERS_SELECTED = new Set();  // __offerIdx values that are currently checked
 
 function openOffersModal() {
     // Freeze a snapshot of currently filtered rows + attach derived fields
@@ -1923,16 +1958,36 @@ function openOffersModal() {
         __totalUtil: sumUtilities(r) || null,
     }));
     OFFERS_SORT = { col: 'property', dir: 'asc' };
-    document.getElementById('offers-title').textContent = `Renewal Offers — ${OFFERS_SUBSET.length} rows`;
+    OFFERS_SELECTED = new Set();   // reset selection on each open
+    updateOffersTitle();
     renderOffersBody();
     document.getElementById('offers-modal').classList.remove('hidden');
 }
 function closeOffersModal() { document.getElementById('offers-modal').classList.add('hidden'); }
 
+function updateOffersTitle() {
+    const total = OFFERS_SUBSET.length;
+    const n = OFFERS_SELECTED.size;
+    const title = n > 0
+        ? `Renewal Offers — ${total} rows (${n} selected)`
+        : `Renewal Offers — ${total} rows`;
+    document.getElementById('offers-title').textContent = title;
+    const printLabel = n > 0 ? `Print ${n} Selected` : `Print All (${total})`;
+    document.getElementById('offers-print-label').textContent = printLabel;
+}
+
 function renderOffersBody() {
     const thead = document.querySelector('#offers-table thead');
     const tbody = document.querySelector('#offers-table tbody');
+    const tfoot = document.querySelector('#offers-table tfoot');
     thead.innerHTML = `<tr>${OFFER_COLUMNS.map(c => {
+        if (c.isCheckbox) {
+            const allOn = OFFERS_SUBSET.length > 0 && OFFERS_SELECTED.size === OFFERS_SUBSET.length;
+            const some = OFFERS_SELECTED.size > 0 && !allOn;
+            return `<th class="px-2 py-2 text-center bg-slate-50 dark:bg-slate-900">
+                        <input type="checkbox" id="offers-chk-all" class="offer-chk" ${allOn?'checked':''} ${some?'data-indeterminate="1"':''}>
+                    </th>`;
+        }
         const active = OFFERS_SORT.col === c.key;
         const arrow = active ? (OFFERS_SORT.dir === 'asc' ? '▲' : '▼') : '▲';
         return `<th class="sortable px-3 py-2 text-${c.align} font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 text-[11px] ${active ? 'sort-active' : ''}" data-col="${c.key}">
@@ -1947,12 +2002,27 @@ function renderOffersBody() {
             renderOffersBody();
         });
     });
+    const chkAll = thead.querySelector('#offers-chk-all');
+    if (chkAll) {
+        if (chkAll.dataset.indeterminate) chkAll.indeterminate = true;
+        chkAll.addEventListener('change', () => {
+            if (chkAll.checked) OFFERS_SUBSET.forEach(r => OFFERS_SELECTED.add(r.__offerIdx));
+            else OFFERS_SELECTED.clear();
+            updateOffersTitle();
+            renderOffersBody();
+        });
+    }
+
     const sorted = sortRows(OFFERS_SUBSET, OFFERS_SORT);
     tbody.innerHTML = sorted.map(r => `
         <tr class="data-row border-b border-slate-200 dark:border-slate-700">
-            ${OFFER_COLUMNS.map(c => `<td class="px-3 py-2 text-${c.align} text-slate-700 dark:text-slate-200">${c.fmt(r[c.key], r)}</td>`).join('')}
+            ${OFFER_COLUMNS.map(c => `<td class="px-${c.isCheckbox?'2':'3'} py-2 text-${c.align} text-slate-700 dark:text-slate-200">${c.fmt(r[c.key], r)}</td>`).join('')}
         </tr>
     `).join('');
+
+    // Totals + Avg rows
+    tfoot.innerHTML = renderOffersFooter(sorted);
+
     // Wire resident-name click -> open letter preview
     tbody.querySelectorAll('.offer-letter-link').forEach(el => {
         el.addEventListener('click', (e) => {
@@ -1962,6 +2032,49 @@ function renderOffersBody() {
             if (row) openOfferLetter(row);
         });
     });
+    // Wire row checkboxes
+    tbody.querySelectorAll('.offer-chk').forEach(cb => {
+        cb.addEventListener('click', e => e.stopPropagation());
+        cb.addEventListener('change', () => {
+            const i = Number(cb.dataset.offerRow);
+            if (cb.checked) OFFERS_SELECTED.add(i);
+            else OFFERS_SELECTED.delete(i);
+            updateOffersTitle();
+            // Update header checkbox state without full re-render
+            const allOn = OFFERS_SELECTED.size === OFFERS_SUBSET.length;
+            const some = OFFERS_SELECTED.size > 0 && !allOn;
+            if (chkAll) {
+                chkAll.checked = allOn;
+                chkAll.indeterminate = some;
+            }
+        });
+    });
+}
+
+// Totals + Avg footer. For every money column, sum across the sorted rows.
+// Rent Δ / Total Δ get an average instead of a sum (shown as $signed).
+function renderOffersFooter(rows) {
+    const sumKeys = new Set(['Base Rent','currentTotal','Rent A','Utility','Valet','Pest','Amenity','Internet','__totalUtil','Pet','Parking','WD','Storage','Total Other','totalOfferA']);
+    const avgKeys = new Set(['__rentDelta','deltaA']);
+    const sum = (key) => rows.reduce((acc, r) => acc + (numOrNull(r[key]) || 0), 0);
+    const nonNull = (key) => rows.map(r => numOrNull(r[key])).filter(v => v !== null);
+    const totalCell = (c) => {
+        if (c.isCheckbox) return '';
+        if (c.key === 'property') return 'Totals';
+        if (c.key === 'Unit') return `${rows.length} rows`;
+        if (c.key === 'Resident Name') return '';
+        if (sumKeys.has(c.key)) return fmtMoney(sum(c.key));
+        if (avgKeys.has(c.key)) {
+            const vals = nonNull(c.key);
+            if (!vals.length) return '—';
+            const avg = vals.reduce((a,b)=>a+b,0) / vals.length;
+            return 'avg ' + signedMoney(avg);
+        }
+        return '';
+    };
+    return `<tr>${OFFER_COLUMNS.map(c =>
+        `<td class="px-${c.isCheckbox?'2':'3'} py-2 text-${c.align} text-slate-800 dark:text-slate-100">${totalCell(c)}</td>`
+    ).join('')}</tr>`;
 }
 
 // =============================================================================
@@ -2226,6 +2339,54 @@ function openOfferLetter(row) {
     w.document.close();
 }
 
+// Combine N letters into a single HTML document with a page-break between
+// each, so one Ctrl+P → one multi-page PDF.
+function openBulkLetters(rows) {
+    if (!rows.length) return;
+    const letters = rows.map(r => fillLetterTemplate(buildLetterContext(r)));
+    // Extract style + body of each letter, stacking inside one page.
+    const docs = letters.map((html, idx) => {
+        // Each letter is a full HTML doc. Pull its body + inherit its style
+        // (identical across letters) only once.
+        const bodyMatch = html.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+        const body = bodyMatch ? bodyMatch[1] : html;
+        const sep = idx === 0 ? '' : '<div style="page-break-before: always; height: 0;"></div>';
+        return sep + body;
+    });
+    const styleMatch = letters[0].match(/<style[^>]*>[\s\S]*?<\/style>/i);
+    const style = styleMatch ? styleMatch[0] : '';
+    const combined = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Renewal Letters — ${rows.length} residents</title>
+${style}
+<style>@media print { .no-print { display: none; } }</style>
+</head>
+<body>
+<div class="no-print" style="position: fixed; top: 10px; right: 10px; z-index: 9999;">
+  <button onclick="window.print()" style="padding: 10px 16px; background: #06b6d4; color: white; border: 0; border-radius: 8px; font-weight: 600; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">Print / Save as PDF</button>
+</div>
+${docs.join('\n')}
+</body>
+</html>`;
+    const w = window.open('', '_blank');
+    if (!w) { alert('Pop-up blocked. Allow pop-ups for this site to print letters.'); return; }
+    w.document.open();
+    w.document.write(combined);
+    w.document.close();
+}
+
+function printOffersLetters() {
+    const selected = OFFERS_SUBSET.filter(r => OFFERS_SELECTED.has(r.__offerIdx));
+    const target = selected.length > 0 ? selected : OFFERS_SUBSET;
+    if (target.length === 0) return;
+    if (target.length > 50) {
+        if (!confirm(`Open ${target.length} letters in one tab? That's a lot — large PDFs can be slow to render.`)) return;
+    }
+    openBulkLetters(target);
+}
+
 // =============================================================================
 // RENDER + INIT
 // =============================================================================
@@ -2264,6 +2425,7 @@ document.getElementById('modal-csv').addEventListener('click', () => {
     const stamp = new Date().toISOString().slice(0,10);
     exportCsv(MODAL_SUBSET, `renewals_subset_${stamp}.csv`);
 });
+document.getElementById('offers-print').addEventListener('click', printOffersLetters);
 document.getElementById('offers-csv').addEventListener('click', () => {
     const stamp = new Date().toISOString().slice(0,10);
     // Export using the Offers column spec, not TABLE_COLUMNS. Values are raw;
