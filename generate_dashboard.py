@@ -1646,6 +1646,9 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data):
     </script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        /* Tone pure white down to a calmer off-white (eyestrain fix) */
+        .bg-white {{ background-color: #fafbfc !important; }}
+
         /* Custom Select Dropdown */
         select {{
             -webkit-appearance: none;
@@ -1658,7 +1661,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data):
         }}
         select option {{
             padding: 12px;
-            background: white;
+            background: #fafbfc;
             color: #1e293b;
         }}
         .dark select option {{
@@ -1715,7 +1718,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data):
             top: 50%;
             transform: translateY(-50%);
             padding: 6px 10px;
-            background: white;
+            background: #fafbfc;
             color: #334155;
             font-size: 11px;
             font-weight: 500;
@@ -1743,7 +1746,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data):
             left: 50%;
             transform: translateX(-50%);
             padding: 4px 8px;
-            background: white;
+            background: #fafbfc;
             color: #334155;
             font-size: 11px;
             font-weight: 600;
@@ -1802,7 +1805,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data):
             top: 50%;
             transform: translateY(-50%);
             padding: 6px 10px;
-            background: white;
+            background: #fafbfc;
             color: #334155;
             font-size: 11px;
             font-weight: 500;
