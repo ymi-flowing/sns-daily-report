@@ -1505,15 +1505,32 @@ function renderTable() {
     `).join('');
     document.getElementById('row-count').textContent = `(${rows.length} rows)`;
 }
-function sortRows(rows) {
-    const { col, dir } = STATE.sort;
+// Columns whose cell values should be compared as real Dates, not strings.
+const DATE_SORT_COLS = new Set([
+    'MI Date', 'Exp Date', 'expMonthKey',
+    'NTV Date', 'Move Out Date', 'Lease End Date', 'Renewal Signed Date',
+]);
+
+function sortRows(rows, sortState) {
+    const { col, dir } = sortState || STATE.sort;
     const mul = dir === 'asc' ? 1 : -1;
+    const asDate = DATE_SORT_COLS.has(col);
     return [...rows].sort((a, b) => {
         const va = a[col], vb = b[col];
-        if (va === null || va === undefined || va === '') return 1;
-        if (vb === null || vb === undefined || vb === '') return -1;
+        const emptyA = va === null || va === undefined || va === '';
+        const emptyB = vb === null || vb === undefined || vb === '';
+        if (emptyA && emptyB) return 0;
+        if (emptyA) return 1;   // blanks sink regardless of direction
+        if (emptyB) return -1;
+        if (asDate) {
+            const da = parseAnyDate(va);
+            const db = parseAnyDate(vb);
+            if (da && db) return (da - db) * mul;
+            if (da) return -1;
+            if (db) return 1;
+        }
         if (typeof va === 'number' && typeof vb === 'number') return (va - vb) * mul;
-        return String(va).localeCompare(String(vb)) * mul;
+        return String(va).localeCompare(String(vb), undefined, { numeric: true }) * mul;
     });
 }
 
@@ -1550,20 +1567,38 @@ function exportCsv(rows, filename) {
 // MODAL
 // =============================================================================
 let MODAL_SUBSET = [];
+let MODAL_SORT = { col: 'property', dir: 'asc' };
 function openModal(title, rows) {
     MODAL_SUBSET = rows;
+    MODAL_SORT = { col: 'property', dir: 'asc' };  // reset on each open
     document.getElementById('modal-title').textContent = `${title} — ${rows.length} rows`;
+    renderModalBody();
+    document.getElementById('detail-modal').classList.remove('hidden');
+}
+function renderModalBody() {
     const thead = document.querySelector('#modal-table thead');
     const tbody = document.querySelector('#modal-table tbody');
-    thead.innerHTML = `<tr>${TABLE_COLUMNS.map(c =>
-        `<th class="px-3 py-2 text-${c.align} font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 text-[11px]">${c.label}</th>`
-    ).join('')}</tr>`;
-    tbody.innerHTML = rows.map(r => `
+    thead.innerHTML = `<tr>${TABLE_COLUMNS.map(c => {
+        const active = MODAL_SORT.col === c.key;
+        const arrow = active ? (MODAL_SORT.dir === 'asc' ? '▲' : '▼') : '▲';
+        return `<th class="sortable px-3 py-2 text-${c.align} font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 text-[11px] ${active ? 'sort-active' : ''}" data-col="${c.key}">
+                    ${c.label}<span class="arrow">${arrow}</span>
+                </th>`;
+    }).join('')}</tr>`;
+    thead.querySelectorAll('th.sortable').forEach(th => {
+        th.addEventListener('click', () => {
+            const col = th.dataset.col;
+            if (MODAL_SORT.col === col) MODAL_SORT.dir = MODAL_SORT.dir === 'asc' ? 'desc' : 'asc';
+            else { MODAL_SORT.col = col; MODAL_SORT.dir = 'asc'; }
+            renderModalBody();
+        });
+    });
+    const sorted = sortRows(MODAL_SUBSET, MODAL_SORT);
+    tbody.innerHTML = sorted.map(r => `
         <tr class="data-row border-b border-slate-100 dark:border-slate-700/40">
             ${TABLE_COLUMNS.map(c => `<td class="px-3 py-2 text-${c.align} text-slate-700 dark:text-slate-200">${c.fmt(r[c.key], r)}</td>`).join('')}
         </tr>
     `).join('');
-    document.getElementById('detail-modal').classList.remove('hidden');
 }
 function closeModal() { document.getElementById('detail-modal').classList.add('hidden'); }
 
