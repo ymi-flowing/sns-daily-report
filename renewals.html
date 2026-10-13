@@ -1125,18 +1125,22 @@ function renderCharts() {
 
     // 2. Stacked bar: Renewal Rate per month = (Renewed + Lower Offer) / Total expiring,
     //    split into Renewed vs Lower Offer segments. Bar height = renewal rate %.
+    //    Hover also surfaces pending (Current) count and the ceiling if all
+    //    pending leases ended up renewing -- the actionable "room to grow".
     const monthsPresent = [...new Set(rows.map(r => r.expMonthKey).filter(Boolean))].sort();
     const monthStats = monthsPresent.map(m => {
         const r = rows.filter(x => x.expMonthKey === m);
         const renewed = r.filter(x => x.statusKey === 'Renewed').length;
         const lower = r.filter(x => x.statusKey === 'Lower Offer').length;
+        const current = r.filter(x => x.statusKey === 'Current').length;
         const total = r.length;
         const signed = renewed + lower;
         return {
-            renewed, lower, total, signed,
-            renewedPct: total ? 100 * renewed / total : 0,
-            lowerPct:   total ? 100 * lower   / total : 0,
-            ratePct:    total ? 100 * signed  / total : 0,
+            renewed, lower, current, total, signed,
+            renewedPct:     total ? 100 * renewed / total : 0,
+            lowerPct:       total ? 100 * lower   / total : 0,
+            ratePct:        total ? 100 * signed  / total : 0,
+            potentialRate:  total ? 100 * (signed + current) / total : 0,
         };
     });
     STATE.charts.month = new Chart(document.getElementById('chart-month'), {
@@ -1173,8 +1177,10 @@ function renderCharts() {
                             const d = monthStats[ctx[0].dataIndex];
                             return [
                                 `Signed renewals: ${d.signed}`,
+                                `Still pending: ${d.current}`,
                                 `Total expiring: ${d.total}`,
                                 `Renewal rate: ${d.ratePct.toFixed(1)}%`,
+                                `Ceiling (all pending renew): ${d.potentialRate.toFixed(1)}%`,
                             ];
                         },
                     }
