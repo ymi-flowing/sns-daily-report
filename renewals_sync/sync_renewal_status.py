@@ -212,23 +212,31 @@ def has_pending_notice(lease: dict) -> bool:
     return bool(ntv) and not mo
 
 
-def derive_status(resman_status: str, renewed: bool, actual_total, offered_total,
-                  pending_notice: bool = False) -> str:
+def derive_status(resman_status: str, renewal_entry: dict | None, is_signed: bool,
+                  actual_total, offered_total, pending_notice: bool = False) -> str:
     """
     Priority:
-      1. Renewed AND actual < offered  → 'Lower Offer'
-      2. Renewed                       → 'Renewed'
-      3. Not renewed AND pending_notice → 'NTV' (overrides stale 'Current')
-      4. Not renewed                   → ResMan status mapped
-    Roommate-swap case is 'Renewed' too — the lease renewed, F reflects that.
+      1. Renewal entry present, signed, actual < offered → 'Lower Offer'
+      2. Renewal entry present, signed                   → 'Renewed'
+      3. Renewal entry present, unsigned, status == 'Pending Renewal' → 'Pending Renewal'
+      4. Not renewed AND pending_notice → 'NTV' (overrides stale 'Current')
+      5. Else → ResMan status mapped
+
+    Pending Renewal matches the Daily Report convention: an entry in
+    lease.history[] with status 'Pending Renewal' AND signedDate empty
+    means an offer went out and the resident hasn't signed yet.
     """
-    if renewed:
-        try:
-            if offered_total and float(actual_total) < float(offered_total):
-                return "Lower Offer"
-        except (TypeError, ValueError):
-            pass
-        return "Renewed"
+    if renewal_entry:
+        if is_signed:
+            try:
+                if offered_total and float(actual_total) < float(offered_total):
+                    return "Lower Offer"
+            except (TypeError, ValueError):
+                pass
+            return "Renewed"
+        if renewal_entry.get("status") == "Pending Renewal":
+            return "Pending Renewal"
+        # Unsigned entry with a different status -- fall through to lease-level
     if pending_notice and resman_status == "Current":
         return "NTV"
     return STATUS_MAP.get(resman_status, resman_status)
@@ -304,9 +312,9 @@ def run_sync(abbr: str, dry_run: bool = False, limit: int | None = None) -> int:
     new_status = []
     new_renewal = []
     new_lease_ids = []
-    stats = {"renewed": 0, "lower_offer": 0, "current": 0, "moved_out": 0, "ntv": 0,
-             "eviction": 0, "unmatched": 0, "other": 0, "matched_by_id": 0,
-             "matched_by_name": 0, "matched_by_mi_date": 0}
+    stats = {"renewed": 0, "lower_offer": 0, "pending_renewal": 0, "current": 0,
+             "moved_out": 0, "ntv": 0, "eviction": 0, "unmatched": 0, "other": 0,
+             "matched_by_id": 0, "matched_by_name": 0, "matched_by_mi_date": 0}
     unmatched_rows = []
 
     limit = limit if limit else len(data)
@@ -363,26 +371,29 @@ def run_sync(abbr: str, dry_run: bool = False, limit: int | None = None) -> int:
         if ym:
             expiring_entry, renewal_entry = find_expiring_and_renewal(lease, ym[0], ym[1])
         # Trump stale-renewal history entries when the tenancy actually ended.
-        renewed = renewal_entry is not None and not lease_has_ended(lease)
-        actual_total = renewal_total(renewal_entry) if renewed else None
+        live_renewal = renewal_entry if renewal_entry is not None and not lease_has_ended(lease) else None
+        is_signed = bool(live_renewal and live_renewal.get("signedDate"))
+        actual_total = renewal_total(live_renewal) if is_signed else None
         pending_notice = has_pending_notice(lease)
-        status_label = derive_status(rm_status, renewed, actual_total, offered_total, pending_notice)
+        status_label = derive_status(rm_status, live_renewal, is_signed,
+                                     actual_total, offered_total, pending_notice)
         new_status.append([status_label])
         new_lease_ids.append([lease_id_out])
 
-        if renewed:
+        # Col T (Actual Renewal) only filled for signed renewals.
+        if status_label in ("Renewed", "Lower Offer"):
             new_renewal.append([actual_total if actual_total is not None else ""])
-            if status_label == "Lower Offer":
-                stats["lower_offer"] += 1
-            else:
-                stats["renewed"] += 1
         else:
             new_renewal.append([""])
-            if status_label == "Current": stats["current"] += 1
-            elif status_label == "Moved Out": stats["moved_out"] += 1
-            elif status_label == "NTV": stats["ntv"] += 1
-            elif status_label in ("Under Eviction", "Evicted"): stats["eviction"] += 1
-            else: stats["other"] += 1
+
+        if status_label == "Renewed":            stats["renewed"] += 1
+        elif status_label == "Lower Offer":      stats["lower_offer"] += 1
+        elif status_label == "Pending Renewal":  stats["pending_renewal"] += 1
+        elif status_label == "Current":          stats["current"] += 1
+        elif status_label == "Moved Out":        stats["moved_out"] += 1
+        elif status_label == "NTV":              stats["ntv"] += 1
+        elif status_label in ("Under Eviction", "Evicted"): stats["eviction"] += 1
+        else:                                    stats["other"] += 1
 
     print()
     print(f"  Summary over {len(data[:limit])} rows:")

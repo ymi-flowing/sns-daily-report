@@ -66,7 +66,7 @@
         .multi-trigger.active { border-color: #64748b; background: #f1f5f9; }
         .dark .multi-trigger.active { background: #334155; border-color: #94a3b8; }
         .multi-trigger .count-badge {
-            background: #1e40af; color: white; font-size: 10px; font-weight: 700;
+            background: #60a5fa; color: white; font-size: 10px; font-weight: 700;
             border-radius: 10px; padding: 2px 7px; margin-left: 2px;
         }
         .multi-trigger svg { opacity: 0.5; }
@@ -140,20 +140,16 @@
             background-color: #0f172a;
         }
 
-        /* Freeze Property (col 1) and Unit (col 2) in both tables */
-        #roster-table thead th:nth-child(1),
-        #roster-table thead th:nth-child(2),
-        #roster-table tbody td:nth-child(1),
-        #roster-table tbody td:nth-child(2),
-        #modal-table thead th:nth-child(1),
-        #modal-table thead th:nth-child(2),
-        #modal-table tbody td:nth-child(1),
-        #modal-table tbody td:nth-child(2) {
+        /* Freeze Property (col 1), Unit (col 2), Status (col 3) in both tables */
+        #roster-table thead th:nth-child(-n+3),
+        #roster-table tbody td:nth-child(-n+3),
+        #modal-table thead th:nth-child(-n+3),
+        #modal-table tbody td:nth-child(-n+3) {
             position: sticky;
             z-index: 2;
         }
-        #roster-table thead th:nth-child(1), #modal-table thead th:nth-child(1) { z-index: 3; }
-        #roster-table thead th:nth-child(2), #modal-table thead th:nth-child(2) { z-index: 3; }
+        #roster-table thead th:nth-child(-n+3),
+        #modal-table thead th:nth-child(-n+3) { z-index: 3; }
         #roster-table thead th:nth-child(1),
         #roster-table tbody td:nth-child(1),
         #modal-table thead th:nth-child(1),
@@ -167,12 +163,19 @@
         #modal-table tbody td:nth-child(2) {
             left: 90px;
             min-width: 70px;
+        }
+        #roster-table thead th:nth-child(3),
+        #roster-table tbody td:nth-child(3),
+        #modal-table thead th:nth-child(3),
+        #modal-table tbody td:nth-child(3) {
+            left: 160px;
+            min-width: 130px;
             border-right: 1px solid rgba(100, 116, 139, 0.25);
         }
-        .dark #roster-table thead th:nth-child(2),
-        .dark #roster-table tbody td:nth-child(2),
-        .dark #modal-table thead th:nth-child(2),
-        .dark #modal-table tbody td:nth-child(2) {
+        .dark #roster-table thead th:nth-child(3),
+        .dark #roster-table tbody td:nth-child(3),
+        .dark #modal-table thead th:nth-child(3),
+        .dark #modal-table tbody td:nth-child(3) {
             border-right-color: rgba(100, 116, 139, 0.35);
         }
 
@@ -415,6 +418,17 @@
     <!-- KPI CARDS -->
     <div id="kpi-grid" class="grid grid-cols-2 md:grid-cols-4 gap-3"></div>
 
+    <!-- STATUS × MONTH SUMMARY -->
+    <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
+        <h3 class="text-sm font-semibold text-slate-800 dark:text-white mb-3">
+            Status × Expiring Month
+            <span class="tip" data-tip="Count of leases per status per expiring month. Click any cell to drill into those residents.">?</span>
+        </h3>
+        <div class="overflow-x-auto fancy-scroll">
+            <table id="summary-table" class="min-w-full text-xs"><thead></thead><tbody></tbody></table>
+        </div>
+    </div>
+
     <!-- CHARTS -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
@@ -508,22 +522,24 @@ const PROPERTY_NAMES = {
 const PROPERTY_ORDER = ['49thStr','AP','EAST','MOC','MUSO','ORT','ROP','SJ','TRA-AN3','TV'];
 
 const STATUS_COLORS = {
-    'Renewed':        { bg: '#10b981', bgSoft: 'rgba(16,185,129,0.15)',  textLight: '#065f46', textDark: '#6ee7b7' },
-    'Lower Offer':    { bg: '#f59e0b', bgSoft: 'rgba(245,158,11,0.15)',  textLight: '#92400e', textDark: '#fcd34d' },
-    'Current':        { bg: '#64748b', bgSoft: 'rgba(100,116,139,0.15)', textLight: '#334155', textDark: '#cbd5e1' },
-    'NTV':            { bg: '#fb923c', bgSoft: 'rgba(251,146,60,0.15)',  textLight: '#9a3412', textDark: '#fdba74' },
-    'Moved Out':      { bg: '#ef4444', bgSoft: 'rgba(239,68,68,0.15)',   textLight: '#7f1d1d', textDark: '#fca5a5' },
-    'Under Eviction': { bg: '#dc2626', bgSoft: 'rgba(220,38,38,0.18)',   textLight: '#7f1d1d', textDark: '#fca5a5' },
-    'Evicted':        { bg: '#991b1b', bgSoft: 'rgba(153,27,27,0.20)',   textLight: '#450a0a', textDark: '#fca5a5' },
-    'Cancelled':      { bg: '#475569', bgSoft: 'rgba(71,85,105,0.15)',   textLight: '#0f172a', textDark: '#cbd5e1' },
-    'Pending':        { bg: '#3b82f6', bgSoft: 'rgba(59,130,246,0.15)',  textLight: '#1e3a8a', textDark: '#93c5fd' },
-    'Denied':         { bg: '#db2777', bgSoft: 'rgba(219,39,119,0.15)',  textLight: '#831843', textDark: '#f9a8d4' },
+    'Renewed':         { bg: '#10b981', bgSoft: 'rgba(16,185,129,0.15)',  textLight: '#065f46', textDark: '#6ee7b7' },
+    'Lower Offer':     { bg: '#f59e0b', bgSoft: 'rgba(245,158,11,0.15)',  textLight: '#92400e', textDark: '#fcd34d' },
+    'Pending Renewal': { bg: '#fbbf24', bgSoft: 'rgba(251,191,36,0.18)',  textLight: '#78350f', textDark: '#fde68a' },
+    'Current':         { bg: '#64748b', bgSoft: 'rgba(100,116,139,0.15)', textLight: '#334155', textDark: '#cbd5e1' },
+    'NTV':             { bg: '#fb923c', bgSoft: 'rgba(251,146,60,0.15)',  textLight: '#9a3412', textDark: '#fdba74' },
+    'Moved Out':       { bg: '#ef4444', bgSoft: 'rgba(239,68,68,0.15)',   textLight: '#7f1d1d', textDark: '#fca5a5' },
+    'Under Eviction':  { bg: '#dc2626', bgSoft: 'rgba(220,38,38,0.18)',   textLight: '#7f1d1d', textDark: '#fca5a5' },
+    'Evicted':         { bg: '#991b1b', bgSoft: 'rgba(153,27,27,0.20)',   textLight: '#450a0a', textDark: '#fca5a5' },
+    'Cancelled':       { bg: '#475569', bgSoft: 'rgba(71,85,105,0.15)',   textLight: '#0f172a', textDark: '#cbd5e1' },
+    'Pending':         { bg: '#3b82f6', bgSoft: 'rgba(59,130,246,0.15)',  textLight: '#1e3a8a', textDark: '#93c5fd' },
+    'Denied':          { bg: '#db2777', bgSoft: 'rgba(219,39,119,0.15)',  textLight: '#831843', textDark: '#f9a8d4' },
 };
-const STATUS_ORDER = ['Renewed','Lower Offer','Current','NTV','Moved Out','Under Eviction','Evicted','Cancelled','Pending','Denied'];
+const STATUS_ORDER = ['Renewed','Lower Offer','Pending Renewal','Current','NTV','Moved Out','Under Eviction','Evicted','Cancelled','Pending','Denied'];
 
 const TABLE_COLUMNS = [
     { key: 'property',       label: 'Property',       align: 'center', fmt: v => v || '' },
     { key: 'Unit',           label: 'Unit',           align: 'center', fmt: v => v ?? '' },
+    { key: 'statusKey',      label: 'Status',         align: 'center', fmt: v => statusPillHtml(v) },
     { key: 'Unit Type',      label: 'Unit Type',      align: 'center', fmt: v => v || '' },
     { key: 'Floorplan',      label: 'Floorplan',      align: 'center', fmt: v => v || '' },
     { key: 'Resident Name',  label: 'Resident',       align: 'center', fmt: v => v ?? '' },
@@ -532,7 +548,6 @@ const TABLE_COLUMNS = [
     { key: 'totalOfferA',    label: 'Renewal Offer',  align: 'center', fmt: fmtMoney },
     { key: 'deltaA',         label: 'Δ Offer',        align: 'center', fmt: fmtMoney },
     { key: 'deltaApct',      label: 'Δ Offer %',      align: 'center', fmt: fmtPct },
-    { key: 'statusKey',      label: 'Status',         align: 'center', fmt: v => statusPillHtml(v) },
     { key: 'actualRenewal',  label: 'Actual Renewal', align: 'center', fmt: v => v ? fmtMoney(v) : '—' },
     { key: 'actualDelta',    label: 'Δ Actual',       align: 'center', fmt: v => v ? fmtMoney(v) : '—' },
     { key: 'actualDeltaPct', label: 'Δ Actual %',     align: 'center', fmt: v => v ? fmtPct(v) : '—' },
@@ -980,10 +995,12 @@ function computeKPIs(rows) {
     const total = rows.length;
     const renewed = rows.filter(r => r.statusKey === 'Renewed').length;
     const lowerOffer = rows.filter(r => r.statusKey === 'Lower Offer').length;
-    const signed = renewed + lowerOffer;  // signed renewals (either kind)
-    const pending = rows.filter(r => r.statusKey === 'Current').length;
+    const pendingRenewal = rows.filter(r => r.statusKey === 'Pending Renewal').length;
+    const signed = renewed + lowerOffer;  // Pending Renewal does NOT count as signed
+    const current = rows.filter(r => r.statusKey === 'Current').length;
+    const pending = current + pendingRenewal;  // Pending Decision = both pending states
     const lostCount = rows.filter(r => ['NTV','Moved Out','Under Eviction','Evicted','Cancelled','Denied'].includes(r.statusKey)).length;
-    const decided = signed + lostCount;
+    const decided = signed + lostCount;  // Pending Renewal/Current NOT decided yet
     const renewalRate = decided > 0 ? signed / decided : 0;
     const lowerPctOfSigned = signed > 0 ? lowerOffer / signed : 0;
     const offerDeltas = rows.map(r => r.deltaApct).filter(v => v !== null);
@@ -995,7 +1012,7 @@ function computeKPIs(rows) {
     const avgRenewedTotal = renewalAmounts.length ? renewalAmounts.reduce((a,b)=>a+b,0) / renewalAmounts.length : 0;
     const uniqueMonths = new Set(rows.map(r => r.expMonthKey).filter(Boolean));
     const avgPerMonth = uniqueMonths.size > 0 ? total / uniqueMonths.size : 0;
-    return { total, renewed, lowerOffer, signed, decided, lostCount, pending,
+    return { total, renewed, lowerOffer, pendingRenewal, signed, decided, lostCount, current, pending,
              renewalRate, lowerPctOfSigned, avgOfferDelta, avgActualDelta,
              avgRenewedTotal, avgPerMonth, monthCount: uniqueMonths.size };
 }
@@ -1011,8 +1028,8 @@ function renderKPIs() {
           tip: 'Share of signed renewals that came in below our offer.' },
         { label: 'Avg Renewed Total',    value: fmtMoney(k.avgRenewedTotal),        sub: 'per signed renewal',                     accent: 'green', filter: {status: ['Renewed','Lower Offer']},
           tip: 'Average actual renewal amount (rent + fees) per signed renewal.' },
-        { label: 'Pending Decision',     value: k.pending,                          sub: pctOf(k.pending, k.total),                accent: 'slate', filter: {status: ['Current']},
-          tip: 'Residents who have not yet renewed, given notice, or moved out.' },
+        { label: 'Pending Decision',     value: k.pending,                          sub: `${k.pendingRenewal} w/ offer out`,       accent: 'slate', filter: {status: ['Current','Pending Renewal']},
+          tip: 'Residents who have not yet renewed, given notice, or moved out. Includes Current (no offer yet) + Pending Renewal (offer out, awaiting signature).' },
         { label: 'Avg Offered Δ',        value: fmtPct(k.avgOfferDelta),            sub: 'portfolio avg',                          accent: 'blue',  filter: null,
           tip: 'Average % change between our offer and the current rate across all expiring leases.' },
         { label: 'Avg Actual Δ',         value: fmtPct(k.avgActualDelta),           sub: 'renewed only',                           accent: 'green', filter: {status: ['Renewed','Lower Offer']},
@@ -1087,6 +1104,8 @@ function renderCharts() {
         data: monthsForBreakdown.map(m => rows.filter(r => r.expMonthKey === m && r.statusKey === status).length),
         backgroundColor: STATUS_COLORS[status]?.bg || '#94a3b8',
         borderWidth: 0,
+        borderRadius: 4,
+        borderSkipped: false,
     }));
     STATE.charts.monthStatus = new Chart(document.getElementById('chart-month-status'), {
         type: 'bar',
@@ -1135,15 +1154,18 @@ function renderCharts() {
         const r = rows.filter(x => x.expMonthKey === m);
         const renewed = r.filter(x => x.statusKey === 'Renewed').length;
         const lower = r.filter(x => x.statusKey === 'Lower Offer').length;
+        const pendingRen = r.filter(x => x.statusKey === 'Pending Renewal').length;
         const current = r.filter(x => x.statusKey === 'Current').length;
         const total = r.length;
         const signed = renewed + lower;
+        const pending = current + pendingRen;
         return {
-            renewed, lower, current, total, signed,
-            renewedPct:     total ? 100 * renewed / total : 0,
-            lowerPct:       total ? 100 * lower   / total : 0,
-            ratePct:        total ? 100 * signed  / total : 0,
-            potentialRate:  total ? 100 * (signed + current) / total : 0,
+            renewed, lower, pendingRen, current, pending, total, signed,
+            renewedPct:    total ? 100 * renewed    / total : 0,
+            lowerPct:      total ? 100 * lower      / total : 0,
+            pendingRenPct: total ? 100 * pendingRen / total : 0,
+            ratePct:       total ? 100 * signed     / total : 0,
+            potentialRate: total ? 100 * (signed + pending) / total : 0,
         };
     });
     STATE.charts.month = new Chart(document.getElementById('chart-month'), {
@@ -1152,9 +1174,9 @@ function renderCharts() {
             labels: monthsPresent.map(fmtMonthLabel),
             datasets: [
                 { label: 'Renewed',     data: monthStats.map(d => d.renewedPct),
-                  backgroundColor: '#10b981', borderWidth: 0, stack: 'rate' },
+                  backgroundColor: '#10b981', borderWidth: 0, borderRadius: 4, borderSkipped: false, stack: 'rate' },
                 { label: 'Lower Offer', data: monthStats.map(d => d.lowerPct),
-                  backgroundColor: '#f59e0b', borderWidth: 0, stack: 'rate' },
+                  backgroundColor: '#f59e0b', borderWidth: 0, borderRadius: 4, borderSkipped: false, stack: 'rate' },
             ]
         },
         options: {
@@ -1180,7 +1202,8 @@ function renderCharts() {
                             const d = monthStats[ctx[0].dataIndex];
                             return [
                                 `Signed renewals: ${d.signed}`,
-                                `Still pending: ${d.current}`,
+                                `Pending Renewal (offer out): ${d.pendingRen}`,
+                                `Current (no offer yet): ${d.current}`,
                                 `Total expiring: ${d.total}`,
                                 `Renewal rate: ${d.ratePct.toFixed(1)}%`,
                                 `Max achievable (all pending renew): ${d.potentialRate.toFixed(1)}%`,
@@ -1215,6 +1238,8 @@ function renderCharts() {
                 data: binCounts,
                 backgroundColor: binLabels.map((_, i) => i < 2 ? '#f59e0b' : (i < 4 ? '#10b981' : '#60a5fa')),
                 borderWidth: 0,
+                borderRadius: 4,
+                borderSkipped: false,
             }],
         },
         options: {
@@ -1289,6 +1314,73 @@ function renderCharts() {
                 openModal('Signed renewals ' + fmtMonthLabel(m), subset);
             }),
         },
+    });
+}
+
+// =============================================================================
+// SUMMARY TABLE (Status x Expiring Month)
+// =============================================================================
+const SUMMARY_STATUSES = ['Renewed','Lower Offer','Pending Renewal','Current','NTV','Under Eviction','Moved Out','Evicted'];
+
+function renderSummaryTable() {
+    const rows = filtered();
+    const months = [...new Set(rows.map(r => r.expMonthKey).filter(Boolean))].sort();
+    const matrix = {};
+    for (const s of SUMMARY_STATUSES) {
+        matrix[s] = { total: 0 };
+        for (const m of months) matrix[s][m] = 0;
+    }
+    for (const r of rows) {
+        if (!matrix[r.statusKey]) continue;
+        if (!r.expMonthKey) continue;
+        matrix[r.statusKey][r.expMonthKey] = (matrix[r.statusKey][r.expMonthKey] || 0) + 1;
+        matrix[r.statusKey].total++;
+    }
+    const colTotals = {};
+    for (const m of months) {
+        colTotals[m] = SUMMARY_STATUSES.reduce((s, status) => s + matrix[status][m], 0);
+    }
+    const grandTotal = SUMMARY_STATUSES.reduce((s, status) => s + matrix[status].total, 0);
+
+    const thead = document.querySelector('#summary-table thead');
+    const tbody = document.querySelector('#summary-table tbody');
+    thead.innerHTML = `
+        <tr class="bg-slate-50 dark:bg-slate-900">
+            <th class="px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 sticky left-0 bg-slate-50 dark:bg-slate-900 z-10">Status</th>
+            ${months.map(m => `<th class="px-3 py-2 text-center text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 whitespace-nowrap">${fmtMonthLabel(m)}</th>`).join('')}
+            <th class="px-3 py-2 text-center text-[11px] font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-200 whitespace-nowrap">Total</th>
+        </tr>
+    `;
+    const bodyRows = SUMMARY_STATUSES.map(s => {
+        const row = matrix[s];
+        return `
+            <tr class="border-b border-slate-100 dark:border-slate-700/40">
+                <td class="px-3 py-2 text-left sticky left-0 bg-white dark:bg-slate-800 z-10">${statusPillHtml(s)}</td>
+                ${months.map(m => {
+                    const n = row[m];
+                    if (!n) return `<td class="px-3 py-2 text-center text-slate-300 dark:text-slate-600">—</td>`;
+                    return `<td class="px-3 py-2 text-center cursor-pointer hover:bg-blue-50 dark:hover:bg-slate-700/60 transition-colors font-medium" data-status="${escapeHtml(s)}" data-month="${escapeHtml(m)}">${n}</td>`;
+                }).join('')}
+                <td class="px-3 py-2 text-center font-semibold text-slate-900 dark:text-white">${row.total || '—'}</td>
+            </tr>
+        `;
+    }).join('');
+    const totalRow = `
+        <tr class="border-t-2 border-slate-200 dark:border-slate-700 font-semibold">
+            <td class="px-3 py-2 text-left sticky left-0 bg-slate-50 dark:bg-slate-900 z-10 text-slate-700 dark:text-slate-200">Total</td>
+            ${months.map(m => `<td class="px-3 py-2 text-center bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-200">${colTotals[m]}</td>`).join('')}
+            <td class="px-3 py-2 text-center bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white">${grandTotal}</td>
+        </tr>
+    `;
+    tbody.innerHTML = bodyRows + totalRow;
+
+    tbody.querySelectorAll('td[data-status][data-month]').forEach(td => {
+        td.addEventListener('click', () => {
+            const status = td.dataset.status;
+            const month = td.dataset.month;
+            const subset = rows.filter(r => r.statusKey === status && r.expMonthKey === month);
+            if (subset.length) openModal(`${fmtMonthLabel(month)} — ${status}`, subset);
+        });
     });
 }
 
@@ -1389,6 +1481,7 @@ function closeModal() { document.getElementById('detail-modal').classList.add('h
 function renderAll() {
     rebuildMultiOptions();  // cascade: narrow dropdowns based on sibling filters
     renderKPIs();
+    renderSummaryTable();
     renderCharts();
     renderTable();
     const parts = [];
