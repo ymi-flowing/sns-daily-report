@@ -1508,13 +1508,15 @@ function renderCharts() {
                         },
                         footer: ctx => {
                             const d = monthStats[ctx[0].dataIndex];
+                            const renewablePct = d.total ? (100 * d.pending / d.total).toFixed(1) : '0.0';
                             return [
                                 `Signed renewals: ${d.signed}`,
                                 `Pending Renewal (offer out): ${d.pendingRen}`,
                                 `Current (no offer yet): ${d.current}`,
+                                `Renewable: ${d.pending} (${renewablePct}%)`,
+                                '─────────────',
                                 `Total expiring: ${d.total}`,
                                 `Renewal rate: ${d.ratePct.toFixed(1)}%`,
-                                `${d.pending} renewable`,
                             ];
                         },
                     }
