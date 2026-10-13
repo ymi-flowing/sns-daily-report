@@ -479,8 +479,8 @@
         </div>
         <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
             <h3 class="text-sm font-semibold text-slate-800 dark:text-white mb-3">
-                Offered Delta % distribution
-                <span class="tip" data-tip="Count of offers per Δ % bin">?</span>
+                Renewed (actual) Delta % distribution
+                <span class="tip" data-tip="Count of signed renewals per Actual Δ % bin">?</span>
             </h3>
             <div class="relative h-72"><canvas id="chart-delta"></canvas></div>
         </div>
@@ -1373,8 +1373,9 @@ function renderCharts() {
         },
     });
 
-    // 3. Histogram: offered delta % distribution
-    const deltas = rows.map(r => r.deltaApct).filter(v => v !== null);
+    // 3. Histogram: actual (signed renewal) delta % distribution
+    const signedRows = rows.filter(r => r.statusKey === 'Renewed' || r.statusKey === 'Lower Offer');
+    const deltas = signedRows.map(r => r.actualDeltaPct).filter(v => v !== null);
     const bins = [-Infinity, -0.05, 0, 0.03, 0.05, 0.08, 0.12, Infinity];
     const binLabels = ['<-5%','-5–0%','0–3%','3–5%','5–8%','8–12%','>12%'];
     const binCounts = bins.slice(0,-1).map((lo, i) => deltas.filter(d => d >= lo && d < bins[i+1]).length);
@@ -1383,7 +1384,7 @@ function renderCharts() {
         data: {
             labels: binLabels,
             datasets: [{
-                label: 'Offers',
+                label: 'Signed renewals',
                 data: binCounts,
                 backgroundColor: '#06b6d4',
                 borderWidth: 0,
@@ -1402,8 +1403,8 @@ function renderCharts() {
                 if (!els.length) return;
                 const i = els[0].index;
                 const lo = bins[i], hi = bins[i+1];
-                const subset = rows.filter(r => r.deltaApct !== null && r.deltaApct >= lo && r.deltaApct < hi);
-                openModal(`Offered Δ ${binLabels[i]}`, subset);
+                const subset = signedRows.filter(r => r.actualDeltaPct !== null && r.actualDeltaPct >= lo && r.actualDeltaPct < hi);
+                openModal(`Actual Δ ${binLabels[i]}`, subset);
             }),
         },
     });
