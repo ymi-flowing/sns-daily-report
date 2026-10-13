@@ -1342,6 +1342,25 @@ function renderSummaryTable() {
     }
     const grandTotal = SUMMARY_STATUSES.reduce((s, status) => s + matrix[status].total, 0);
 
+    // Rate rows: Actual Renewal % (of decided) and Renewal % of total
+    const LOST_STATUSES = ['NTV','Under Eviction','Moved Out','Evicted'];
+    function rateOfDecided(signed, lost) {
+        const decided = signed + lost;
+        return decided > 0 ? (100 * signed / decided) : null;
+    }
+    const rateOfDecidedByMonth = {};
+    const rateOfTotalByMonth = {};
+    for (const m of months) {
+        const signed = matrix['Renewed'][m] + matrix['Lower Offer'][m];
+        const lost = LOST_STATUSES.reduce((s, status) => s + matrix[status][m], 0);
+        rateOfDecidedByMonth[m] = rateOfDecided(signed, lost);
+        rateOfTotalByMonth[m] = colTotals[m] > 0 ? (100 * signed / colTotals[m]) : null;
+    }
+    const totalSigned = matrix['Renewed'].total + matrix['Lower Offer'].total;
+    const totalLost = LOST_STATUSES.reduce((s, status) => s + matrix[status].total, 0);
+    const grandRateOfDecided = rateOfDecided(totalSigned, totalLost);
+    const grandRateOfTotal = grandTotal > 0 ? (100 * totalSigned / grandTotal) : null;
+
     const thead = document.querySelector('#summary-table thead');
     const tbody = document.querySelector('#summary-table tbody');
     thead.innerHTML = `
@@ -1372,7 +1391,30 @@ function renderSummaryTable() {
             <td class="px-3 py-2 text-center bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white">${grandTotal}</td>
         </tr>
     `;
-    tbody.innerHTML = bodyRows + totalRow;
+    const fmtRate = v => v === null ? '—' : v.toFixed(1) + '%';
+    const rateRow1Tip = 'Signed renewals (Renewed + Lower Offer) divided by DECIDED leases (signed + NTV + Moved Out + Evictions). Excludes Current + Pending Renewal because they have not landed yet. Measures how well the decisions we have went.';
+    const rateRow2Tip = 'Signed renewals divided by TOTAL expiring that month. Still-pending Current + Pending Renewal are counted in the denominator, so this rate always sits lower until the month closes out.';
+    const rateRow1 = `
+        <tr class="border-t border-slate-200 dark:border-slate-700">
+            <td class="px-3 py-2 text-left sticky left-0 bg-emerald-50 dark:bg-emerald-900/20 z-10 text-emerald-900 dark:text-emerald-200 font-semibold whitespace-nowrap">
+                Actual Renewal %
+                <span class="tip" data-tip="${escapeHtml(rateRow1Tip)}">?</span>
+            </td>
+            ${months.map(m => `<td class="px-3 py-2 text-center bg-emerald-50 dark:bg-emerald-900/20 text-emerald-900 dark:text-emerald-200 font-semibold">${fmtRate(rateOfDecidedByMonth[m])}</td>`).join('')}
+            <td class="px-3 py-2 text-center bg-emerald-50 dark:bg-emerald-900/20 text-emerald-900 dark:text-emerald-200 font-bold">${fmtRate(grandRateOfDecided)}</td>
+        </tr>
+    `;
+    const rateRow2 = `
+        <tr>
+            <td class="px-3 py-2 text-left sticky left-0 bg-blue-50 dark:bg-blue-900/20 z-10 text-blue-900 dark:text-blue-200 font-semibold whitespace-nowrap">
+                Renewal % of total
+                <span class="tip" data-tip="${escapeHtml(rateRow2Tip)}">?</span>
+            </td>
+            ${months.map(m => `<td class="px-3 py-2 text-center bg-blue-50 dark:bg-blue-900/20 text-blue-900 dark:text-blue-200 font-semibold">${fmtRate(rateOfTotalByMonth[m])}</td>`).join('')}
+            <td class="px-3 py-2 text-center bg-blue-50 dark:bg-blue-900/20 text-blue-900 dark:text-blue-200 font-bold">${fmtRate(grandRateOfTotal)}</td>
+        </tr>
+    `;
+    tbody.innerHTML = bodyRows + totalRow + rateRow1 + rateRow2;
 
     tbody.querySelectorAll('td[data-status][data-month]').forEach(td => {
         td.addEventListener('click', () => {
