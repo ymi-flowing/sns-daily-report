@@ -2425,6 +2425,7 @@ function openOfferLetter(row) {
     w.document.open();
     w.document.write(html);
     w.document.close();
+    try { w.focus(); } catch (_) {}
 }
 
 // Combine N letters into a single HTML document with a page-break between
@@ -2463,6 +2464,7 @@ ${docs.join('\n')}
     w.document.open();
     w.document.write(combined);
     w.document.close();
+    try { w.focus(); } catch (_) {}
 }
 
 function printOffersLetters() {
