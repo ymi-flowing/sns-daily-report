@@ -24,6 +24,49 @@
         #roster-table tbody td:last-child { border-right: 0; }
         .dark #roster-table tbody td { border-right-color: rgba(148, 163, 184, 0.1); }
 
+        /* Renewal Offers table: nowrap + sticky-column pattern */
+        #offers-table th, #offers-table td { white-space: nowrap; }
+        #offers-table thead th {
+            background-color: #f8fafc;
+        }
+        .dark #offers-table thead th { background-color: #0f172a; }
+        #offers-table tbody td { background-color: #fafbfc; }
+        .dark #offers-table tbody td { background-color: #1e293b; }
+        #offers-table tbody tr:hover td { background-color: #eff6ff; }
+        .dark #offers-table tbody tr:hover td { background-color: #253551; }
+
+        #offers-table thead th:nth-child(-n+3),
+        #offers-table tbody td:nth-child(-n+3) {
+            position: sticky; z-index: 2;
+        }
+        #offers-table thead th:nth-child(-n+3) { z-index: 3; }
+        #offers-table thead th:nth-child(1),
+        #offers-table tbody td:nth-child(1) { left: 0; min-width: 90px; }
+        #offers-table thead th:nth-child(2),
+        #offers-table tbody td:nth-child(2) { left: 90px; min-width: 70px; }
+        #offers-table thead th:nth-child(3),
+        #offers-table tbody td:nth-child(3) {
+            left: 160px; min-width: 180px;
+            border-right: 1px solid rgba(100, 116, 139, 0.25);
+        }
+        .dark #offers-table thead th:nth-child(3),
+        .dark #offers-table tbody td:nth-child(3) {
+            border-right-color: rgba(100, 116, 139, 0.35);
+        }
+        #offers-table tbody td { border-right: 1px solid rgba(100, 116, 139, 0.1); }
+        #offers-table tbody td:last-child { border-right: 0; }
+        .dark #offers-table tbody td { border-right-color: rgba(148, 163, 184, 0.1); }
+
+        /* Resident name as a "letter link" inside Offers table */
+        .offer-letter-link {
+            color: #0284c7; cursor: pointer; font-weight: 600;
+            text-decoration: underline; text-decoration-color: rgba(2,132,199,0.4);
+            text-underline-offset: 2px;
+        }
+        .offer-letter-link:hover { color: #0369a1; text-decoration-color: #0369a1; }
+        .dark .offer-letter-link { color: #38bdf8; text-decoration-color: rgba(56,189,248,0.4); }
+        .dark .offer-letter-link:hover { color: #7dd3fc; text-decoration-color: #7dd3fc; }
+
         /* Narrower multi-select triggers on small screens */
         @media (max-width: 640px) {
             .multi-trigger { min-width: 140px; padding: 8px 10px; font-size: 12px; }
@@ -364,6 +407,14 @@
                     <span id="last-updated" class="font-semibold text-slate-700 dark:text-slate-200 text-sm">Loading...</span>
                 </div>
             </div>
+            <!-- Renewal Offers Button -->
+            <div>
+                <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">&nbsp;</label>
+                <button id="offers-btn" onclick="openOffersModal()" class="h-11 px-4 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600 transition-all outline-none focus:ring-2 focus:ring-blue-400 border-2 border-slate-200 dark:border-slate-600 flex items-center gap-2 text-sm font-semibold" data-hover-tip="Renewal offers grid + per-resident letter preview">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    Renewal Offers
+                </button>
+            </div>
             <!-- Refresh Button (icon-only, matches Daily KPIs refresh-btn) -->
             <div>
                 <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">&nbsp;</label>
@@ -523,6 +574,25 @@
         </div>
     </div>
 
+</div>
+
+<!-- RENEWAL OFFERS MODAL -->
+<div id="offers-modal" class="modal-backdrop hidden" onclick="if(event.target===this) closeOffersModal()">
+    <div class="modal-box border border-slate-200 dark:border-slate-700">
+        <div class="p-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+            <h3 id="offers-title" class="text-lg font-bold text-slate-800 dark:text-white">Renewal Offers</h3>
+            <div class="flex items-center gap-2">
+                <button id="offers-csv" data-hover-tip="Export the Offers subset as CSV" class="h-8 px-3 rounded-lg bg-slate-100 dark:bg-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600">Export CSV</button>
+                <button onclick="closeOffersModal()" class="h-8 w-8 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 flex items-center justify-center">&times;</button>
+            </div>
+        </div>
+        <div class="overflow-auto fancy-scroll flex-1 py-4 px-0">
+            <table class="min-w-full text-xs" id="offers-table">
+                <thead class="bg-slate-50 dark:bg-slate-900 sticky top-0 z-10"></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
 </div>
 
 <!-- DRILL-DOWN MODAL -->
@@ -700,7 +770,19 @@ function parseAnyDate(s) {
     if (!s) return null;
     const str = String(s).trim();
     if (!str) return null;
-    const d = new Date(str.length <= 10 ? str + 'T00:00:00' : str);
+    // ISO YYYY-MM-DD(THH:MM:SS...)
+    const iso = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (iso) {
+        const d = new Date(+iso[1], +iso[2] - 1, +iso[3]);
+        return isNaN(d) ? null : d;
+    }
+    // US MM/DD/YYYY
+    const us = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    if (us) {
+        const d = new Date(+us[3], +us[1] - 1, +us[2]);
+        return isNaN(d) ? null : d;
+    }
+    const d = new Date(str);
     return isNaN(d) ? null : d;
 }
 function fmtDateShort(d) {
@@ -1734,6 +1816,417 @@ function renderModalBody() {
 function closeModal() { document.getElementById('detail-modal').classList.add('hidden'); }
 
 // =============================================================================
+// RENEWAL OFFERS MODAL (offer-grid view + per-resident letter preview)
+// =============================================================================
+
+// Formal property names used in the letter header. For TRA-AN3 (merged tab),
+// default to "The River Apartments"; mentally the leasing team can edit after
+// Save-as-PDF if a specific unit is actually an AN3 unit.
+const PROPERTY_LETTER_NAMES = {
+    '49thStr':  '49th St Apartments',
+    'AP':       'Arbor Place Apartments',
+    'ROP':      'Riverside at Orange Park',
+    'MOC':      'The Morgan At Ocala Apartments',
+    'MUSO':     'The Mustang at Ocala',
+    'EAST':     'The Village at Eastpointe Apartments',
+    'SJ':       'The Village at San Jose',
+    'ORT':      'The Villas at Ortega',
+    'TV':       'The Vista At Winter Park',
+    'TRA-AN3':  'The River Apartments',
+};
+// For these properties, the Internet column is labelled "Landscaping" in the letter.
+const LANDSCAPING_PROPS = new Set(['TRA-AN3']);
+
+// Charge label order + sheet column mapping -- mirrors generate_letters.py.
+const OFFER_LETTER_CHARGES = [
+    { label: 'Utility',                  key: 'Utility' },
+    { label: 'Valet Trash',              key: 'Valet' },
+    { label: 'Pest Control',             key: 'Pest' },
+    { label: 'Property\'s Amenities Fee',key: 'Amenity' },
+    { label: 'Internet',                 key: 'Internet' },  // relabelled below for TRA-AN3
+    { label: 'Pet Rent',                 key: 'Pet' },
+    { label: 'Reserved Parking',         key: 'Parking' },
+    { label: 'Washer & Dryer',           key: 'WD' },
+    { label: 'Storage',                  key: 'Storage' },
+];
+
+function numOrNull(v) {
+    if (v === null || v === undefined || v === '') return null;
+    const n = Number(v);
+    return Number.isFinite(n) ? n : null;
+}
+function moneyOrBlank(v) {
+    const n = numOrNull(v);
+    if (n === null || n === 0) return '';
+    const sign = n < 0 ? '-' : '';
+    return sign + '$' + Math.round(Math.abs(n)).toLocaleString('en-US');
+}
+function moneyOrDash(v) {
+    const n = numOrNull(v);
+    if (n === null) return '—';
+    return fmtMoney(n);
+}
+function signedMoney(v) {
+    const n = numOrNull(v);
+    if (n === null) return '—';
+    if (n === 0) return '$0';
+    const sign = n > 0 ? '+' : '-';
+    return sign + '$' + Math.abs(Math.round(n)).toLocaleString('en-US');
+}
+function sumUtilities(row) {
+    return ['Utility','Valet','Pest','Amenity','Internet']
+        .reduce((s, k) => s + (numOrNull(row[k]) || 0), 0);
+}
+function rentDelta(row) {
+    const rentA = numOrNull(row['Rent A']);
+    const base = numOrNull(row['Base Rent']);
+    if (rentA === null || base === null) return null;
+    return rentA - base;
+}
+
+// Column spec for the Offers modal table.
+const OFFER_COLUMNS = [
+    { key: 'property',       label: 'Property',  align: 'center', fmt: v => v || '' },
+    { key: 'Unit',           label: 'Unit',      align: 'center', fmt: v => v ?? '' },
+    { key: 'Resident Name',  label: 'Resident',  align: 'center',
+      fmt: (v, row) => {
+          const name = (v ?? '').toString().trim();
+          if (!name) return '';
+          return `<span class="offer-letter-link" data-offer-row="${row.__offerIdx}">${escapeHtml(name)}</span>`;
+      } },
+    { key: 'Base Rent',      label: 'Current Rent',    align: 'center', fmt: moneyOrDash },
+    { key: 'currentTotal',   label: 'Current Total',   align: 'center', fmt: fmtMoney },
+    { key: '__rentDelta',    label: 'Rent Δ',          align: 'center', fmt: v => signedMoney(v) },
+    { key: 'deltaA',         label: 'Total Δ',         align: 'center', fmt: v => signedMoney(v) },
+    { key: 'Rent A',         label: 'Rent Offer',      align: 'center', fmt: moneyOrDash },
+    { key: 'Utility',        label: 'Utility',         align: 'center', fmt: moneyOrDash },
+    { key: 'Valet',          label: 'Valet',           align: 'center', fmt: moneyOrDash },
+    { key: 'Pest',           label: 'Pest',            align: 'center', fmt: moneyOrDash },
+    { key: 'Amenity',        label: 'Amenity',         align: 'center', fmt: moneyOrDash },
+    { key: 'Internet',       label: 'Internet',        align: 'center', fmt: moneyOrDash },
+    { key: '__totalUtil',    label: 'Total Utilities', align: 'center', fmt: v => moneyOrDash(v) },
+    { key: 'Pet',            label: 'Pet',             align: 'center', fmt: moneyOrDash },
+    { key: 'Parking',        label: 'Parking',         align: 'center', fmt: moneyOrDash },
+    { key: 'WD',             label: 'WD',              align: 'center', fmt: moneyOrDash },
+    { key: 'Storage',        label: 'Storage',         align: 'center', fmt: moneyOrDash },
+    { key: 'Total Other',    label: 'Total Other',     align: 'center', fmt: moneyOrDash },
+    { key: 'totalOfferA',    label: 'Total Offer',     align: 'center', fmt: fmtMoney },
+];
+
+let OFFERS_SUBSET = [];
+let OFFERS_SORT = { col: 'property', dir: 'asc' };
+
+function openOffersModal() {
+    // Freeze a snapshot of currently filtered rows + attach derived fields
+    OFFERS_SUBSET = filtered().map((r, i) => Object.assign({ __offerIdx: i }, r, {
+        __rentDelta: rentDelta(r),
+        __totalUtil: sumUtilities(r) || null,
+    }));
+    OFFERS_SORT = { col: 'property', dir: 'asc' };
+    document.getElementById('offers-title').textContent = `Renewal Offers — ${OFFERS_SUBSET.length} rows`;
+    renderOffersBody();
+    document.getElementById('offers-modal').classList.remove('hidden');
+}
+function closeOffersModal() { document.getElementById('offers-modal').classList.add('hidden'); }
+
+function renderOffersBody() {
+    const thead = document.querySelector('#offers-table thead');
+    const tbody = document.querySelector('#offers-table tbody');
+    thead.innerHTML = `<tr>${OFFER_COLUMNS.map(c => {
+        const active = OFFERS_SORT.col === c.key;
+        const arrow = active ? (OFFERS_SORT.dir === 'asc' ? '▲' : '▼') : '▲';
+        return `<th class="sortable px-3 py-2 text-${c.align} font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 text-[11px] ${active ? 'sort-active' : ''}" data-col="${c.key}">
+                    ${c.label}<span class="arrow">${arrow}</span>
+                </th>`;
+    }).join('')}</tr>`;
+    thead.querySelectorAll('th.sortable').forEach(th => {
+        th.addEventListener('click', () => {
+            const col = th.dataset.col;
+            if (OFFERS_SORT.col === col) OFFERS_SORT.dir = OFFERS_SORT.dir === 'asc' ? 'desc' : 'asc';
+            else { OFFERS_SORT.col = col; OFFERS_SORT.dir = 'asc'; }
+            renderOffersBody();
+        });
+    });
+    const sorted = sortRows(OFFERS_SUBSET, OFFERS_SORT);
+    tbody.innerHTML = sorted.map(r => `
+        <tr class="data-row border-b border-slate-200 dark:border-slate-700">
+            ${OFFER_COLUMNS.map(c => `<td class="px-3 py-2 text-${c.align} text-slate-700 dark:text-slate-200">${c.fmt(r[c.key], r)}</td>`).join('')}
+        </tr>
+    `).join('');
+    // Wire resident-name click -> open letter preview
+    tbody.querySelectorAll('.offer-letter-link').forEach(el => {
+        el.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const i = Number(el.dataset.offerRow);
+            const row = OFFERS_SUBSET.find(x => x.__offerIdx === i);
+            if (row) openOfferLetter(row);
+        });
+    });
+}
+
+// =============================================================================
+// RENEWAL OFFER LETTER (client-side render; opens in a new tab for Save-as-PDF)
+// =============================================================================
+// Inlined copy of Renewal Letters/letters/letter_template.html.
+// Keep in sync manually if that template changes. {{placeholders}} filled via
+// fillLetterTemplate(). Contains no backticks or ${ sequences so template
+// literal is safe.
+const LETTER_TEMPLATE = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Renewal Letter — {{property_name}} · {{apartment}} · {{month_label}}</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+    background: #f0f2f5; color: #111; line-height: 1.5;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+  .letter-wrapper { width: 620px; max-width: 100%; margin: 40px auto; }
+  .letter-container {
+    background: #fff; border-radius: 16px; overflow: hidden;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+  }
+  .letter-header {
+    padding: 6px; background: #fff; border-bottom: 1px solid #eee;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .letter-logo { border-radius: 16px; overflow: hidden; display: inline-block; }
+  .letter-logo img { display: block; height: auto; max-width: 200px; }
+  .header-meta { padding-right: 14px; text-align: right; font-size: 12px; color: #555; line-height: 1.4; }
+  .header-meta .property { font-weight: 900; color: #003f75; font-size: 13px; }
+  .header-meta .date { color: #666; }
+  .letter-body { padding: 26px; }
+  .letter-title { font-size: 22px; font-weight: 900; color: #111; margin-bottom: 14px; }
+  .greeting { font-size: 14px; color: #111; font-weight: 600; margin-bottom: 8px; }
+  .letter-intro { font-size: 14px; color: #333; margin-bottom: 16px; }
+  .letter-intro strong { font-weight: 900; color: #111; }
+  .lease-bar {
+    display: flex; background: #fafafa; border: 1px solid #eee; border-radius: 12px;
+    padding: 10px 16px; margin-bottom: 16px; font-size: 13px; color: #222; gap: 10px;
+  }
+  .lease-bar .item { flex: 1; }
+  .lease-bar .item + .item { padding-left: 12px; border-left: 1px solid #e5e5e5; }
+  .lease-bar .k {
+    display: block; font-size: 10.5px; color: #666;
+    text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; margin-bottom: 2px;
+  }
+  .lease-bar .v { font-size: 13px; font-weight: 900; color: #111; }
+  .section-card {
+    border: 1px solid #eee; border-radius: 12px; overflow: hidden;
+    background: #fff; margin-bottom: 16px;
+  }
+  .section-card-header { padding: 12px 14px; background: #fafafa; border-bottom: 1px solid #eee; }
+  .section-card-header h3 { font-size: 15px; font-weight: 900; color: #003f75; margin-bottom: 3px; }
+  .section-card-header .subtitle { font-size: 12px; color: #666; }
+  .section-card-body { padding: 12px 14px; }
+  .charges-table { width: 100%; border-collapse: collapse; }
+  .charges-table tr td { padding: 8px 0; border-bottom: 1px solid #eee; font-size: 13px; }
+  .charges-table tr:last-child td { border-bottom: none; }
+  .charges-table .label { color: #111; }
+  .charges-table .value { text-align: right; font-weight: 900; color: #111; font-variant-numeric: tabular-nums; }
+  .charges-table .total-row td { padding-top: 12px; border-top: 2px solid #003f75; border-bottom: none; }
+  .charges-table .total-row .label { font-weight: 900; color: #003f75; }
+  .charges-table .total-row .value { font-size: 17px; color: #003f75; }
+  .deposit-inline {
+    margin-top: 12px; padding: 10px 12px; background: #f0f7ff; border-radius: 8px;
+    font-size: 12px; color: #333; display: flex; justify-content: space-between;
+    flex-wrap: wrap; gap: 4px 12px;
+  }
+  .deposit-inline .item strong { color: #003f75; font-weight: 900; }
+  .card { background: #fafafa; border: 1px solid #eee; border-radius: 14px; margin-bottom: 16px; }
+  .card-body { padding: 16px; }
+  .card-title { font-size: 14px; font-weight: 900; color: #111; margin-bottom: 10px; }
+  .card-list { margin: 0; padding: 0 0 0 18px; font-size: 13px; color: #222; }
+  .card-list li { margin-bottom: 6px; }
+  .card-list li:last-child { margin-bottom: 0; }
+  .card-list strong { font-weight: 900; }
+  .letter-footer { text-align: center; border-top: 1px solid #eee; padding-top: 12px; margin-top: 4px; }
+  .closing-message { font-size: 13px; color: #333; margin-bottom: 8px; }
+  .footer-contact { font-size: 12px; color: #666; }
+  .footer-contact .property-name { font-weight: 900; color: #111; }
+
+  @media print {
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    body { background: #fff; font-size: 13px; line-height: 1.4; }
+    .letter-wrapper { width: 100%; max-width: 100%; margin: 0; }
+    .letter-container { box-shadow: none; border-radius: 0; }
+    .letter-header { padding: 4px 6px; }
+    .letter-logo img { max-width: 165px; }
+    .header-meta { font-size: 11px; padding-right: 10px; }
+    .header-meta .property { font-size: 12.5px; }
+    .letter-body { padding: 16px 22px; }
+    .letter-title { font-size: 22px; margin-bottom: 12px; }
+    .greeting { font-size: 14px; margin-bottom: 8px; }
+    .letter-intro { font-size: 13.5px; margin-bottom: 14px; }
+    .lease-bar { padding: 10px 14px; margin-bottom: 14px; }
+    .lease-bar .k { font-size: 11px; }
+    .lease-bar .v { font-size: 13px; }
+    .section-card { margin-bottom: 12px; border-radius: 10px; }
+    .section-card-header { padding: 10px 14px; }
+    .section-card-header h3 { font-size: 15px; margin-bottom: 4px; }
+    .section-card-header .subtitle { font-size: 12.5px; }
+    .section-card-body { padding: 11px 14px; }
+    .charges-table tr td { padding: 6px 0; font-size: 13px; }
+    .charges-table .total-row td { padding-top: 10px; border-top: 2px solid #003f75; }
+    .charges-table .total-row .label { font-size: 14px; }
+    .charges-table .total-row .value { font-size: 17px; }
+    .deposit-inline { margin-top: 10px; padding: 9px 12px; font-size: 12px; }
+    .card { margin-bottom: 10px; border-radius: 10px; }
+    .card-body { padding: 12px 14px; }
+    .card-title { font-size: 14px; margin-bottom: 8px; }
+    .card-list { font-size: 13px; padding-left: 16px; line-height: 1.45; }
+    .card-list li { margin-bottom: 4px; }
+    .letter-footer { padding-top: 10px; margin-top: 6px; }
+    .closing-message { font-size: 13px; margin-bottom: 6px; }
+    .footer-contact { font-size: 12px; }
+    @page { margin: 10mm; size: A4; }
+  }
+</style>
+</head>
+<body>
+  <div class="letter-wrapper">
+    <div class="letter-container">
+      <div class="letter-header">
+        <div class="letter-logo">
+          <img src="https://www.dropbox.com/scl/fi/8i6y3e0lnjhm65s2ymhr9/SNS.jpg?rlkey=6ca6wtkxp5hr4l16ppu9hkj1z&raw=1" alt="SNS Logo" />
+        </div>
+        <div class="header-meta">
+          <div class="property">{{property_name}}</div>
+          <div class="date">{{header_date}}</div>
+        </div>
+      </div>
+      <div class="letter-body">
+        <div class="letter-title">Renewal Letter</div>
+        <div class="greeting">Dear {{first_name}},</div>
+        <div class="letter-intro">
+          Thank you for making <strong>{{property_name}}</strong> your home. We'd love for
+          you to continue calling us home after your current lease expires on
+          <strong>{{exp_date}}</strong>. Please see our renewal offer for you below.
+        </div>
+        <div class="lease-bar">
+          <div class="item"><span class="k">Resident</span><span class="v">{{resident_name}}</span></div>
+          <div class="item"><span class="k">Apartment</span><span class="v">{{apartment}}</span></div>
+          <div class="item"><span class="k">Floorplan</span><span class="v">{{floorplan}}</span></div>
+          <div class="item"><span class="k">Lease Expires</span><span class="v">{{exp_date}}</span></div>
+        </div>
+        <div class="section-card">
+          <div class="section-card-header">
+            <h3>Here's our renewal offer for you</h3>
+            <div class="subtitle"><strong>12-month</strong> lease beginning on {{lease_start}}.</div>
+          </div>
+          <div class="section-card-body">
+            <table class="charges-table">
+{{charges_rows}}
+              <tr class="total-row"><td class="label">Total Monthly Charges</td><td class="value">{{total_display}}</td></tr>
+            </table>
+{{deposit_block}}
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div class="card-title">Please note</div>
+            <ul class="card-list">
+              <li>The leasing team may require a valid ID and SSN for all leaseholders to complete the renewal.</li>
+              <li>This letter serves as formal written notice of any rent adjustments and lease changes effective at the end of the current lease term.</li>
+              <li>If no lease is signed and no notice to vacate is provided, your lease will automatically convert to month-to-month with the charges above plus a Month-to-Month Fee of $150.</li>
+              <li>Any unpaid balance on your account must be paid in full before the renewal lease can be signed.</li>
+              <li>This renewal offer may be withdrawn at any time by Management prior to both parties' written acceptance and execution of a Lease Renewal or new lease.</li>
+              <li>If you choose to move out at the end of your term, please provide at least 60 days written notice to avoid an Insufficient Notice Penalty.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="letter-footer">
+          <div class="closing-message">
+            We appreciate you being part of our community and look forward to your reply.
+          </div>
+          <div class="footer-contact">
+            <div class="property-name">{{property_name}}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>`;
+
+function firstNameOf(full) {
+    if (!full) return '';
+    return String(full).trim().split(/\s+/)[0];
+}
+function buildChargesRowsHtml(row) {
+    const prop = row.property;
+    const internetLabel = LANDSCAPING_PROPS.has(prop) ? 'Landscaping' : 'Internet';
+    const lines = [];
+    const rentDisp = moneyOrBlank(row['Rent A']) || '$0';
+    lines.push(['Rent', rentDisp]);
+    for (const c of OFFER_LETTER_CHARGES) {
+        const label = c.key === 'Internet' ? internetLabel : c.label;
+        const disp = moneyOrBlank(row[c.key]);
+        if (disp) lines.push([label, disp]);
+    }
+    return lines
+        .map(([label, val]) => `              <tr><td class="label">${escapeHtml(label)}</td><td class="value">${escapeHtml(val)}</td></tr>`)
+        .join('\n');
+}
+function buildDepositBlockHtml(row) {
+    const addition = numOrNull(row['Deposit D']);
+    if (!addition || addition <= 0) return '';
+    const held = moneyOrBlank(row['Deposit']) || '$0';
+    const required = moneyOrBlank(row['R Deposit']) || '$0';
+    const add = moneyOrBlank(row['Deposit D']) || '$0';
+    return `            <div class="deposit-inline">
+              <span class="item">Security Deposit Held: <strong>${escapeHtml(held)}</strong></span>
+              <span class="item">Required Deposit: <strong>${escapeHtml(required)}</strong></span>
+              <span class="item">Required Addition: <strong>${escapeHtml(add)}</strong></span>
+            </div>`;
+}
+function fmtMDY(d) {
+    if (!d) return '';
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${mm}/${dd}/${d.getFullYear()}`;
+}
+function buildLetterContext(row) {
+    const prop = row.property;
+    const propertyName = PROPERTY_LETTER_NAMES[prop] || prop;
+    const resident = (row['Resident Name'] || '').toString().trim();
+    const expDate = parseAnyDate(row['Exp Date']);
+    const leaseStart = expDate ? new Date(expDate.getTime() + 86400000) : null;
+    return {
+        property_name: propertyName,
+        header_date:   fmtMDY(new Date()),
+        first_name:    firstNameOf(resident),
+        resident_name: resident,
+        apartment:     String(row['Unit'] ?? ''),
+        floorplan:     String(row['Floorplan'] ?? ''),
+        exp_date:      expDate ? fmtMDY(expDate) : '',
+        lease_start:   leaseStart ? fmtMDY(leaseStart) : '',
+        month_label:   expDate ? expDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : '',
+        total_display: moneyOrBlank(row['Total Offer A']) || '$0',
+        charges_rows:  buildChargesRowsHtml(row),
+        deposit_block: buildDepositBlockHtml(row),
+    };
+}
+function fillLetterTemplate(ctx) {
+    let s = LETTER_TEMPLATE;
+    for (const [k, v] of Object.entries(ctx)) {
+        s = s.split('{{' + k + '}}').join(v);
+    }
+    return s;
+}
+function openOfferLetter(row) {
+    const ctx = buildLetterContext(row);
+    const html = fillLetterTemplate(ctx);
+    const w = window.open('', '_blank');
+    if (!w) { alert('Pop-up blocked. Allow pop-ups for this site to preview the letter.'); return; }
+    w.document.open();
+    w.document.write(html);
+    w.document.close();
+}
+
+// =============================================================================
 // RENDER + INIT
 // =============================================================================
 function renderAll() {
@@ -1770,6 +2263,26 @@ document.getElementById('csv-export').addEventListener('click', () => {
 document.getElementById('modal-csv').addEventListener('click', () => {
     const stamp = new Date().toISOString().slice(0,10);
     exportCsv(MODAL_SUBSET, `renewals_subset_${stamp}.csv`);
+});
+document.getElementById('offers-csv').addEventListener('click', () => {
+    const stamp = new Date().toISOString().slice(0,10);
+    // Export using the Offers column spec, not TABLE_COLUMNS. Values are raw;
+    // columns like Rent Δ / Total Utilities are computed.
+    const rows = sortRows(OFFERS_SUBSET, OFFERS_SORT);
+    const headers = OFFER_COLUMNS.map(c => c.label);
+    const lines = [headers.join(',')];
+    for (const r of rows) {
+        lines.push(OFFER_COLUMNS.map(c => {
+            const v = r[c.key];
+            if (v === null || v === undefined || v === '') return '';
+            // Resident Name should export as plain text, not the HTML link
+            return csvEscape(typeof v === 'string' || typeof v === 'number' ? v : String(v));
+        }).join(','));
+    }
+    const blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `renewal_offers_${stamp}.csv`; a.click();
+    URL.revokeObjectURL(url);
 });
 
 applyTheme();
