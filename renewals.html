@@ -638,15 +638,21 @@ function fmtDateShort(d) {
 function checkmarkHtml(title) {
     return ` <span class="inline-block text-emerald-600 dark:text-emerald-400 font-bold" title="${escapeHtml(title)}">✓</span>`;
 }
-// NTV Date: show green ✓ when NTV was given 60+ days before move-out.
+// NTV Date: show green ✓ when NTV was given 60+ days before Move Out Date
+// (if moved out) or before Lease End Date (if still here).
 function ntvDateHtml(v, row) {
     const d = parseAnyDate(v);
     if (!d) return '<span class="text-slate-300 dark:text-slate-600">—</span>';
     const mo = parseAnyDate(row && row['Move Out Date']);
+    const leaseEnd = parseAnyDate(row && row['Lease End Date']);
+    const reference = mo || leaseEnd;
     let mark = '';
-    if (mo) {
-        const days = Math.round((mo - d) / 86400000);
-        if (days >= 60) mark = checkmarkHtml(`${days} days notice (60+)`);
+    if (reference) {
+        const days = Math.round((reference - d) / 86400000);
+        if (days >= 60) {
+            const label = mo ? 'before move-out' : 'before lease end';
+            mark = checkmarkHtml(`${days} days notice ${label}`);
+        }
     }
     return fmtDateShort(d) + mark;
 }
