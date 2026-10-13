@@ -1,21 +1,21 @@
 """
 Fetch all 10 property tabs from the Renewal Letters Google Sheet and write
-a single `renewals_data.json` file at the repo root.
-
-The JSON is baked into the repo (committed by the sync workflow), so the
-dashboard can load it as a static file -- same pattern as `generate_dashboard.py`
-baking `dashboard_live.html`.
+a single `renewals_data.json` file at the repo root. Also augments each row
+with two LIVE fields that do NOT live in the sheet: `NTV Date` and
+`Move Out Date` pulled from the ResMan Partners API via Lease ID.
 
 Env:
-  SHEETS_WEBHOOK_URL -- Apps Script webhook (same as Renewal Letters/.env)
+  SHEETS_WEBHOOK_URL -- Apps Script webhook
   SHARED_SECRET      -- Apps Script shared secret
+  RESMAN_API_KEY     -- ResMan Partners API key
+  RESMAN_PARTNER_ID  -- ResMan integration partner id
+  RESMAN_ACCOUNT_ID  -- ResMan account id (1550 for SNS)
 
 Output file layout:
   {
     "generatedAt": "<ISO UTC>",
     "tabs": {
-      "49thStr":  { "headers": [...], "rows": [[...], ...] },
-      "ORT":      { "headers": [...], "rows": [[...], ...] },
+      "49thStr":  { "headers": [..., "NTV Date", "Move Out Date"], "rows": [[...], ...] },
       ...
     }
   }
@@ -26,16 +26,33 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-# Reuse the shared sheets client from the sync pipeline.
+# Reuse shared code from the sync pipeline.
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import sheets_client
+from create_monday_items import fetch_leases, get_property_id
 
 
 PROPERTY_TABS = [
     "49thStr", "ORT", "AP", "TV", "MOC", "MUSO",
     "SJ", "ROP", "EAST", "TRA-AN3",
 ]
+
+# Which ResMan property abbreviation(s) feed each sheet tab.
+TAB_TO_PROPERTIES = {
+    "49thStr":  ["49thStr"],
+    "ORT":      ["ORT"],
+    "AP":       ["AP"],
+    "TV":       ["TV"],
+    "MOC":      ["MOC"],
+    "MUSO":     ["MUSO"],
+    "SJ":       ["SJ"],
+    "ROP":      ["ROP"],
+    "EAST":     ["EAST"],
+    "TRA-AN3":  ["TRA", "AN3"],
+}
+
+EXTRA_HEADERS = ["NTV Date", "Move Out Date"]
 
 RANGE_PER_TAB = "A1:AJ400"
 
@@ -61,23 +78,77 @@ def fetch_tab(tab: str) -> dict:
     return {"headers": headers, "rows": rows}
 
 
+def build_resman_lookup(property_abbrs: list) -> dict:
+    """
+    Fetch leases from each ResMan property and return
+      { leaseId: { noticeToVacateDate, moveOutDate } }
+    """
+    out = {}
+    for abbr in property_abbrs:
+        pid = get_property_id(abbr)
+        if not pid:
+            print(f"  WARNING: could not resolve property id for {abbr}")
+            continue
+        leases = fetch_leases(pid)
+        print(f"  {abbr}: {len(leases)} leases")
+        for L in leases:
+            lid = L.get("leaseId")
+            if not lid:
+                continue
+            out[lid] = {
+                "ntv": (L.get("noticeToVacateDate") or "")[:10],
+                "mo":  (L.get("moveOutDate") or "")[:10],
+            }
+    return out
+
+
+def augment_rows(tab_data: dict, lease_lookup: dict) -> dict:
+    """Append NTV Date + Move Out Date columns to a tab's rows."""
+    headers = tab_data["headers"]
+    if "Lease ID" not in headers:
+        print(f"  WARNING: 'Lease ID' header missing; skipping ResMan merge")
+        return {
+            "headers": headers + EXTRA_HEADERS,
+            "rows": [r + ["", ""] for r in tab_data["rows"]],
+        }
+    lid_idx = headers.index("Lease ID")
+    new_rows = []
+    hits = 0
+    for r in tab_data["rows"]:
+        lid = str(r[lid_idx]).strip() if lid_idx < len(r) else ""
+        if lid and lid in lease_lookup:
+            info = lease_lookup[lid]
+            new_rows.append(r + [info["ntv"], info["mo"]])
+            hits += 1
+        else:
+            new_rows.append(r + ["", ""])
+    print(f"  augmented {hits}/{len(new_rows)} rows with ResMan dates")
+    return {
+        "headers": headers + EXTRA_HEADERS,
+        "rows": new_rows,
+    }
+
+
 def main() -> int:
     if not os.environ.get("SHEETS_WEBHOOK_URL") or not os.environ.get("SHARED_SECRET"):
         print("ERROR: SHEETS_WEBHOOK_URL or SHARED_SECRET env var missing.")
         return 2
 
-    print(f"Fetching {len(PROPERTY_TABS)} tabs...")
+    print(f"Fetching {len(PROPERTY_TABS)} tabs + ResMan dates...")
     tabs = {}
     total_rows = 0
     for tab in PROPERTY_TABS:
+        print(f"\n[{tab}]")
         try:
             data = fetch_tab(tab)
-            tabs[tab] = data
             n = len(data["rows"])
+            print(f"  sheet: headers={len(data['headers'])} rows={n}")
+            resman_props = TAB_TO_PROPERTIES.get(tab, [tab])
+            lease_lookup = build_resman_lookup(resman_props)
+            tabs[tab] = augment_rows(data, lease_lookup)
             total_rows += n
-            print(f"  {tab:<10} headers={len(data['headers'])} rows={n}")
         except Exception as e:
-            print(f"  {tab:<10} ERROR: {e}")
+            print(f"  ERROR: {e}")
             tabs[tab] = {"headers": [], "rows": []}
 
     payload = {

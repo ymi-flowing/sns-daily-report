@@ -466,7 +466,7 @@
     <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
         <div class="p-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
             <div>
-                <h2 class="text-lg font-bold text-slate-800 dark:text-white">Renewal roster <span id="row-count" class="text-sm font-normal text-slate-500 dark:text-slate-400 ml-2"></span></h2>
+                <h2 class="text-lg font-bold text-slate-800 dark:text-white">Expiring leases <span id="row-count" class="text-sm font-normal text-slate-500 dark:text-slate-400 ml-2"></span></h2>
             </div>
             <button id="csv-export" data-hover-tip="Download the current filtered table as CSV" class="h-9 px-3 rounded-lg bg-slate-100 dark:bg-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 flex items-center gap-2">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
@@ -552,6 +552,8 @@ const TABLE_COLUMNS = [
     { key: 'actualDelta',    label: 'Δ Actual',       align: 'center', fmt: v => v ? fmtMoney(v) : '—' },
     { key: 'actualDeltaPct', label: 'Δ Actual %',     align: 'center', fmt: v => v ? fmtPct(v) : '—' },
     { key: 'monthsInProperty', label: 'Months',       align: 'center', fmt: v => v ?? '' },
+    { key: 'NTV Date',       label: 'NTV Date',       align: 'center', fmt: (v, row) => ntvDateHtml(v, row) },
+    { key: 'Move Out Date',  label: 'Move Out Date',  align: 'center', fmt: (v, row) => moDateHtml(v, row) },
 ];
 
 // =============================================================================
@@ -619,6 +621,43 @@ function fmtMonthLabel(k) {
     const names = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     return `${names[Number(m)-1]} ${y}`;
 }
+// Shared date helpers for the NTV / Move Out columns.
+function parseAnyDate(s) {
+    if (!s) return null;
+    const str = String(s).trim();
+    if (!str) return null;
+    const d = new Date(str.length <= 10 ? str + 'T00:00:00' : str);
+    return isNaN(d) ? null : d;
+}
+function fmtDateShort(d) {
+    if (!d) return '—';
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+function checkmarkHtml(title) {
+    return ` <span class="inline-block text-emerald-600 dark:text-emerald-400 font-bold" title="${escapeHtml(title)}">✓</span>`;
+}
+// NTV Date: show green ✓ when NTV was given 60+ days before move-out.
+function ntvDateHtml(v, row) {
+    const d = parseAnyDate(v);
+    if (!d) return '<span class="text-slate-300 dark:text-slate-600">—</span>';
+    const mo = parseAnyDate(row && row['Move Out Date']);
+    let mark = '';
+    if (mo) {
+        const days = Math.round((mo - d) / 86400000);
+        if (days >= 60) mark = checkmarkHtml(`${days} days notice (60+)`);
+    }
+    return fmtDateShort(d) + mark;
+}
+// Move Out Date: show green ✓ when move-out date >= lease end date (Exp Date).
+function moDateHtml(v, row) {
+    const d = parseAnyDate(v);
+    if (!d) return '<span class="text-slate-300 dark:text-slate-600">—</span>';
+    const exp = parseAnyDate(row && row['Exp Date']);
+    let mark = '';
+    if (exp && d >= exp) mark = checkmarkHtml('moved out at or after lease end');
+    return fmtDateShort(d) + mark;
+}
+
 // Resident name -> link to the ResMan resident detail page if we have a Lease ID.
 function residentLinkHtml(name, leaseId) {
     const n = (name ?? '').toString().trim();
@@ -1115,7 +1154,6 @@ function renderCharts() {
         backgroundColor: STATUS_COLORS[status]?.bg || '#94a3b8',
         borderWidth: 0,
         borderRadius: 4,
-        borderSkipped: false,
     }));
     STATE.charts.monthStatus = new Chart(document.getElementById('chart-month-status'), {
         type: 'bar',
@@ -1184,9 +1222,9 @@ function renderCharts() {
             labels: monthsPresent.map(fmtMonthLabel),
             datasets: [
                 { label: 'Renewed',     data: monthStats.map(d => d.renewedPct),
-                  backgroundColor: '#10b981', borderWidth: 0, borderRadius: 4, borderSkipped: false, stack: 'rate' },
+                  backgroundColor: '#10b981', borderWidth: 0, borderRadius: 4, stack: 'rate' },
                 { label: 'Lower Offer', data: monthStats.map(d => d.lowerPct),
-                  backgroundColor: '#f59e0b', borderWidth: 0, borderRadius: 4, borderSkipped: false, stack: 'rate' },
+                  backgroundColor: '#f59e0b', borderWidth: 0, borderRadius: 4, stack: 'rate' },
             ]
         },
         options: {
@@ -1249,7 +1287,6 @@ function renderCharts() {
                 backgroundColor: binLabels.map((_, i) => i < 2 ? '#f59e0b' : (i < 4 ? '#10b981' : '#60a5fa')),
                 borderWidth: 0,
                 borderRadius: 4,
-                borderSkipped: false,
             }],
         },
         options: {
