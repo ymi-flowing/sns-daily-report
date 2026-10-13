@@ -144,7 +144,10 @@ def augment_rows(tab_data: dict, lease_lookup: dict) -> dict:
         lease = lease_lookup.get(lid) if lid else None
         if lease:
             ntv = (lease.get("noticeToVacateDate") or "")[:10]
-            mo = (lease.get("moveOutDate") or "")[:10]
+            # Fall back to scheduledMoveOutDate so NTV + MTM rows show the
+            # planned move-out, not a blank. Actual moveOutDate still wins
+            # once the resident has physically left.
+            mo = (lease.get("moveOutDate") or lease.get("scheduledMoveOutDate") or "")[:10]
             lease_end = (lease.get("leaseEndDate") or "")[:10]
             signed = _renewal_signed_date(lease, r[exp_idx] if exp_idx < len(r) else "")
             new_rows.append(r + [ntv, mo, lease_end, signed])

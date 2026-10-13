@@ -656,13 +656,13 @@ function ntvDateHtml(v, row) {
     }
     return fmtDateShort(d) + mark;
 }
-// Move Out Date: show green ✓ when move-out date >= lease end date (Exp Date).
+// Move Out Date: show green ✓ when move-out date >= Lease End Date.
 function moDateHtml(v, row) {
     const d = parseAnyDate(v);
     if (!d) return '<span class="text-slate-300 dark:text-slate-600">—</span>';
-    const exp = parseAnyDate(row && row['Exp Date']);
+    const leaseEnd = parseAnyDate(row && row['Lease End Date']);
     let mark = '';
-    if (exp && d >= exp) mark = checkmarkHtml('moved out at or after lease end');
+    if (leaseEnd && d >= leaseEnd) mark = checkmarkHtml('moved out at or after lease end');
     return fmtDateShort(d) + mark;
 }
 
