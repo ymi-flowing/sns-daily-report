@@ -29,6 +29,10 @@ This dashboard provides a unified view of:
 - **Renovation Status** - Renovated / Partial / Classic breakdown per property
 - **Financial Summary** - Income, credits, net revenue, and delinquency tracking
 
+### Companion pages
+
+- **`/renewals`** — standalone renewals analytics page. See the [Renewals Dashboard section](#renewals-dashboard) below.
+
 ## Files
 
 | File | Description |
@@ -46,6 +50,16 @@ This dashboard provides a unified view of:
 | `vercel.json` | Vercel deployment configuration |
 | `requirements.txt` | Python dependencies |
 | `renewal_letters.html` | Renewal letter generation tool |
+| `renewals.html` | **Renewals Dashboard** — `/renewals` page (see section below) |
+| `renewals_data.json` | Baked JSON that powers `renewals.html` (committed by `sync-renewals.yml`) |
+| `renewals_sync/` | Python scripts that pull ResMan → Sheet and Sheet → `renewals_data.json` |
+| `api/get_renewals.py` | Live fallback that reads the Google Sheet directly (used mid-refresh for immediate feedback) |
+| `api/trigger_renewals_sync.py` | Dispatches `sync-renewals.yml` from the Refresh button |
+| `api/sync_status.py` | Reports the last `sync-renewals.yml` run status |
+| `api/last_sync.py` | Reports the last successful run time (shown in the chip) |
+| `.github/workflows/sync-renewals.yml` | GitHub Actions workflow for the Renewals Dashboard refresh pipeline |
+| `SNS-letter-logo.jpg` | Self-hosted SNS logo used in the per-resident renewal letter preview |
+| `dev_server.py` | Local Python dev server that emulates Vercel routing (static files + `/api/*.py` handlers) |
 
 ---
 
@@ -380,6 +394,113 @@ Shows income and delinquency data per property.
 - [ ] Individual property detail pages
 - [ ] Historical trends and charts
 - [ ] Automated daily email reports
+
+---
+
+## Renewals Dashboard
+
+Standalone page at **`/renewals`** that surfaces every expiring lease plus signed-renewal detail, with per-resident PDF letter preview. Same Vercel app, static-first load, same off-white light / dark theme.
+
+### Load pattern
+
+```
+Normal open:
+  browser → GET /renewals_data.json → ~100ms, no API
+
+Refresh click:
+  POST /api/trigger_renewals_sync
+    → GitHub Actions sync-renewals.yml:
+        1. renewals_sync/sync_all.py            ResMan → Sheet
+        2. renewals_sync/write_renewals_json.py Sheet + ResMan dates → renewals_data.json
+        3. git commit + push                    bakes JSON into repo
+    → dashboard polls /api/sync_status until "completed"
+    → dashboard reads /api/get_renewals (live sheet) for immediate feedback
+    → next normal reload serves the newly-baked static JSON
+```
+
+ETA ~3–5 minutes end-to-end.
+
+### Secrets required (GitHub Actions AND Vercel env vars)
+
+- `RESMAN_API_KEY`, `RESMAN_PARTNER_ID`, `RESMAN_ACCOUNT_ID` — ResMan Partners API
+- `SHEETS_WEBHOOK_URL` — Apps Script `/exec` endpoint for the Renewal Letters sheet
+- `SHARED_SECRET` — Apps Script shared secret
+- `GITHUB_TOKEN` — for `/api/trigger_renewals_sync` to dispatch the workflow
+
+### Status vocabulary (col G in the Google Sheet)
+
+Written by `renewals_sync/sync_renewal_status.py`:
+
+| Status | Meaning |
+|---|---|
+| `Renewed` | Signed renewal entry in `lease.history[]`, actual ≥ offered |
+| `Lower Offer` | Signed renewal, actual < offered |
+| `Pending Renewal` | History entry with `status == "Pending Renewal"` AND `signedDate` null |
+| `Current` | No renewal entry yet; still live, no notice |
+| `MTM` | `scheduledMoveOutDate > leaseEndDate` AND no `moveOutDate` yet (month-to-month) |
+| `NTV` | `noticeToVacateDate` set, no `moveOutDate` yet |
+| `Moved Out`, `Under Eviction`, `Evicted`, `Cancelled`, `Denied` | Mapped straight from `lease.leaseStatus` |
+
+The "best renewal candidate" picker handles the common ResMan case of a Cancelled sibling sitting next to a signed Current renewal with the same `startDate`: it ranks `(signed AND not cancelled) > signed > not cancelled > latest applicationDate`.
+
+### Dashboard sections
+
+1. **Header** — logo + "Renewals Dashboard" + Renewal Offers button + Last Updated chip + Refresh + theme toggle.
+2. **Filter bar** — five cascading multi-selects (Property, Status, Expiring Month, Unit Type, Floorplan) + Clear all. Each dropdown's options are narrowed by the other active filters.
+3. **8 KPI cards** — Total Expiring, Renewal Rate, Lower Offer %, Avg Renewed Total, Pending Decision, Avg Offered Δ, Avg Actual Δ, Avg Expiring/Month. Each has a short `?` tooltip (just the calculation). Double-click opens a drill-in modal.
+4. **Status × Expiring Month** summary — 9 status rows + Total + three rate rows:
+   - `Renewed of total` = (Renewed + Lower Offer) / Total
+   - `% Renewable` = (Pending Renewal + Current) / Total
+   - `Avg Δ (signed)` = mean of Actual Δ $ and % across signed renewals
+   Every cell is clickable → drill-in modal.
+5. **4 charts** —
+   - Status breakdown by month (stacked bar)
+   - Renewal rate by month (stacked bar, bar height = signed/total)
+   - Renewed (actual) Delta % distribution (cyan histogram, signed only)
+   - Avg renewed total by month (cyan line; hover shows Avg Renewed, Avg Δ $, Avg Δ %)
+6. **Expiring leases table** — the detailed roster. Property + Unit + Status frozen left. Resident name links to ResMan's resident detail page. NTV Date and Move Out Date cells show a green ✓ when the rule applies. Two chip filters in the card header: **Insufficient Notice**, **Early Termination** — both filter the whole report (KPIs, charts, summary table, offers popup).
+
+### Renewal Offers popup
+
+Opens from the "Renewal Offers" header button. Reads the **same filtered subset** as the main dashboard but shows an offer-focused grid:
+
+Property · Unit · Lease End (all frozen) · Resident · Current Rent · Current Total · Rent Δ · Total Δ · Rent Offer · Utility · Valet · Pest · Amenity · Internet · Total Utilities · Pet · Parking · WD · Storage · Total Other · Total Offer
+
+A checkbox column + select-all header lets the user pick specific residents. **"Print Letters"** button prints all selected (or all visible if none selected) by opening a single new tab with every letter stacked and separated by `page-break-before: always` — one Ctrl+P produces a multi-page PDF. Totals footer sums every $ column (deltas sum too).
+
+Each resident name is clickable → opens that resident's formal renewal letter in a new tab (A4, print-ready). The letter template is inlined into `renewals.html` as `LETTER_TEMPLATE`; placeholder data is produced by `buildLetterContext()`, which ports `letters/generate_letters.py` logic (first-name split, charges rows, deposit sub-block, Internet → Landscaping label for TRA/AN3). The SNS logo is self-hosted at `/SNS-letter-logo.jpg`.
+
+### `renewals_sync/` directory
+
+Copies of the upstream Renewal Letters pipeline kept in-repo so the GitHub Actions workflow can run without external deps:
+
+| File | Role |
+|---|---|
+| `sync_all.py` | Loops through 10 properties → calls `sync_renewal_status.run_sync()` on each |
+| `sync_renewal_status.py` | ResMan → Sheet: writes Renewal Status, Actual Renewal, Lease ID |
+| `create_monday_items.py` | ResMan API helpers (`fetch_leases`, `get_property_id`) — Monday code dead but harmless |
+| `sheets_client.py` | Apps Script webhook wrapper |
+| `sheet_schema.py` | Canonical headers + tab names |
+| `write_renewals_json.py` | **NEW** — fetches each sheet tab, joins ResMan lease data by Lease ID, writes `renewals_data.json` with four extra columns (NTV Date, Move Out Date (falls back to scheduled), Lease End Date, Renewal Signed Date) |
+
+**Important:** `renewals_sync/sync_renewal_status.py` is a hand-maintained copy of the one in `C:\Users\ymosh\Claude\ROI\Renewal Letters`. When fixing a status-detection bug, mirror the fix to both.
+
+### Styling notes
+
+- Light mode body is `bg-slate-100` (not slate-50); cards + modals + tooltips use `#fafbfc` via a scoped `html:not(.dark) .bg-white { … !important }` override. Dark mode uses the normal `dark:bg-slate-800` for cards.
+- Scrollbars are slate (grey-cyan), not blue. Both `.fancy-scroll` and the global `*` scrollbar use `#94a3b8 → #64748b` light / `#64748b → #475569` dark.
+- Every checkbox-looking control (dropdowns, Offers rows, Insufficient Notice / Early Termination chips) shares one themed style: border-only unchecked, ✓ in light-gray (`#64748b` light / `#94a3b8` dark). No native `accent-color`.
+- `#06b6d4` cyan is the brand accent on this page: MTM pill, chart 3 bars, chart 4 line, filter count badge, Renewal Offers button hover.
+
+### Local development
+
+```bash
+# Static files + /api/*.py handlers, mimics Vercel routing
+python dev_server.py
+# → http://localhost:3000/renewals
+```
+
+Needs `.env.local` with `SHEETS_WEBHOOK_URL` and `SHARED_SECRET` (plus `RESMAN_API_KEY`/`PARTNER_ID`/`ACCOUNT_ID` if testing `write_renewals_json.py` locally).
 
 ---
 
