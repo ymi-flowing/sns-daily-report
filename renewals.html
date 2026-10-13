@@ -35,7 +35,7 @@
         #offers-table tbody tr:hover td { background-color: #eff6ff; }
         .dark #offers-table tbody tr:hover td { background-color: #253551; }
 
-        /* Freeze first 4 columns: checkbox | Property | Unit | Resident */
+        /* Freeze first 4 columns: checkbox | Property | Unit | Lease End */
         #offers-table thead th:nth-child(-n+4),
         #offers-table tbody td:nth-child(-n+4),
         #offers-table tfoot td:nth-child(-n+4) {
@@ -54,7 +54,7 @@
         #offers-table thead th:nth-child(4),
         #offers-table tbody td:nth-child(4),
         #offers-table tfoot td:nth-child(4) {
-            left: 198px; min-width: 180px;
+            left: 198px; min-width: 110px;
             border-right: 1px solid rgba(100, 116, 139, 0.25);
         }
         .dark #offers-table thead th:nth-child(4),
@@ -1963,9 +1963,11 @@ function rentDelta(row) {
 const OFFER_COLUMNS = [
     { key: '__chk',          label: '',          align: 'center', isCheckbox: true,
       fmt: (v, row) => `<input type="checkbox" class="offer-chk" data-offer-row="${row.__offerIdx}" ${OFFERS_SELECTED.has(row.__offerIdx) ? 'checked' : ''}>` },
-    { key: 'property',       label: 'Property',  align: 'center', fmt: v => v || '' },
-    { key: 'Unit',           label: 'Unit',      align: 'center', fmt: v => v ?? '' },
-    { key: 'Resident Name',  label: 'Resident',  align: 'center',
+    { key: 'property',       label: 'Property',   align: 'center', fmt: v => v || '' },
+    { key: 'Unit',           label: 'Unit',       align: 'center', fmt: v => v ?? '' },
+    { key: 'Lease End Date', label: 'Lease End',  align: 'center',
+      fmt: v => v ? fmtDateShort(parseAnyDate(v)) : '—' },
+    { key: 'Resident Name',  label: 'Resident',   align: 'center',
       fmt: (v, row) => {
           const name = (v ?? '').toString().trim();
           if (!name) return '';
@@ -2105,6 +2107,7 @@ function renderOffersFooter(rows) {
         if (c.isCheckbox) return '';
         if (c.key === 'property') return 'Totals';
         if (c.key === 'Unit') return `${rows.length} rows`;
+        if (c.key === 'Lease End Date') return '';
         if (c.key === 'Resident Name') return '';
         if (sumKeys.has(c.key)) return fmtMoney(sum(c.key));
         if (avgKeys.has(c.key)) {
