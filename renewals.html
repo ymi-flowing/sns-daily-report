@@ -155,14 +155,18 @@
         .dark .toggle-filter.active {
             background: #334155; border-color: #94a3b8;
         }
-        .toggle-filter.active .toggle-box {
-            background: #64748b; border-color: #64748b;
-        }
-        .dark .toggle-filter.active .toggle-box {
-            background: #94a3b8; border-color: #94a3b8;
-        }
+        /* Checkbox-looking box matches the themed .offer-chk / .multi-item input */
+        .toggle-box { background: transparent; }
+        .toggle-filter:hover .toggle-box { border-color: #64748b; }
+        .dark .toggle-filter:hover .toggle-box { border-color: #94a3b8; }
         .toggle-filter.active .toggle-box::after {
-            content: '✓'; display: inline-block;
+            content: '✓';
+            font-size: 11px; font-weight: 900;
+            color: #64748b;  /* light gray V (both themes) */
+            line-height: 1;
+        }
+        .dark .toggle-filter.active .toggle-box::after {
+            color: #94a3b8;
         }
         .multi-trigger .count-badge {
             background: #06b6d4; color: white; font-size: 10px; font-weight: 700;
