@@ -1028,7 +1028,7 @@ function renderKPIs() {
           tip: 'Share of signed renewals that came in below our offer.' },
         { label: 'Avg Renewed Total',    value: fmtMoney(k.avgRenewedTotal),        sub: 'per signed renewal',                     accent: 'green', filter: {status: ['Renewed','Lower Offer']},
           tip: 'Average actual renewal amount (rent + fees) per signed renewal.' },
-        { label: 'Pending Decision',     value: k.pending,                          sub: `${k.pendingRenewal} w/ offer out`,       accent: 'slate', filter: {status: ['Current','Pending Renewal']},
+        { label: 'Pending Decision',     value: k.pending,                          sub: `${k.pendingRenewal} pending signature`,  accent: 'slate', filter: {status: ['Current','Pending Renewal']},
           tip: 'Residents who have not yet renewed, given notice, or moved out. Includes Current (no offer yet) + Pending Renewal (offer out, awaiting signature).' },
         { label: 'Avg Offered Δ',        value: fmtPct(k.avgOfferDelta),            sub: 'portfolio avg',                          accent: 'blue',  filter: null,
           tip: 'Average % change between our offer and the current rate across all expiring leases.' },
