@@ -541,7 +541,7 @@ const TABLE_COLUMNS = [
     { key: 'statusKey',      label: 'Status',         align: 'center', fmt: v => statusPillHtml(v) },
     { key: 'Unit Type',      label: 'Unit Type',      align: 'center', fmt: v => v || '' },
     { key: 'Floorplan',      label: 'Floorplan',      align: 'center', fmt: v => v || '' },
-    { key: 'Resident Name',  label: 'Resident',       align: 'center', fmt: v => v ?? '' },
+    { key: 'Resident Name',  label: 'Resident',       align: 'center', fmt: (v, row) => residentLinkHtml(v, row && row['Lease ID']) },
     { key: 'expMonthKey',    label: 'Exp Month',      align: 'center', fmt: v => v || '' },
     { key: 'currentTotal',   label: 'Current Rate',   align: 'center', fmt: fmtMoney },
     { key: 'totalOfferA',    label: 'Renewal Offer',  align: 'center', fmt: fmtMoney },
@@ -618,6 +618,16 @@ function fmtMonthLabel(k) {
     const names = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     return `${names[Number(m)-1]} ${y}`;
 }
+// Resident name -> link to the ResMan resident detail page if we have a Lease ID.
+function residentLinkHtml(name, leaseId) {
+    const n = (name ?? '').toString().trim();
+    if (!n) return '';
+    const safe = escapeHtml(n);
+    if (!leaseId) return safe;
+    const url = `https://sns.myresman.com/#/Residents/Detail/${encodeURIComponent(leaseId)}`;
+    return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="text-blue-600 dark:text-blue-400 hover:underline">${safe}</a>`;
+}
+
 function statusPillHtml(status) {
     if (!status) return '<span class="text-slate-400">—</span>';
     const c = STATUS_COLORS[status] || STATUS_COLORS['Current'];
@@ -1449,7 +1459,7 @@ function renderTable() {
     });
     tbody.innerHTML = rows.map(r => `
         <tr class="data-row border-b border-slate-100 dark:border-slate-700/40">
-            ${TABLE_COLUMNS.map(c => `<td class="px-3 py-2 text-${c.align} text-slate-700 dark:text-slate-200">${c.fmt(r[c.key])}</td>`).join('')}
+            ${TABLE_COLUMNS.map(c => `<td class="px-3 py-2 text-${c.align} text-slate-700 dark:text-slate-200">${c.fmt(r[c.key], r)}</td>`).join('')}
         </tr>
     `).join('');
     document.getElementById('row-count').textContent = `(${rows.length} rows)`;
@@ -1509,7 +1519,7 @@ function openModal(title, rows) {
     ).join('')}</tr>`;
     tbody.innerHTML = rows.map(r => `
         <tr class="data-row border-b border-slate-100 dark:border-slate-700/40">
-            ${TABLE_COLUMNS.map(c => `<td class="px-3 py-2 text-${c.align} text-slate-700 dark:text-slate-200">${c.fmt(r[c.key])}</td>`).join('')}
+            ${TABLE_COLUMNS.map(c => `<td class="px-3 py-2 text-${c.align} text-slate-700 dark:text-slate-200">${c.fmt(r[c.key], r)}</td>`).join('')}
         </tr>
     `).join('');
     document.getElementById('detail-modal').classList.remove('hidden');
