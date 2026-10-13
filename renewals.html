@@ -431,14 +431,6 @@
                     <div class="multi-list"></div>
                 </div>
             </div>
-            <button class="toggle-filter h-10 px-3 inline-flex items-center gap-2 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-600 hover:border-slate-400 dark:hover:border-slate-500 transition-colors" data-key="earlyTerm">
-                <span class="toggle-box inline-flex items-center justify-center w-4 h-4 rounded border-2 border-slate-300 dark:border-slate-500 text-white text-[11px] leading-none">&nbsp;</span>
-                Early Termination
-            </button>
-            <button class="toggle-filter h-10 px-3 inline-flex items-center gap-2 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-600 hover:border-slate-400 dark:hover:border-slate-500 transition-colors" data-key="insufficientNotice">
-                <span class="toggle-box inline-flex items-center justify-center w-4 h-4 rounded border-2 border-slate-300 dark:border-slate-500 text-white text-[11px] leading-none">&nbsp;</span>
-                Insufficient Notice
-            </button>
             <button id="clear-filters" class="h-10 px-4 rounded-xl text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 border-2 border-slate-200 dark:border-slate-600 hover:border-red-300 dark:hover:border-red-700 transition-colors">Clear all</button>
         </div>
     </div>
@@ -493,14 +485,24 @@
 
     <!-- TABLE -->
     <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
-        <div class="p-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+        <div class="p-4 border-b border-slate-200 dark:border-slate-700 flex flex-wrap items-center justify-between gap-3">
             <div>
                 <h2 class="text-lg font-bold text-slate-800 dark:text-white">Expiring leases <span id="row-count" class="text-sm font-normal text-slate-500 dark:text-slate-400 ml-2"></span></h2>
             </div>
-            <button id="csv-export" data-hover-tip="Export filtered table as CSV" class="h-9 px-3 rounded-lg bg-slate-100 dark:bg-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 flex items-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                Export CSV
-            </button>
+            <div class="flex flex-wrap items-center gap-2">
+                <button class="toggle-filter h-9 px-3 inline-flex items-center gap-2 rounded-lg text-xs font-semibold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:border-slate-400 dark:hover:border-slate-500 transition-colors" data-key="earlyTerm">
+                    <span class="toggle-box inline-flex items-center justify-center w-4 h-4 rounded border-2 border-slate-300 dark:border-slate-500 text-white text-[10px] leading-none">&nbsp;</span>
+                    Early Termination
+                </button>
+                <button class="toggle-filter h-9 px-3 inline-flex items-center gap-2 rounded-lg text-xs font-semibold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:border-slate-400 dark:hover:border-slate-500 transition-colors" data-key="insufficientNotice">
+                    <span class="toggle-box inline-flex items-center justify-center w-4 h-4 rounded border-2 border-slate-300 dark:border-slate-500 text-white text-[10px] leading-none">&nbsp;</span>
+                    Insufficient Notice
+                </button>
+                <button id="csv-export" data-hover-tip="Export filtered table as CSV" class="h-9 px-3 rounded-lg bg-slate-100 dark:bg-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                    Export CSV
+                </button>
+            </div>
         </div>
         <div class="overflow-x-auto fancy-scroll max-h-[600px]">
             <table class="min-w-full text-xs" id="roster-table">
@@ -1477,19 +1479,19 @@ function renderSummaryTable() {
     }
     const grandTotal = SUMMARY_STATUSES.reduce((s, status) => s + matrix[status].total, 0);
 
-    // Rate rows: Renewed of total + Max achievable (if all pending sign)
+    // Rate rows: Renewed of total + % Renewable (how much upside is left)
     const renewedOfTotalByMonth = {};
-    const maxAchievableByMonth = {};
+    const renewableByMonth = {};
     for (const m of months) {
         const signed = matrix['Renewed'][m] + matrix['Lower Offer'][m];
         const upside = matrix['Current'][m] + matrix['Pending Renewal'][m];
         renewedOfTotalByMonth[m] = colTotals[m] > 0 ? (100 * signed / colTotals[m]) : null;
-        maxAchievableByMonth[m]  = colTotals[m] > 0 ? (100 * (signed + upside) / colTotals[m]) : null;
+        renewableByMonth[m]      = colTotals[m] > 0 ? (100 * upside / colTotals[m]) : null;
     }
     const totalSigned = matrix['Renewed'].total + matrix['Lower Offer'].total;
     const totalUpside = matrix['Current'].total + matrix['Pending Renewal'].total;
     const grandRenewedOfTotal = grandTotal > 0 ? (100 * totalSigned / grandTotal) : null;
-    const grandMaxAchievable  = grandTotal > 0 ? (100 * (totalSigned + totalUpside) / grandTotal) : null;
+    const grandRenewable      = grandTotal > 0 ? (100 * totalUpside / grandTotal) : null;
 
     const thead = document.querySelector('#summary-table thead');
     const tbody = document.querySelector('#summary-table tbody');
@@ -1522,8 +1524,8 @@ function renderSummaryTable() {
         </tr>
     `;
     const fmtRate = v => v === null ? '—' : v.toFixed(1) + '%';
-    const renewedTip = '(Renewed + Lower Offer) / Total expiring';
-    const maxTip     = '(Renewed + Lower Offer + Pending Renewal + Current) / Total expiring';
+    const renewedTip   = '(Renewed + Lower Offer) / Total expiring';
+    const renewableTip = '(Pending Renewal + Current) / Total expiring';
     const rateRow1 = `
         <tr class="border-t border-slate-200 dark:border-slate-700">
             <td class="px-3 py-2 text-left sticky left-0 bg-emerald-50 dark:bg-emerald-900/20 z-10 text-emerald-900 dark:text-emerald-200 font-semibold whitespace-nowrap">
@@ -1537,11 +1539,11 @@ function renderSummaryTable() {
     const rateRow2 = `
         <tr>
             <td class="px-3 py-2 text-left sticky left-0 bg-blue-50 dark:bg-blue-900/20 z-10 text-blue-900 dark:text-blue-200 font-semibold whitespace-nowrap">
-                Max achievable
-                <span class="tip" data-tip="${escapeHtml(maxTip)}">?</span>
+                % Renewable
+                <span class="tip" data-tip="${escapeHtml(renewableTip)}">?</span>
             </td>
-            ${months.map(m => `<td class="px-3 py-2 text-center bg-blue-50 dark:bg-blue-900/20 text-blue-900 dark:text-blue-200 font-semibold">${fmtRate(maxAchievableByMonth[m])}</td>`).join('')}
-            <td class="px-3 py-2 text-center bg-blue-50 dark:bg-blue-900/20 text-blue-900 dark:text-blue-200 font-bold">${fmtRate(grandMaxAchievable)}</td>
+            ${months.map(m => `<td class="px-3 py-2 text-center bg-blue-50 dark:bg-blue-900/20 text-blue-900 dark:text-blue-200 font-semibold">${fmtRate(renewableByMonth[m])}</td>`).join('')}
+            <td class="px-3 py-2 text-center bg-blue-50 dark:bg-blue-900/20 text-blue-900 dark:text-blue-200 font-bold">${fmtRate(grandRenewable)}</td>
         </tr>
     `;
     tbody.innerHTML = bodyRows + totalRow + rateRow1 + rateRow2;
