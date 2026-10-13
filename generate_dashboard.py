@@ -1667,17 +1667,20 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data):
         }}
         .fancy-scroll {{
             scrollbar-width: thin;
-            scrollbar-color: #60a5fa #e2e8f0;
+            scrollbar-color: #94a3b8 #e2e8f0;
         }}
         .dark .fancy-scroll {{
-            scrollbar-color: #3b82f6 #1e293b;
+            scrollbar-color: #64748b #1e293b;
         }}
         .fancy-scroll::-webkit-scrollbar {{ width: 8px; height: 8px; }}
         .fancy-scroll::-webkit-scrollbar-track {{ background: #e2e8f0; border-radius: 10px; }}
         .dark .fancy-scroll::-webkit-scrollbar-track {{ background: #1e293b; }}
         .fancy-scroll::-webkit-scrollbar-thumb {{
-            background: linear-gradient(180deg, #60a5fa 0%, #3b82f6 100%);
+            background: linear-gradient(180deg, #94a3b8 0%, #64748b 100%);
             border-radius: 10px;
+        }}
+        .dark .fancy-scroll::-webkit-scrollbar-thumb {{
+            background: linear-gradient(180deg, #64748b 0%, #475569 100%);
         }}
         .kpi-card {{ transition: transform 0.2s ease, box-shadow 0.2s ease; }}
         .kpi-card:hover {{ transform: translateY(-2px); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); }}
