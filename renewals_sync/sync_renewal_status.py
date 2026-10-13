@@ -146,9 +146,14 @@ def find_expiring_and_renewal(lease: dict, expiring_year: int, expiring_month: i
     (expiring_history_entry, renewal_history_entry_or_None).
 
     - expiring_entry = history entry whose endDate falls in the row's expiring month
-    - renewal_entry  = the next history entry whose startDate is within
+    - renewal_entry  = the BEST next history entry whose startDate is within
                        RENEWAL_START_GAP_DAYS of expiring_entry.endDate
-                       (i.e. a signed renewal term, whether already active or future)
+
+    "Best" matters because ResMan often leaves a Cancelled sibling with the
+    same startDate as the signed Current/Renewed renewal (an older offer that
+    was redone and signed). The sort key alone can land us on the Cancelled
+    one. We now rank candidates: signed AND not cancelled > signed > not
+    cancelled > latest applicationDate.
     """
     hist = sorted(
         lease.get("history", []),
@@ -164,14 +169,25 @@ def find_expiring_and_renewal(lease: dict, expiring_year: int, expiring_month: i
             # keep looking — if there are duplicates, prefer the latest
     if expiring_entry is None:
         return None, None
-    if expiring_idx + 1 >= len(hist):
-        return expiring_entry, None
     e_end = parse_iso_date(expiring_entry["endDate"])
-    next_entry = hist[expiring_idx + 1]
-    n_start = parse_iso_date(next_entry.get("startDate", ""))
-    if e_end and n_start and 0 <= (n_start - e_end).days <= RENEWAL_START_GAP_DAYS:
-        return expiring_entry, next_entry
-    return expiring_entry, None
+    if not e_end:
+        return expiring_entry, None
+
+    # Collect every history entry whose startDate lands in the renewal window.
+    candidates = []
+    for entry in hist[expiring_idx + 1:]:
+        n_start = parse_iso_date(entry.get("startDate", ""))
+        if n_start and 0 <= (n_start - e_end).days <= RENEWAL_START_GAP_DAYS:
+            candidates.append(entry)
+    if not candidates:
+        return expiring_entry, None
+
+    def rank(entry):
+        signed = bool(entry.get("signedDate"))
+        active = entry.get("status") not in ("Cancelled", "Denied")
+        return (signed and active, signed, active, entry.get("applicationDate") or "")
+
+    return expiring_entry, max(candidates, key=rank)
 
 
 def renewal_total(entry: dict):
@@ -212,19 +228,38 @@ def has_pending_notice(lease: dict) -> bool:
     return bool(ntv) and not mo
 
 
+def is_mtm(lease: dict) -> bool:
+    """
+    Month-to-month: the lease has effectively expired but the resident is
+    still occupying the unit beyond the original end date. Signal:
+      - moveOutDate is None (they haven't actually left yet)
+      - scheduledMoveOutDate > leaseEndDate (they're staying past original term)
+
+    Examples: EAST-31A1 (end 2026-07-28, scheduled 2026-10-31),
+    EAST-29A1 (end 2026-09-05, scheduled 2026-12-19).
+    Status in ResMan may still read "Notice to Vacate" even in this state.
+    """
+    if lease.get("moveOutDate"):
+        return False
+    sched = parse_iso_date(lease.get("scheduledMoveOutDate", ""))
+    end = parse_iso_date(lease.get("leaseEndDate", ""))
+    return bool(sched and end and sched > end)
+
+
 def derive_status(resman_status: str, renewal_entry: dict | None, is_signed: bool,
-                  actual_total, offered_total, pending_notice: bool = False) -> str:
+                  actual_total, offered_total, pending_notice: bool = False,
+                  mtm: bool = False) -> str:
     """
     Priority:
       1. Renewal entry present, signed, actual < offered → 'Lower Offer'
       2. Renewal entry present, signed                   → 'Renewed'
       3. Renewal entry present, unsigned, status == 'Pending Renewal' → 'Pending Renewal'
-      4. Not renewed AND pending_notice → 'NTV' (overrides stale 'Current')
-      5. Else → ResMan status mapped
+      4. mtm (scheduled move-out past lease end, still here) → 'MTM'
+      5. Not renewed AND pending_notice → 'NTV' (overrides stale 'Current')
+      6. Else → ResMan status mapped
 
-    Pending Renewal matches the Daily Report convention: an entry in
-    lease.history[] with status 'Pending Renewal' AND signedDate empty
-    means an offer went out and the resident hasn't signed yet.
+    MTM overrides NTV because the lease has effectively expired and the
+    resident is on month-to-month even if they also gave notice.
     """
     if renewal_entry:
         if is_signed:
@@ -237,6 +272,8 @@ def derive_status(resman_status: str, renewal_entry: dict | None, is_signed: boo
         if renewal_entry.get("status") == "Pending Renewal":
             return "Pending Renewal"
         # Unsigned entry with a different status -- fall through to lease-level
+    if mtm:
+        return "MTM"
     if pending_notice and resman_status == "Current":
         return "NTV"
     return STATUS_MAP.get(resman_status, resman_status)
@@ -312,8 +349,9 @@ def run_sync(abbr: str, dry_run: bool = False, limit: int | None = None) -> int:
     new_status = []
     new_renewal = []
     new_lease_ids = []
-    stats = {"renewed": 0, "lower_offer": 0, "pending_renewal": 0, "current": 0,
-             "moved_out": 0, "ntv": 0, "eviction": 0, "unmatched": 0, "other": 0,
+    stats = {"renewed": 0, "lower_offer": 0, "pending_renewal": 0, "mtm": 0,
+             "current": 0, "moved_out": 0, "ntv": 0, "eviction": 0,
+             "unmatched": 0, "other": 0,
              "matched_by_id": 0, "matched_by_name": 0, "matched_by_mi_date": 0}
     unmatched_rows = []
 
@@ -375,8 +413,9 @@ def run_sync(abbr: str, dry_run: bool = False, limit: int | None = None) -> int:
         is_signed = bool(live_renewal and live_renewal.get("signedDate"))
         actual_total = renewal_total(live_renewal) if is_signed else None
         pending_notice = has_pending_notice(lease)
+        mtm = is_mtm(lease)
         status_label = derive_status(rm_status, live_renewal, is_signed,
-                                     actual_total, offered_total, pending_notice)
+                                     actual_total, offered_total, pending_notice, mtm)
         new_status.append([status_label])
         new_lease_ids.append([lease_id_out])
 
@@ -389,6 +428,7 @@ def run_sync(abbr: str, dry_run: bool = False, limit: int | None = None) -> int:
         if status_label == "Renewed":            stats["renewed"] += 1
         elif status_label == "Lower Offer":      stats["lower_offer"] += 1
         elif status_label == "Pending Renewal":  stats["pending_renewal"] += 1
+        elif status_label == "MTM":              stats["mtm"] += 1
         elif status_label == "Current":          stats["current"] += 1
         elif status_label == "Moved Out":        stats["moved_out"] += 1
         elif status_label == "NTV":              stats["ntv"] += 1

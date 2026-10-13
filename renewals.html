@@ -525,6 +525,7 @@ const STATUS_COLORS = {
     'Lower Offer':     { bg: '#f59e0b', bgSoft: 'rgba(245,158,11,0.15)',  textLight: '#92400e', textDark: '#fcd34d' },
     'Pending Renewal': { bg: '#fbbf24', bgSoft: 'rgba(251,191,36,0.18)',  textLight: '#78350f', textDark: '#fde68a' },
     'Current':         { bg: '#64748b', bgSoft: 'rgba(100,116,139,0.15)', textLight: '#334155', textDark: '#cbd5e1' },
+    'MTM':             { bg: '#06b6d4', bgSoft: 'rgba(6,182,212,0.15)',   textLight: '#155e75', textDark: '#67e8f9' },
     'NTV':             { bg: '#fb923c', bgSoft: 'rgba(251,146,60,0.15)',  textLight: '#9a3412', textDark: '#fdba74' },
     'Moved Out':       { bg: '#ef4444', bgSoft: 'rgba(239,68,68,0.15)',   textLight: '#7f1d1d', textDark: '#fca5a5' },
     'Under Eviction':  { bg: '#dc2626', bgSoft: 'rgba(220,38,38,0.18)',   textLight: '#7f1d1d', textDark: '#fca5a5' },
@@ -533,7 +534,7 @@ const STATUS_COLORS = {
     'Pending':         { bg: '#3b82f6', bgSoft: 'rgba(59,130,246,0.15)',  textLight: '#1e3a8a', textDark: '#93c5fd' },
     'Denied':          { bg: '#db2777', bgSoft: 'rgba(219,39,119,0.15)',  textLight: '#831843', textDark: '#f9a8d4' },
 };
-const STATUS_ORDER = ['Renewed','Lower Offer','Pending Renewal','Current','NTV','Moved Out','Under Eviction','Evicted','Cancelled','Pending','Denied'];
+const STATUS_ORDER = ['Renewed','Lower Offer','Pending Renewal','Current','MTM','NTV','Moved Out','Under Eviction','Evicted','Cancelled','Pending','Denied'];
 
 const TABLE_COLUMNS = [
     { key: 'property',       label: 'Property',       align: 'center', fmt: v => v || '' },
@@ -1008,7 +1009,7 @@ function computeKPIs(rows) {
     const signed = renewed + lowerOffer;  // Pending Renewal does NOT count as signed
     const current = rows.filter(r => r.statusKey === 'Current').length;
     const pending = current + pendingRenewal;  // Pending Decision = both pending states
-    const lostCount = rows.filter(r => ['NTV','Moved Out','Under Eviction','Evicted','Cancelled','Denied'].includes(r.statusKey)).length;
+    const lostCount = rows.filter(r => ['MTM','NTV','Moved Out','Under Eviction','Evicted','Cancelled','Denied'].includes(r.statusKey)).length;
     const decided = signed + lostCount;  // Pending Renewal/Current NOT decided yet
     const renewalRate = decided > 0 ? signed / decided : 0;
     const lowerPctOfSigned = signed > 0 ? lowerOffer / signed : 0;
@@ -1329,7 +1330,7 @@ function renderCharts() {
 // =============================================================================
 // SUMMARY TABLE (Status x Expiring Month)
 // =============================================================================
-const SUMMARY_STATUSES = ['Renewed','Lower Offer','Pending Renewal','Current','NTV','Under Eviction','Moved Out','Evicted'];
+const SUMMARY_STATUSES = ['Renewed','Lower Offer','Pending Renewal','Current','MTM','NTV','Under Eviction','Moved Out','Evicted'];
 
 function renderSummaryTable() {
     const rows = filtered();
@@ -1352,7 +1353,7 @@ function renderSummaryTable() {
     const grandTotal = SUMMARY_STATUSES.reduce((s, status) => s + matrix[status].total, 0);
 
     // Rate rows: Actual Renewal % (of decided) and Renewal % of total
-    const LOST_STATUSES = ['NTV','Under Eviction','Moved Out','Evicted'];
+    const LOST_STATUSES = ['MTM','NTV','Under Eviction','Moved Out','Evicted'];
     function rateOfDecided(signed, lost) {
         const decided = signed + lost;
         return decided > 0 ? (100 * signed / decided) : null;
