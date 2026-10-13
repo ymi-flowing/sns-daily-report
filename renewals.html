@@ -1502,6 +1502,8 @@ function renderSummaryTable() {
             <th class="px-3 py-2 text-center text-[11px] font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-200 whitespace-nowrap">Total</th>
         </tr>
     `;
+    // Click helper for every cell: data-mode (status|signed|renewable|all) + data-month (yyyy-mm or __all__)
+    const cellClickable = 'cursor-pointer hover:bg-blue-50 dark:hover:bg-slate-700/60 transition-colors';
     const bodyRows = SUMMARY_STATUSES.map(s => {
         const row = matrix[s];
         return `
@@ -1510,30 +1512,33 @@ function renderSummaryTable() {
                 ${months.map(m => {
                     const n = row[m];
                     if (!n) return `<td class="px-3 py-2 text-center text-slate-300 dark:text-slate-600">—</td>`;
-                    return `<td class="px-3 py-2 text-center cursor-pointer hover:bg-blue-50 dark:hover:bg-slate-700/60 transition-colors font-medium" data-status="${escapeHtml(s)}" data-month="${escapeHtml(m)}">${n}</td>`;
+                    return `<td class="px-3 py-2 text-center ${cellClickable} font-medium" data-mode="status" data-status="${escapeHtml(s)}" data-month="${escapeHtml(m)}">${n}</td>`;
                 }).join('')}
-                <td class="px-3 py-2 text-center font-semibold text-slate-900 dark:text-white">${row.total || '—'}</td>
+                ${row.total
+                    ? `<td class="px-3 py-2 text-center ${cellClickable} font-semibold text-slate-900 dark:text-white" data-mode="status" data-status="${escapeHtml(s)}" data-month="__all__">${row.total}</td>`
+                    : `<td class="px-3 py-2 text-center font-semibold text-slate-300 dark:text-slate-600">—</td>`}
             </tr>
         `;
     }).join('');
     const totalRow = `
         <tr class="border-t-2 border-slate-200 dark:border-slate-700 font-semibold">
             <td class="px-3 py-2 text-left sticky left-0 bg-slate-50 dark:bg-slate-900 z-10 text-slate-700 dark:text-slate-200">Total</td>
-            ${months.map(m => `<td class="px-3 py-2 text-center bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-200">${colTotals[m]}</td>`).join('')}
-            <td class="px-3 py-2 text-center bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white">${grandTotal}</td>
+            ${months.map(m => `<td class="px-3 py-2 text-center bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-200 ${colTotals[m] ? cellClickable : ''}" data-mode="all" data-month="${escapeHtml(m)}">${colTotals[m] || '—'}</td>`).join('')}
+            <td class="px-3 py-2 text-center bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white ${grandTotal ? cellClickable : ''}" data-mode="all" data-month="__all__">${grandTotal || '—'}</td>
         </tr>
     `;
     const fmtRate = v => v === null ? '—' : v.toFixed(1) + '%';
     const renewedTip   = '(Renewed + Lower Offer) / Total expiring';
     const renewableTip = '(Pending Renewal + Current) / Total expiring';
+    const rateHover = 'cursor-pointer hover:brightness-95 dark:hover:brightness-110 transition-all';
     const rateRow1 = `
         <tr class="border-t border-slate-200 dark:border-slate-700">
             <td class="px-3 py-2 text-left sticky left-0 bg-emerald-50 dark:bg-emerald-900/20 z-10 text-emerald-900 dark:text-emerald-200 font-semibold whitespace-nowrap">
                 Renewed of total
                 <span class="tip" data-tip="${escapeHtml(renewedTip)}">?</span>
             </td>
-            ${months.map(m => `<td class="px-3 py-2 text-center bg-emerald-50 dark:bg-emerald-900/20 text-emerald-900 dark:text-emerald-200 font-semibold">${fmtRate(renewedOfTotalByMonth[m])}</td>`).join('')}
-            <td class="px-3 py-2 text-center bg-emerald-50 dark:bg-emerald-900/20 text-emerald-900 dark:text-emerald-200 font-bold">${fmtRate(grandRenewedOfTotal)}</td>
+            ${months.map(m => `<td class="px-3 py-2 text-center bg-emerald-50 dark:bg-emerald-900/20 text-emerald-900 dark:text-emerald-200 font-semibold ${renewedOfTotalByMonth[m] !== null ? rateHover : ''}" data-mode="signed" data-month="${escapeHtml(m)}">${fmtRate(renewedOfTotalByMonth[m])}</td>`).join('')}
+            <td class="px-3 py-2 text-center bg-emerald-50 dark:bg-emerald-900/20 text-emerald-900 dark:text-emerald-200 font-bold ${grandRenewedOfTotal !== null ? rateHover : ''}" data-mode="signed" data-month="__all__">${fmtRate(grandRenewedOfTotal)}</td>
         </tr>
     `;
     const rateRow2 = `
@@ -1542,18 +1547,36 @@ function renderSummaryTable() {
                 % Renewable
                 <span class="tip" data-tip="${escapeHtml(renewableTip)}">?</span>
             </td>
-            ${months.map(m => `<td class="px-3 py-2 text-center bg-blue-50 dark:bg-blue-900/20 text-blue-900 dark:text-blue-200 font-semibold">${fmtRate(renewableByMonth[m])}</td>`).join('')}
-            <td class="px-3 py-2 text-center bg-blue-50 dark:bg-blue-900/20 text-blue-900 dark:text-blue-200 font-bold">${fmtRate(grandRenewable)}</td>
+            ${months.map(m => `<td class="px-3 py-2 text-center bg-blue-50 dark:bg-blue-900/20 text-blue-900 dark:text-blue-200 font-semibold ${renewableByMonth[m] !== null ? rateHover : ''}" data-mode="renewable" data-month="${escapeHtml(m)}">${fmtRate(renewableByMonth[m])}</td>`).join('')}
+            <td class="px-3 py-2 text-center bg-blue-50 dark:bg-blue-900/20 text-blue-900 dark:text-blue-200 font-bold ${grandRenewable !== null ? rateHover : ''}" data-mode="renewable" data-month="__all__">${fmtRate(grandRenewable)}</td>
         </tr>
     `;
     tbody.innerHTML = bodyRows + totalRow + rateRow1 + rateRow2;
 
-    tbody.querySelectorAll('td[data-status][data-month]').forEach(td => {
+    tbody.querySelectorAll('td[data-mode]').forEach(td => {
         td.addEventListener('click', () => {
-            const status = td.dataset.status;
+            const mode = td.dataset.mode;
             const month = td.dataset.month;
-            const subset = rows.filter(r => r.statusKey === status && r.expMonthKey === month);
-            if (subset.length) openModal(`${fmtMonthLabel(month)} — ${status}`, subset);
+            const inMonth = r => month === '__all__' || r.expMonthKey === month;
+            const monthLabel = month === '__all__' ? 'All months' : fmtMonthLabel(month);
+            let subset, title;
+            if (mode === 'status') {
+                const status = td.dataset.status;
+                subset = rows.filter(r => r.statusKey === status && inMonth(r));
+                title  = `${monthLabel} — ${status}`;
+            } else if (mode === 'all') {
+                subset = rows.filter(r => SUMMARY_STATUSES.includes(r.statusKey) && inMonth(r));
+                title  = `${monthLabel} — All statuses`;
+            } else if (mode === 'signed') {
+                subset = rows.filter(r => (r.statusKey === 'Renewed' || r.statusKey === 'Lower Offer') && inMonth(r));
+                title  = `${monthLabel} — Renewed + Lower Offer`;
+            } else if (mode === 'renewable') {
+                subset = rows.filter(r => (r.statusKey === 'Pending Renewal' || r.statusKey === 'Current') && inMonth(r));
+                title  = `${monthLabel} — Pending Renewal + Current`;
+            } else {
+                return;
+            }
+            if (subset.length) openModal(title, subset);
         });
     });
 }
