@@ -1411,10 +1411,17 @@ function renderCharts() {
 
     // 4. Line: avg renewed total by expiring month (trend over time)
     const monthsForAvg = [...new Set(rows.map(r => r.expMonthKey).filter(Boolean))].sort();
-    const avgRenewalByMonth = monthsForAvg.map(m => {
-        const amts = rows.filter(r => r.expMonthKey === m && r.actualRenewal).map(r => r.actualRenewal);
-        return amts.length ? amts.reduce((a,b)=>a+b,0) / amts.length : null;
+    const monthMeans = monthsForAvg.map(m => {
+        const signedInMonth = rows.filter(r => r.expMonthKey === m && r.actualRenewal);
+        if (!signedInMonth.length) return { avg: null, avgDelta: null, avgDeltaPct: null, n: 0 };
+        const avg = signedInMonth.reduce((s, r) => s + r.actualRenewal, 0) / signedInMonth.length;
+        const deltas = signedInMonth.map(r => r.actualDelta).filter(v => v !== null);
+        const avgDelta = deltas.length ? deltas.reduce((a,b)=>a+b,0) / deltas.length : null;
+        const deltaPcts = signedInMonth.map(r => r.actualDeltaPct).filter(v => v !== null);
+        const avgDeltaPct = deltaPcts.length ? deltaPcts.reduce((a,b)=>a+b,0) / deltaPcts.length : null;
+        return { avg, avgDelta, avgDeltaPct, n: signedInMonth.length };
     });
+    const avgRenewalByMonth = monthMeans.map(d => d.avg);
     STATE.charts.avgRenewed = new Chart(document.getElementById('chart-avg-renewed'), {
         type: 'line',
         data: {
@@ -1446,11 +1453,18 @@ function renderCharts() {
                 tooltip: {
                     callbacks: {
                         label: ctx => {
-                            const m = monthsForAvg[ctx.dataIndex];
-                            const n = rows.filter(r => r.expMonthKey === m && r.actualRenewal).length;
-                            const v = ctx.parsed.y;
-                            return v === null ? 'No signed renewals' :
-                                `$${Math.round(v).toLocaleString()} avg across ${n} signed`;
+                            const d = monthMeans[ctx.dataIndex];
+                            if (d.avg === null) return 'No signed renewals';
+                            const lines = [`Avg Renewed: $${Math.round(d.avg).toLocaleString()}`];
+                            if (d.avgDelta !== null) {
+                                const sign = d.avgDelta >= 0 ? '+' : '-';
+                                lines.push(`Avg Δ $: ${sign}$${Math.abs(Math.round(d.avgDelta)).toLocaleString()}`);
+                            }
+                            if (d.avgDeltaPct !== null) {
+                                lines.push(`Avg Δ %: ${(d.avgDeltaPct * 100).toFixed(1)}%`);
+                            }
+                            lines.push(`Across ${d.n} signed`);
+                            return lines;
                         }
                     }
                 },
