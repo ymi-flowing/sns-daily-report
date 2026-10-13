@@ -79,8 +79,7 @@
         }
         #offers-table tfoot td:nth-child(-n+4) { z-index: 3; }
 
-        /* Checkbox in Offers table */
-        .offer-chk { accent-color: #06b6d4; cursor: pointer; width: 16px; height: 16px; }
+        /* .offer-chk styling now shared with .multi-item input[type=checkbox] above */
 
         /* Resident name as a "letter link" inside Offers table */
         .offer-letter-link {
@@ -189,7 +188,51 @@
         .dark .multi-item { color: #cbd5e1; }
         .multi-item:hover { background: #eff6ff; }
         .dark .multi-item:hover { background: #1e293b80; }
-        .multi-item input { accent-color: #06b6d4; margin: 0; }
+        .multi-item input { margin: 0; }
+
+        /* Themed checkboxes -- border only, V-mark on check.
+           Matches theme (slate V in light, dark-blue V in dark). */
+        .multi-item input[type="checkbox"],
+        .offer-chk {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 16px; height: 16px;
+            border: 1.5px solid #94a3b8;
+            border-radius: 4px;
+            background: transparent;
+            cursor: pointer;
+            position: relative;
+            flex-shrink: 0;
+            transition: border-color 0.15s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            vertical-align: middle;
+        }
+        .multi-item input[type="checkbox"]:hover,
+        .offer-chk:hover { border-color: #64748b; }
+        .dark .multi-item input[type="checkbox"],
+        .dark .offer-chk { border-color: #64748b; }
+        .dark .multi-item input[type="checkbox"]:hover,
+        .dark .offer-chk:hover { border-color: #94a3b8; }
+        .multi-item input[type="checkbox"]:checked::after,
+        .offer-chk:checked::after {
+            content: '✓';
+            font-size: 11px; font-weight: 900;
+            line-height: 1;
+            color: #64748b;  /* light gray V */
+        }
+        .dark .multi-item input[type="checkbox"]:checked::after,
+        .dark .offer-chk:checked::after {
+            color: #1e40af;  /* dark blue V */
+        }
+        .offer-chk:indeterminate::after {
+            content: '−';
+            font-size: 14px; font-weight: 900;
+            line-height: 1;
+            color: #64748b;
+        }
+        .dark .offer-chk:indeterminate::after { color: #1e40af; }
         .multi-actions {
             display: flex; justify-content: space-between; padding: 6px 10px 2px;
             font-size: 11px; border-bottom: 1px solid #e2e8f0; margin-bottom: 6px;
