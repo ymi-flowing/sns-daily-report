@@ -31,6 +31,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import sheets_client
 from create_monday_items import fetch_leases, get_property_id
+from sync_renewal_status import find_expiring_and_renewal, lease_has_ended, parse_iso_date
 
 
 PROPERTY_TABS = [
@@ -52,7 +53,7 @@ TAB_TO_PROPERTIES = {
     "TRA-AN3":  ["TRA", "AN3"],
 }
 
-EXTRA_HEADERS = ["NTV Date", "Move Out Date"]
+EXTRA_HEADERS = ["NTV Date", "Move Out Date", "Lease End Date", "Renewal Signed Date"]
 
 RANGE_PER_TAB = "A1:AJ400"
 
@@ -81,7 +82,8 @@ def fetch_tab(tab: str) -> dict:
 def build_resman_lookup(property_abbrs: list) -> dict:
     """
     Fetch leases from each ResMan property and return
-      { leaseId: { noticeToVacateDate, moveOutDate } }
+      { leaseId: full_lease_dict }
+    so callers can derive dates lazily (lease end, renewal signed, etc).
     """
     out = {}
     for abbr in property_abbrs:
@@ -93,35 +95,62 @@ def build_resman_lookup(property_abbrs: list) -> dict:
         print(f"  {abbr}: {len(leases)} leases")
         for L in leases:
             lid = L.get("leaseId")
-            if not lid:
-                continue
-            out[lid] = {
-                "ntv": (L.get("noticeToVacateDate") or "")[:10],
-                "mo":  (L.get("moveOutDate") or "")[:10],
-            }
+            if lid:
+                out[lid] = L
     return out
 
 
+def _parse_exp_month(cell) -> tuple | None:
+    """Column A value -> (year, month) or None. Handles ISO and 'YYYY-MM'."""
+    if not cell:
+        return None
+    s = str(cell).strip()
+    try:
+        return int(s[:4]), int(s[5:7])
+    except (ValueError, IndexError):
+        return None
+
+
+def _renewal_signed_date(lease: dict, exp_cell) -> str:
+    """Signed date of the best-matching renewal entry for the row's expiring month."""
+    if not lease or lease_has_ended(lease):
+        return ""
+    ym = _parse_exp_month(exp_cell)
+    if not ym:
+        return ""
+    _, renewal_entry = find_expiring_and_renewal(lease, ym[0], ym[1])
+    if not renewal_entry:
+        return ""
+    sd = renewal_entry.get("signedDate") or ""
+    return sd[:10]
+
+
 def augment_rows(tab_data: dict, lease_lookup: dict) -> dict:
-    """Append NTV Date + Move Out Date columns to a tab's rows."""
+    """Append NTV Date + Move Out Date + Lease End Date + Renewal Signed Date."""
     headers = tab_data["headers"]
+    blanks = [""] * len(EXTRA_HEADERS)
     if "Lease ID" not in headers:
         print(f"  WARNING: 'Lease ID' header missing; skipping ResMan merge")
         return {
             "headers": headers + EXTRA_HEADERS,
-            "rows": [r + ["", ""] for r in tab_data["rows"]],
+            "rows": [r + blanks for r in tab_data["rows"]],
         }
     lid_idx = headers.index("Lease ID")
+    exp_idx = headers.index("Expiring Month") if "Expiring Month" in headers else 0
     new_rows = []
     hits = 0
     for r in tab_data["rows"]:
         lid = str(r[lid_idx]).strip() if lid_idx < len(r) else ""
-        if lid and lid in lease_lookup:
-            info = lease_lookup[lid]
-            new_rows.append(r + [info["ntv"], info["mo"]])
+        lease = lease_lookup.get(lid) if lid else None
+        if lease:
+            ntv = (lease.get("noticeToVacateDate") or "")[:10]
+            mo = (lease.get("moveOutDate") or "")[:10]
+            lease_end = (lease.get("leaseEndDate") or "")[:10]
+            signed = _renewal_signed_date(lease, r[exp_idx] if exp_idx < len(r) else "")
+            new_rows.append(r + [ntv, mo, lease_end, signed])
             hits += 1
         else:
-            new_rows.append(r + ["", ""])
+            new_rows.append(r + blanks)
     print(f"  augmented {hits}/{len(new_rows)} rows with ResMan dates")
     return {
         "headers": headers + EXTRA_HEADERS,

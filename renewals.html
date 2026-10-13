@@ -550,10 +550,12 @@ const TABLE_COLUMNS = [
     { key: 'deltaApct',      label: 'Δ Offer %',      align: 'center', fmt: fmtPct },
     { key: 'actualRenewal',  label: 'Actual Renewal', align: 'center', fmt: v => v ? fmtMoney(v) : '—' },
     { key: 'actualDelta',    label: 'Δ Actual',       align: 'center', fmt: v => v ? fmtMoney(v) : '—' },
-    { key: 'actualDeltaPct', label: 'Δ Actual %',     align: 'center', fmt: v => v ? fmtPct(v) : '—' },
-    { key: 'monthsInProperty', label: 'Months',       align: 'center', fmt: v => v ?? '' },
-    { key: 'NTV Date',       label: 'NTV Date',       align: 'center', fmt: (v, row) => ntvDateHtml(v, row) },
-    { key: 'Move Out Date',  label: 'Move Out Date',  align: 'center', fmt: (v, row) => moDateHtml(v, row) },
+    { key: 'actualDeltaPct', label: 'Δ Actual %',          align: 'center', fmt: v => v ? fmtPct(v) : '—' },
+    { key: 'Renewal Signed Date', label: 'Renewal Signed', align: 'center', fmt: v => v ? fmtDateShort(parseAnyDate(v)) : '—' },
+    { key: 'monthsInProperty', label: 'Months',             align: 'center', fmt: v => v ?? '' },
+    { key: 'NTV Date',       label: 'NTV Date',             align: 'center', fmt: (v, row) => ntvDateHtml(v, row) },
+    { key: 'Move Out Date',  label: 'Move Out Date',        align: 'center', fmt: (v, row) => moDateHtml(v, row) },
+    { key: 'Lease End Date', label: 'Lease End',            align: 'center', fmt: v => v ? fmtDateShort(parseAnyDate(v)) : '—' },
 ];
 
 // =============================================================================
