@@ -328,14 +328,14 @@
             <!-- Last Updated Chip (matches Daily KPIs refresh-timestamp) -->
             <div>
                 <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">&nbsp;</label>
-                <div class="h-11 py-2.5 px-4 bg-slate-100 dark:bg-slate-700 rounded-xl border-2 border-slate-200 dark:border-slate-600 flex items-center" data-hover-tip="Last successful ResMan -> Sheet sync (not the time you opened this page)">
+                <div class="h-11 py-2.5 px-4 bg-slate-100 dark:bg-slate-700 rounded-xl border-2 border-slate-200 dark:border-slate-600 flex items-center" data-hover-tip="Last ResMan sync time">
                     <span id="last-updated" class="font-semibold text-slate-700 dark:text-slate-200 text-sm">Loading...</span>
                 </div>
             </div>
             <!-- Refresh Button (icon-only, matches Daily KPIs refresh-btn) -->
             <div>
                 <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">&nbsp;</label>
-                <button id="refresh-btn" onclick="refreshData()" class="h-11 w-11 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 transition-all outline-none focus:ring-2 focus:ring-blue-400 border-2 border-slate-200 dark:border-slate-600 flex items-center justify-center" data-hover-tip="Pull fresh data: ResMan -> Sheet -> Dashboard (~5-10 min)">
+                <button id="refresh-btn" onclick="refreshData()" class="h-11 w-11 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 transition-all outline-none focus:ring-2 focus:ring-blue-400 border-2 border-slate-200 dark:border-slate-600 flex items-center justify-center" data-hover-tip="Pull from ResMan (~5-10 min)">
                     <svg id="refresh-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                     <svg id="refresh-spinner" class="w-5 h-5 hidden animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                 </button>
@@ -343,7 +343,7 @@
             <!-- Theme Toggle (matches Daily KPIs) -->
             <div>
                 <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">&nbsp;</label>
-                <button id="theme-toggle" data-hover-tip="Toggle light / dark" class="h-11 w-11 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 transition-all outline-none focus:ring-2 focus:ring-blue-400 border-2 border-slate-200 dark:border-slate-600 flex items-center justify-center">
+                <button id="theme-toggle" data-hover-tip="Toggle theme" class="h-11 w-11 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 transition-all outline-none focus:ring-2 focus:ring-blue-400 border-2 border-slate-200 dark:border-slate-600 flex items-center justify-center">
                     <svg id="theme-dark-icon" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
                     <svg id="theme-light-icon" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
                 </button>
@@ -421,7 +421,7 @@
     <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
         <h3 class="text-sm font-semibold text-slate-800 dark:text-white mb-3">
             Status × Expiring Month
-            <span class="tip" data-tip="Count of leases per status per expiring month. Click any cell to drill into those residents.">?</span>
+            <span class="tip" data-tip="Count of leases per status × expiring month">?</span>
         </h3>
         <div class="overflow-x-auto fancy-scroll">
             <table id="summary-table" class="min-w-full text-xs"><thead></thead><tbody></tbody></table>
@@ -433,7 +433,7 @@
         <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
             <h3 class="text-sm font-semibold text-slate-800 dark:text-white mb-3">
                 Status breakdown by expiring month
-                <span class="tip" data-tip="Count of leases per status, stacked for each expiring month. Click any segment to drill in.">?</span>
+                <span class="tip" data-tip="Count per status, stacked per expiring month">?</span>
             </h3>
             <div class="relative h-72"><canvas id="chart-month-status"></canvas></div>
         </div>
@@ -441,14 +441,14 @@
             <h3 class="text-sm font-semibold text-slate-800 dark:text-white mb-3">
                 Renewal rate by expiring month
                 <span class="text-xs text-slate-500">(% of total expiring)</span>
-                <span class="tip" data-tip="Bar height = Renewal Rate: signed renewals (Renewed + Lower Offer) as a share of total expiring that month. Green = Renewed, amber = Lower Offer.">?</span>
+                <span class="tip" data-tip="Bar height = (Renewed + Lower Offer) / Total expiring">?</span>
             </h3>
             <div class="relative h-72"><canvas id="chart-month"></canvas></div>
         </div>
         <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
             <h3 class="text-sm font-semibold text-slate-800 dark:text-white mb-3">
                 Offered Delta % distribution
-                <span class="tip" data-tip="How our offers break down by % increase from current rate. Amber = at/below current, green = +0 to 5%, blue = +5% or more.">?</span>
+                <span class="tip" data-tip="Count of offers per Δ % bin">?</span>
             </h3>
             <div class="relative h-72"><canvas id="chart-delta"></canvas></div>
         </div>
@@ -456,7 +456,7 @@
             <h3 class="text-sm font-semibold text-slate-800 dark:text-white mb-3">
                 Avg renewed total by expiring month
                 <span class="text-xs text-slate-500">(trend)</span>
-                <span class="tip" data-tip="Average actual renewal amount ($ rent + fees) per signed renewal in that month. Trend tells you whether renewal dollars are moving up or down over time.">?</span>
+                <span class="tip" data-tip="Mean of Actual Renewal per expiring month">?</span>
             </h3>
             <div class="relative h-72"><canvas id="chart-avg-renewed"></canvas></div>
         </div>
@@ -468,7 +468,7 @@
             <div>
                 <h2 class="text-lg font-bold text-slate-800 dark:text-white">Expiring leases <span id="row-count" class="text-sm font-normal text-slate-500 dark:text-slate-400 ml-2"></span></h2>
             </div>
-            <button id="csv-export" data-hover-tip="Download the current filtered table as CSV" class="h-9 px-3 rounded-lg bg-slate-100 dark:bg-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 flex items-center gap-2">
+            <button id="csv-export" data-hover-tip="Export filtered table as CSV" class="h-9 px-3 rounded-lg bg-slate-100 dark:bg-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 flex items-center gap-2">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                 Export CSV
             </button>
@@ -1070,21 +1070,21 @@ function renderKPIs() {
     const k = computeKPIs(rows);
     const cards = [
         { label: 'Total Expiring',       value: k.total,                            sub: '',                                       accent: 'blue',  filter: null,
-          tip: 'All leases expiring in the filtered months.' },
+          tip: 'Count of expiring leases in the current filter.' },
         { label: 'Renewal Rate',         value: fmtPct(k.renewalRate),              sub: `${k.signed} of ${k.decided} decided`,    accent: 'green', filter: {status: ['Renewed','Lower Offer']},
-          tip: 'Signed renewals (Renewed + Lower Offer) as % of decided leases. Excludes Pending/Current.' },
+          tip: '(Renewed + Lower Offer) / (Renewed + Lower Offer + MTM + NTV + Moved Out + Evictions)' },
         { label: 'Lower Offer %',        value: fmtPct(k.lowerPctOfSigned),         sub: `${k.lowerOffer} of ${k.signed} signed`,  accent: 'amber', filter: {status: ['Lower Offer']},
-          tip: 'Share of signed renewals that came in below our offer.' },
+          tip: 'Lower Offer / (Renewed + Lower Offer)' },
         { label: 'Avg Renewed Total',    value: fmtMoney(k.avgRenewedTotal),        sub: 'per signed renewal',                     accent: 'green', filter: {status: ['Renewed','Lower Offer']},
-          tip: 'Average actual renewal amount (rent + fees) per signed renewal.' },
+          tip: 'Sum of Actual Renewal / count of signed renewals' },
         { label: 'Pending Decision',     value: k.pending,                          sub: `${k.pendingRenewal} pending signature`,  accent: 'slate', filter: {status: ['Current','Pending Renewal']},
-          tip: 'Residents who have not yet renewed, given notice, or moved out. Includes Current (no offer yet) + Pending Renewal (offer out, awaiting signature).' },
+          tip: 'Current + Pending Renewal' },
         { label: 'Avg Offered Δ',        value: fmtPct(k.avgOfferDelta),            sub: 'portfolio avg',                          accent: 'blue',  filter: null,
-          tip: 'Average % change between our offer and the current rate across all expiring leases.' },
+          tip: 'Mean of Offered Δ % across all expiring leases' },
         { label: 'Avg Actual Δ',         value: fmtPct(k.avgActualDelta),           sub: 'renewed only',                           accent: 'green', filter: {status: ['Renewed','Lower Offer']},
-          tip: 'Average % change between the actual signed renewal and the current rate (signed renewals only).' },
+          tip: 'Mean of Actual Δ % across signed renewals' },
         { label: 'Avg Expiring / Month', value: k.avgPerMonth.toFixed(1),           sub: `across ${k.monthCount} months`,          accent: 'blue',  filter: null,
-          tip: 'Total expiring leases divided by the number of unique expiring months in the current filter.' },
+          tip: 'Total expiring / number of expiring months' },
     ];
     const grid = document.getElementById('kpi-grid');
     grid.innerHTML = cards.map((c, i) => `
@@ -1389,24 +1389,19 @@ function renderSummaryTable() {
     }
     const grandTotal = SUMMARY_STATUSES.reduce((s, status) => s + matrix[status].total, 0);
 
-    // Rate rows: Actual Renewal % (of decided) and Renewal % of total
-    const LOST_STATUSES = ['MTM','NTV','Under Eviction','Moved Out','Evicted'];
-    function rateOfDecided(signed, lost) {
-        const decided = signed + lost;
-        return decided > 0 ? (100 * signed / decided) : null;
-    }
-    const rateOfDecidedByMonth = {};
-    const rateOfTotalByMonth = {};
+    // Rate rows: Renewed of total + Max achievable (if all pending sign)
+    const renewedOfTotalByMonth = {};
+    const maxAchievableByMonth = {};
     for (const m of months) {
         const signed = matrix['Renewed'][m] + matrix['Lower Offer'][m];
-        const lost = LOST_STATUSES.reduce((s, status) => s + matrix[status][m], 0);
-        rateOfDecidedByMonth[m] = rateOfDecided(signed, lost);
-        rateOfTotalByMonth[m] = colTotals[m] > 0 ? (100 * signed / colTotals[m]) : null;
+        const upside = matrix['Current'][m] + matrix['Pending Renewal'][m];
+        renewedOfTotalByMonth[m] = colTotals[m] > 0 ? (100 * signed / colTotals[m]) : null;
+        maxAchievableByMonth[m]  = colTotals[m] > 0 ? (100 * (signed + upside) / colTotals[m]) : null;
     }
     const totalSigned = matrix['Renewed'].total + matrix['Lower Offer'].total;
-    const totalLost = LOST_STATUSES.reduce((s, status) => s + matrix[status].total, 0);
-    const grandRateOfDecided = rateOfDecided(totalSigned, totalLost);
-    const grandRateOfTotal = grandTotal > 0 ? (100 * totalSigned / grandTotal) : null;
+    const totalUpside = matrix['Current'].total + matrix['Pending Renewal'].total;
+    const grandRenewedOfTotal = grandTotal > 0 ? (100 * totalSigned / grandTotal) : null;
+    const grandMaxAchievable  = grandTotal > 0 ? (100 * (totalSigned + totalUpside) / grandTotal) : null;
 
     const thead = document.querySelector('#summary-table thead');
     const tbody = document.querySelector('#summary-table tbody');
@@ -1439,26 +1434,26 @@ function renderSummaryTable() {
         </tr>
     `;
     const fmtRate = v => v === null ? '—' : v.toFixed(1) + '%';
-    const rateRow1Tip = 'Signed renewals (Renewed + Lower Offer) divided by DECIDED leases (signed + NTV + Moved Out + Evictions). Excludes Current + Pending Renewal because they have not landed yet. Measures how well the decisions we have went.';
-    const rateRow2Tip = 'Signed renewals divided by TOTAL expiring that month. Still-pending Current + Pending Renewal are counted in the denominator, so this rate always sits lower until the month closes out.';
+    const renewedTip = '(Renewed + Lower Offer) / Total expiring';
+    const maxTip     = '(Renewed + Lower Offer + Pending Renewal + Current) / Total expiring';
     const rateRow1 = `
         <tr class="border-t border-slate-200 dark:border-slate-700">
             <td class="px-3 py-2 text-left sticky left-0 bg-emerald-50 dark:bg-emerald-900/20 z-10 text-emerald-900 dark:text-emerald-200 font-semibold whitespace-nowrap">
-                Actual Renewal %
-                <span class="tip" data-tip="${escapeHtml(rateRow1Tip)}">?</span>
+                Renewed of total
+                <span class="tip" data-tip="${escapeHtml(renewedTip)}">?</span>
             </td>
-            ${months.map(m => `<td class="px-3 py-2 text-center bg-emerald-50 dark:bg-emerald-900/20 text-emerald-900 dark:text-emerald-200 font-semibold">${fmtRate(rateOfDecidedByMonth[m])}</td>`).join('')}
-            <td class="px-3 py-2 text-center bg-emerald-50 dark:bg-emerald-900/20 text-emerald-900 dark:text-emerald-200 font-bold">${fmtRate(grandRateOfDecided)}</td>
+            ${months.map(m => `<td class="px-3 py-2 text-center bg-emerald-50 dark:bg-emerald-900/20 text-emerald-900 dark:text-emerald-200 font-semibold">${fmtRate(renewedOfTotalByMonth[m])}</td>`).join('')}
+            <td class="px-3 py-2 text-center bg-emerald-50 dark:bg-emerald-900/20 text-emerald-900 dark:text-emerald-200 font-bold">${fmtRate(grandRenewedOfTotal)}</td>
         </tr>
     `;
     const rateRow2 = `
         <tr>
             <td class="px-3 py-2 text-left sticky left-0 bg-blue-50 dark:bg-blue-900/20 z-10 text-blue-900 dark:text-blue-200 font-semibold whitespace-nowrap">
-                Renewal % of total
-                <span class="tip" data-tip="${escapeHtml(rateRow2Tip)}">?</span>
+                Max achievable
+                <span class="tip" data-tip="${escapeHtml(maxTip)}">?</span>
             </td>
-            ${months.map(m => `<td class="px-3 py-2 text-center bg-blue-50 dark:bg-blue-900/20 text-blue-900 dark:text-blue-200 font-semibold">${fmtRate(rateOfTotalByMonth[m])}</td>`).join('')}
-            <td class="px-3 py-2 text-center bg-blue-50 dark:bg-blue-900/20 text-blue-900 dark:text-blue-200 font-bold">${fmtRate(grandRateOfTotal)}</td>
+            ${months.map(m => `<td class="px-3 py-2 text-center bg-blue-50 dark:bg-blue-900/20 text-blue-900 dark:text-blue-200 font-semibold">${fmtRate(maxAchievableByMonth[m])}</td>`).join('')}
+            <td class="px-3 py-2 text-center bg-blue-50 dark:bg-blue-900/20 text-blue-900 dark:text-blue-200 font-bold">${fmtRate(grandMaxAchievable)}</td>
         </tr>
     `;
     tbody.innerHTML = bodyRows + totalRow + rateRow1 + rateRow2;
