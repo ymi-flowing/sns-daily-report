@@ -1646,8 +1646,8 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data):
     </script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        /* Tone pure white down to a calmer off-white (eyestrain fix) */
-        .bg-white {{ background-color: #fafbfc !important; }}
+        /* Tone pure white down to off-white in LIGHT MODE ONLY. */
+        html:not(.dark) .bg-white {{ background-color: #fafbfc !important; }}
 
         /* Custom Select Dropdown */
         select {{
@@ -1955,7 +1955,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data):
         }}
     </style>
 </head>
-<body class="bg-slate-50 dark:bg-slate-900 p-6 font-sans text-slate-800 dark:text-slate-100 transition-colors duration-200">
+<body class="bg-slate-100 dark:bg-slate-900 p-6 font-sans text-slate-800 dark:text-slate-100 transition-colors duration-200">
     <!-- Loading Overlay -->
     <div id="refresh-overlay" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 hidden items-center justify-center">
         <div class="bg-white dark:bg-slate-800 rounded-2xl p-8 shadow-2xl max-w-sm mx-4 text-center">
