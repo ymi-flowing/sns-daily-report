@@ -61,9 +61,10 @@
             transition: border-color 0.15s;
         }
         .dark .multi-trigger { background: #1e293b; border-color: #334155; color: #cbd5e1; }
-        .multi-trigger:hover { border-color: #3b82f6; }
-        .multi-trigger.active { border-color: #1e40af; background: #eff6ff; }
-        .dark .multi-trigger.active { background: #1e3a8a33; border-color: #60a5fa; }
+        .multi-trigger:hover { border-color: #94a3b8; }
+        .dark .multi-trigger:hover { border-color: #64748b; }
+        .multi-trigger.active { border-color: #64748b; background: #f1f5f9; }
+        .dark .multi-trigger.active { background: #334155; border-color: #94a3b8; }
         .multi-trigger .count-badge {
             background: #1e40af; color: white; font-size: 10px; font-weight: 700;
             border-radius: 10px; padding: 2px 7px; margin-left: 2px;
@@ -422,9 +423,9 @@
         </div>
         <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
             <h3 class="text-sm font-semibold text-slate-800 dark:text-white mb-3">
-                Signed renewals: Renewed vs Lower Offer by month
-                <span class="text-xs text-slate-500">(% of signed)</span>
-                <span class="tip" data-tip="For each month, each bar is 100% of SIGNED renewals (Renewed + Lower Offer). Shows what share came in at or above offer vs below.">?</span>
+                Renewal rate by expiring month
+                <span class="text-xs text-slate-500">(% of total expiring)</span>
+                <span class="tip" data-tip="Bar height = Renewal Rate: signed renewals (Renewed + Lower Offer) as a share of total expiring that month. Green = Renewed, amber = Lower Offer.">?</span>
             </h3>
             <div class="relative h-72"><canvas id="chart-month"></canvas></div>
         </div>
@@ -1122,23 +1123,31 @@ function renderCharts() {
         },
     });
 
-    // 2. 100% stacked bar: Renewed vs Lower Offer as share of signed, by month
+    // 2. Stacked bar: Renewal Rate per month = (Renewed + Lower Offer) / Total expiring,
+    //    split into Renewed vs Lower Offer segments. Bar height = renewal rate %.
     const monthsPresent = [...new Set(rows.map(r => r.expMonthKey).filter(Boolean))].sort();
-    const signedByMonth = monthsPresent.map(m => {
+    const monthStats = monthsPresent.map(m => {
         const r = rows.filter(x => x.expMonthKey === m);
         const renewed = r.filter(x => x.statusKey === 'Renewed').length;
         const lower = r.filter(x => x.statusKey === 'Lower Offer').length;
-        return { renewed, lower, total: renewed + lower };
+        const total = r.length;
+        const signed = renewed + lower;
+        return {
+            renewed, lower, total, signed,
+            renewedPct: total ? 100 * renewed / total : 0,
+            lowerPct:   total ? 100 * lower   / total : 0,
+            ratePct:    total ? 100 * signed  / total : 0,
+        };
     });
     STATE.charts.month = new Chart(document.getElementById('chart-month'), {
         type: 'bar',
         data: {
             labels: monthsPresent.map(fmtMonthLabel),
             datasets: [
-                { label: 'Renewed',     data: signedByMonth.map(d => d.total ? 100 * d.renewed / d.total : 0),
-                  backgroundColor: '#10b981', borderWidth: 0, stack: 'signed' },
-                { label: 'Lower Offer', data: signedByMonth.map(d => d.total ? 100 * d.lower / d.total : 0),
-                  backgroundColor: '#f59e0b', borderWidth: 0, stack: 'signed' },
+                { label: 'Renewed',     data: monthStats.map(d => d.renewedPct),
+                  backgroundColor: '#10b981', borderWidth: 0, stack: 'rate' },
+                { label: 'Lower Offer', data: monthStats.map(d => d.lowerPct),
+                  backgroundColor: '#f59e0b', borderWidth: 0, stack: 'rate' },
             ]
         },
         options: {
@@ -1155,14 +1164,18 @@ function renderCharts() {
                     callbacks: {
                         title: ctx => ctx[0].label,
                         label: ctx => {
-                            const d = signedByMonth[ctx.dataIndex];
-                            if (!d.total) return `${ctx.dataset.label}: no signed`;
-                            if (ctx.datasetIndex === 0) return `Renewed: ${d.renewed} (${(100*d.renewed/d.total).toFixed(1)}%)`;
-                            return `Lower Offer: ${d.lower} (${(100*d.lower/d.total).toFixed(1)}%)`;
+                            const d = monthStats[ctx.dataIndex];
+                            if (!d.total) return `${ctx.dataset.label}: no data`;
+                            if (ctx.datasetIndex === 0) return `Renewed: ${d.renewed} (${d.renewedPct.toFixed(1)}%)`;
+                            return `Lower Offer: ${d.lower} (${d.lowerPct.toFixed(1)}%)`;
                         },
                         footer: ctx => {
-                            const d = signedByMonth[ctx[0].dataIndex];
-                            return `Total signed: ${d.total}`;
+                            const d = monthStats[ctx[0].dataIndex];
+                            return [
+                                `Signed renewals: ${d.signed}`,
+                                `Total expiring: ${d.total}`,
+                                `Renewal rate: ${d.ratePct.toFixed(1)}%`,
+                            ];
                         },
                     }
                 },
