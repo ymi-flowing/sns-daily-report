@@ -2096,13 +2096,13 @@ function renderOffersBody() {
     });
 }
 
-// Totals + Avg footer. For every money column, sum across the sorted rows.
-// Rent Δ / Total Δ get an average instead of a sum (shown as $signed).
+// Totals footer. For every money column, sum across the sorted rows.
+// Rent Δ / Total Δ sums represent the aggregate monthly $ swing if
+// everyone renewed at the offer.
 function renderOffersFooter(rows) {
     const sumKeys = new Set(['Base Rent','currentTotal','Rent A','Utility','Valet','Pest','Amenity','Internet','__totalUtil','Pet','Parking','WD','Storage','Total Other','totalOfferA']);
-    const avgKeys = new Set(['__rentDelta','deltaA']);
+    const signedSumKeys = new Set(['__rentDelta','deltaA']);
     const sum = (key) => rows.reduce((acc, r) => acc + (numOrNull(r[key]) || 0), 0);
-    const nonNull = (key) => rows.map(r => numOrNull(r[key])).filter(v => v !== null);
     const totalCell = (c) => {
         if (c.isCheckbox) return '';
         if (c.key === 'property') return 'Totals';
@@ -2110,12 +2110,7 @@ function renderOffersFooter(rows) {
         if (c.key === 'Lease End Date') return '';
         if (c.key === 'Resident Name') return '';
         if (sumKeys.has(c.key)) return fmtMoney(sum(c.key));
-        if (avgKeys.has(c.key)) {
-            const vals = nonNull(c.key);
-            if (!vals.length) return '—';
-            const avg = vals.reduce((a,b)=>a+b,0) / vals.length;
-            return 'avg ' + signedMoney(avg);
-        }
+        if (signedSumKeys.has(c.key)) return signedMoney(sum(c.key));
         return '';
     };
     return `<tr>${OFFER_COLUMNS.map(c =>
