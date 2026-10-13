@@ -1680,6 +1680,36 @@ function renderSummaryTable() {
     const grandRenewedOfTotal = grandTotal > 0 ? (100 * totalSigned / grandTotal) : null;
     const grandRenewable      = grandTotal > 0 ? (100 * totalUpside / grandTotal) : null;
 
+    // Avg Δ row: mean of actualDelta + actualDeltaPct across signed renewals per month
+    const avgDeltaByMonth = {};
+    for (const m of months) {
+        const signedInMonth = rows.filter(r => r.expMonthKey === m && (r.statusKey === 'Renewed' || r.statusKey === 'Lower Offer'));
+        const dds = signedInMonth.map(r => r.actualDelta).filter(v => v !== null);
+        const pds = signedInMonth.map(r => r.actualDeltaPct).filter(v => v !== null);
+        avgDeltaByMonth[m] = {
+            d: dds.length ? dds.reduce((a,b)=>a+b,0) / dds.length : null,
+            p: pds.length ? pds.reduce((a,b)=>a+b,0) / pds.length : null,
+        };
+    }
+    const grandSignedRows = rows.filter(r => r.statusKey === 'Renewed' || r.statusKey === 'Lower Offer');
+    const gdds = grandSignedRows.map(r => r.actualDelta).filter(v => v !== null);
+    const gpds = grandSignedRows.map(r => r.actualDeltaPct).filter(v => v !== null);
+    const grandAvgDelta = {
+        d: gdds.length ? gdds.reduce((a,b)=>a+b,0) / gdds.length : null,
+        p: pds => (pds.length ? pds.reduce((a,b)=>a+b,0) / pds.length : null),
+    };
+    const grandAvgDeltaCombined = {
+        d: gdds.length ? gdds.reduce((a,b)=>a+b,0) / gdds.length : null,
+        p: gpds.length ? gpds.reduce((a,b)=>a+b,0) / gpds.length : null,
+    };
+    const fmtAvgDelta = o => {
+        if (!o || o.d === null) return '—';
+        const sign = o.d >= 0 ? '+' : '-';
+        const d = sign + '$' + Math.abs(Math.round(o.d)).toLocaleString();
+        const p = (o.p !== null) ? ` (${(o.p * 100).toFixed(1)}%)` : '';
+        return d + p;
+    };
+
     const thead = document.querySelector('#summary-table thead');
     const tbody = document.querySelector('#summary-table tbody');
     thead.innerHTML = `
@@ -1738,7 +1768,18 @@ function renderSummaryTable() {
             <td class="px-3 py-2 text-center bg-blue-50 dark:bg-blue-900/20 text-blue-900 dark:text-blue-200 font-bold ${grandRenewable !== null ? rateHover : ''}" data-mode="renewable" data-month="__all__">${fmtRate(grandRenewable)}</td>
         </tr>
     `;
-    tbody.innerHTML = bodyRows + totalRow + rateRow1 + rateRow2;
+    const avgDeltaTip = 'Mean of Actual Δ $ and % across signed renewals (Renewed + Lower Offer)';
+    const rateRow3 = `
+        <tr>
+            <td class="px-3 py-2 text-left sticky left-0 bg-amber-50 dark:bg-amber-900/20 z-10 text-amber-900 dark:text-amber-200 font-semibold whitespace-nowrap">
+                Avg Δ (signed)
+                <span class="tip" data-tip="${escapeHtml(avgDeltaTip)}">?</span>
+            </td>
+            ${months.map(m => `<td class="px-3 py-2 text-center bg-amber-50 dark:bg-amber-900/20 text-amber-900 dark:text-amber-200 font-semibold ${avgDeltaByMonth[m] && avgDeltaByMonth[m].d !== null ? rateHover : ''}" data-mode="signed" data-month="${escapeHtml(m)}">${fmtAvgDelta(avgDeltaByMonth[m])}</td>`).join('')}
+            <td class="px-3 py-2 text-center bg-amber-50 dark:bg-amber-900/20 text-amber-900 dark:text-amber-200 font-bold ${grandAvgDeltaCombined.d !== null ? rateHover : ''}" data-mode="signed" data-month="__all__">${fmtAvgDelta(grandAvgDeltaCombined)}</td>
+        </tr>
+    `;
+    tbody.innerHTML = bodyRows + totalRow + rateRow1 + rateRow2 + rateRow3;
 
     tbody.querySelectorAll('td[data-mode]').forEach(td => {
         td.addEventListener('click', () => {
