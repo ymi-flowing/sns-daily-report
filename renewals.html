@@ -91,16 +91,32 @@
         .dark .offer-letter-link { color: #38bdf8; text-decoration-color: rgba(56,189,248,0.4); }
         .dark .offer-letter-link:hover { color: #7dd3fc; text-decoration-color: #7dd3fc; }
 
-        /* Editable Adjustment cell inside Offers table */
-        .offer-adj-cell {
+        /* Adjustment cell (edit mode only) */
+        #offers-table tbody td.offer-adj-td.edit-mode {
+            background: rgba(6, 182, 212, 0.06);
             cursor: pointer;
+        }
+        .dark #offers-table tbody td.offer-adj-td.edit-mode {
+            background: rgba(34, 211, 238, 0.08);
+        }
+        .offer-adj-cell {
             display: inline-flex;
             align-items: center;
             gap: 4px;
             padding: 1px 6px;
             border-radius: 4px;
             border: 1px dashed transparent;
-            transition: background-color 0.15s, border-color 0.15s;
+            outline: none;
+        }
+        .offer-adj-cell:focus {
+            border-color: #06b6d4;
+            background: rgba(6, 182, 212, 0.12);
+            box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.25);
+        }
+        .dark .offer-adj-cell:focus {
+            border-color: #22d3ee;
+            background: rgba(34, 211, 238, 0.15);
+            box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.3);
         }
         .offer-adj-cell:hover {
             border-color: #06b6d4;
@@ -110,10 +126,10 @@
             border-color: #22d3ee;
             background: rgba(34, 211, 238, 0.12);
         }
-        .offer-adj-cell .offer-edit-icon {
-            width: 10px; height: 10px; opacity: 0.35;
-        }
-        .offer-adj-cell:hover .offer-edit-icon { opacity: 1; }
+        .offer-adj-cell .offer-edit-icon { width: 10px; height: 10px; opacity: 0.35; }
+        .offer-adj-cell:hover .offer-edit-icon,
+        .offer-adj-cell:focus .offer-edit-icon { opacity: 1; }
+
         .offer-adj-input {
             width: 76px;
             padding: 3px 6px;
@@ -128,12 +144,61 @@
         .dark .offer-adj-input {
             background: #0f172a; color: #e2e8f0; border-color: #22d3ee;
         }
+        /* Kill native number-input spinner arrows (if we ever use type=number) */
+        .offer-adj-input::-webkit-outer-spin-button,
+        .offer-adj-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .offer-adj-input[type="number"] { -moz-appearance: textfield; }
+
         .offer-adj-pending {
             color: #64748b;
             font-size: 11px;
             font-style: italic;
         }
         .dark .offer-adj-pending { color: #94a3b8; }
+
+        /* Edit / Save toggle button active state */
+        #offers-edit-toggle.edit-active {
+            background-color: #10b981;
+            color: #ffffff;
+            border-color: #047857;
+        }
+        #offers-edit-toggle.edit-active:hover {
+            background-color: #059669;
+        }
+        #offers-edit-toggle.edit-active svg { color: #ffffff; }
+
+        /* In-app password modal */
+        .pwd-modal-box {
+            background: #ffffff;
+            border-radius: 14px;
+            width: 100%;
+            max-width: 400px;
+            padding: 22px 24px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+        }
+        .dark .pwd-modal-box {
+            background: #1e293b;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+        }
+        .pwd-modal-box input[type="password"] {
+            width: 100%;
+            padding: 9px 12px;
+            font-size: 13px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            background: #ffffff;
+            color: #0f172a;
+            outline: none;
+            transition: border-color 0.15s;
+        }
+        .pwd-modal-box input[type="password"]:focus { border-color: #06b6d4; }
+        .dark .pwd-modal-box input[type="password"] {
+            background: #0f172a; color: #e2e8f0; border-color: #334155;
+        }
+        .dark .pwd-modal-box input[type="password"]:focus { border-color: #22d3ee; }
 
         /* Narrower multi-select triggers on small screens */
         @media (max-width: 640px) {
@@ -702,6 +767,10 @@
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
                     <span id="offers-print-label">Print Letters</span>
                 </button>
+                <button id="offers-edit-toggle" onclick="toggleOffersEditMode()" data-hover-tip="Edit Adjustment values inline (password required)" class="h-8 px-3 rounded-lg bg-slate-100 dark:bg-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 flex items-center gap-1.5">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                    <span id="offers-edit-label">Edit</span>
+                </button>
                 <button id="offers-csv" data-hover-tip="Export the Offers subset as CSV" class="h-8 px-3 rounded-lg bg-slate-100 dark:bg-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600">Export CSV</button>
                 <button onclick="closeOffersModal()" class="h-8 w-8 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 flex items-center justify-center">&times;</button>
             </div>
@@ -732,6 +801,24 @@
                 <tbody></tbody>
             </table>
         </div>
+    </div>
+</div>
+
+<!-- IN-APP PASSWORD MODAL -->
+<div id="pwd-modal" class="modal-backdrop hidden">
+    <div class="pwd-modal-box border border-slate-200 dark:border-slate-700">
+        <h4 id="pwd-title" class="text-base font-bold text-slate-800 dark:text-white mb-1">Password required</h4>
+        <p id="pwd-subtitle" class="text-xs text-slate-500 dark:text-slate-400 mb-4">Enter the password to continue.</p>
+        <form id="pwd-form" autocomplete="on">
+            <!-- Hidden username so Chrome offers to save the password -->
+            <input type="text" name="username" id="pwd-username" autocomplete="username" value="renewals" readonly tabindex="-1" style="position:absolute;opacity:0;height:0;width:0;pointer-events:none;" />
+            <input id="pwd-input" type="password" name="password" autocomplete="current-password" placeholder="Enter password" />
+            <p id="pwd-error" class="text-xs text-red-500 mt-2" style="display:none;">Incorrect password.</p>
+            <div class="flex items-center justify-end gap-2 mt-4">
+                <button type="button" id="pwd-cancel" class="h-9 px-4 rounded-lg bg-slate-100 dark:bg-slate-700 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600">Cancel</button>
+                <button type="submit" id="pwd-submit" class="h-9 px-4 rounded-lg bg-cyan-600 hover:bg-cyan-700 text-sm font-semibold text-white border border-cyan-700">Unlock</button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -2070,7 +2157,8 @@ const OFFER_COLUMNS = [
     { key: 'Adjustment',     label: 'Adjustment',      align: 'center', isAdjustment: true,
       fmt: (v, row) => {
           const txt = (v === null || v === undefined || v === '') ? '—' : signedMoney(v);
-          return `<span class="offer-adj-cell" data-offer-row="${row.__offerIdx}" title="Click to edit">`
+          if (!OFFERS_EDIT_MODE) return txt;
+          return `<span class="offer-adj-cell" data-offer-row="${row.__offerIdx}" tabindex="0" title="Enter to edit">`
                + `<span>${txt}</span>`
                + `<svg class="offer-edit-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>`
                + `</span>`;
@@ -2101,17 +2189,67 @@ let OFFERS_SELECTED = new Set();  // __offerIdx values that are currently checke
 
 const OFFERS_PASSWORD = 'SnsRenewals123457$';
 const OFFERS_EDIT_PASSWORD = 'TaliRenewals123457$';
+let OFFERS_EDIT_MODE = false;
 
-function openOffersModal() {
-    if (sessionStorage.getItem('offersUnlocked') !== '1') {
-        const input = prompt('Enter password to view Renewal Offers:');
-        if (input === null) return;
-        if (input !== OFFERS_PASSWORD) {
-            alert('Incorrect password.');
-            return;
-        }
-        sessionStorage.setItem('offersUnlocked', '1');
-    }
+// In-app password modal. Returns a Promise<boolean> that resolves to true if
+// the user submitted the correct password, false if they cancelled/dismissed.
+// The hidden username input makes Chrome's password manager offer to save.
+function askPassword(expected, opts = {}) {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('pwd-modal');
+        const form = document.getElementById('pwd-form');
+        const input = document.getElementById('pwd-input');
+        const err = document.getElementById('pwd-error');
+        const cancelBtn = document.getElementById('pwd-cancel');
+        const username = document.getElementById('pwd-username');
+        document.getElementById('pwd-title').textContent = opts.title || 'Password required';
+        document.getElementById('pwd-subtitle').textContent = opts.subtitle || '';
+        if (opts.username) username.value = opts.username;
+        input.value = '';
+        err.style.display = 'none';
+        modal.classList.remove('hidden');
+        setTimeout(() => input.focus(), 30);
+
+        let done = false;
+        const cleanup = (result) => {
+            if (done) return;
+            done = true;
+            modal.classList.add('hidden');
+            form.removeEventListener('submit', onSubmit);
+            cancelBtn.removeEventListener('click', onCancel);
+            modal.removeEventListener('click', onBackdrop);
+            document.removeEventListener('keydown', onKey);
+            resolve(result);
+        };
+        const onSubmit = (e) => {
+            e.preventDefault();
+            if (input.value === expected) {
+                cleanup(true);
+            } else {
+                err.style.display = '';
+                input.select();
+            }
+        };
+        const onCancel = () => cleanup(false);
+        const onBackdrop = (e) => { if (e.target === modal) cleanup(false); };
+        const onKey = (e) => { if (e.key === 'Escape') cleanup(false); };
+        form.addEventListener('submit', onSubmit);
+        cancelBtn.addEventListener('click', onCancel);
+        modal.addEventListener('click', onBackdrop);
+        document.addEventListener('keydown', onKey);
+    });
+}
+
+async function openOffersModal() {
+    const ok = await askPassword(OFFERS_PASSWORD, {
+        title: 'Renewal Offers',
+        subtitle: 'Enter the password to view Renewal Offers.',
+        username: 'renewals-view',
+    });
+    if (!ok) return;
+    // Always start outside edit mode -- Edit button re-asks for the second password.
+    OFFERS_EDIT_MODE = false;
+    updateEditToggleButton();
     // Freeze a snapshot of currently filtered rows + attach derived fields.
     // __origRef points back at the STATE.rows entry so saved edits flow through
     // to the main dashboard (KPIs, charts, roster) without a full refetch.
@@ -2125,7 +2263,51 @@ function openOffersModal() {
     renderOffersBody();
     document.getElementById('offers-modal').classList.remove('hidden');
 }
-function closeOffersModal() { document.getElementById('offers-modal').classList.add('hidden'); }
+function closeOffersModal() {
+    document.getElementById('offers-modal').classList.add('hidden');
+    // Leaving the popup also exits edit mode -- password will be re-asked on next entry.
+    OFFERS_EDIT_MODE = false;
+    updateEditToggleButton();
+}
+
+async function toggleOffersEditMode() {
+    if (OFFERS_EDIT_MODE) {
+        // Save/exit: changes are persisted per-cell, so this just drops the lock.
+        OFFERS_EDIT_MODE = false;
+        updateEditToggleButton();
+        renderOffersBody();
+        return;
+    }
+    const ok = await askPassword(OFFERS_EDIT_PASSWORD, {
+        title: 'Edit Adjustment',
+        subtitle: 'Enter the edit password. Adjustment cells become editable; press Save when done.',
+        username: 'renewals-edit',
+    });
+    if (!ok) return;
+    OFFERS_EDIT_MODE = true;
+    updateEditToggleButton();
+    renderOffersBody();
+    // Focus first Adjustment cell so arrow nav works immediately.
+    setTimeout(() => {
+        const first = document.querySelector('#offers-table tbody .offer-adj-cell');
+        if (first) first.focus();
+    }, 50);
+}
+
+function updateEditToggleButton() {
+    const btn = document.getElementById('offers-edit-toggle');
+    const label = document.getElementById('offers-edit-label');
+    if (!btn || !label) return;
+    if (OFFERS_EDIT_MODE) {
+        btn.classList.add('edit-active');
+        label.textContent = 'Save';
+        btn.setAttribute('data-hover-tip', 'Exit edit mode (changes already saved per cell)');
+    } else {
+        btn.classList.remove('edit-active');
+        label.textContent = 'Edit';
+        btn.setAttribute('data-hover-tip', 'Edit Adjustment values inline (password required)');
+    }
+}
 
 function updateOffersTitle() {
     const total = OFFERS_SUBSET.length;
@@ -2178,7 +2360,10 @@ function renderOffersBody() {
     const sorted = sortRows(OFFERS_SUBSET, OFFERS_SORT);
     tbody.innerHTML = sorted.map(r => `
         <tr class="data-row border-b border-slate-200 dark:border-slate-700">
-            ${OFFER_COLUMNS.map(c => `<td class="px-${c.isCheckbox?'2':'3'} py-2 text-${c.align} text-slate-700 dark:text-slate-200">${c.fmt(r[c.key], r)}</td>`).join('')}
+            ${OFFER_COLUMNS.map(c => {
+                const extra = c.isAdjustment ? ` offer-adj-td${OFFERS_EDIT_MODE ? ' edit-mode' : ''}` : '';
+                return `<td class="px-${c.isCheckbox?'2':'3'} py-2 text-${c.align} text-slate-700 dark:text-slate-200${extra}">${c.fmt(r[c.key], r)}</td>`;
+            }).join('')}
         </tr>
     `).join('');
 
@@ -2194,13 +2379,32 @@ function renderOffersBody() {
             if (row) openOfferLetter(row);
         });
     });
-    // Wire Adjustment cell click -> inline editor (password-gated)
-    tbody.querySelectorAll('.offer-adj-cell').forEach(el => {
+    // Wire Adjustment cells (edit mode only): click or Enter -> edit, arrows -> navigate.
+    const adjCells = Array.from(tbody.querySelectorAll('.offer-adj-cell'));
+    adjCells.forEach((el, idx) => {
+        const rowFor = () => {
+            const i = Number(el.dataset.offerRow);
+            return OFFERS_SUBSET.find(x => x.__offerIdx === i);
+        };
         el.addEventListener('click', (e) => {
             e.stopPropagation();
-            const i = Number(el.dataset.offerRow);
-            const row = OFFERS_SUBSET.find(x => x.__offerIdx === i);
-            if (row) beginAdjustmentEdit(el, row);
+            const row = rowFor();
+            if (row) beginAdjustmentEdit(el, row, adjCells);
+        });
+        el.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                const next = adjCells[Math.min(adjCells.length - 1, idx + 1)];
+                if (next) next.focus();
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                const prev = adjCells[Math.max(0, idx - 1)];
+                if (prev) prev.focus();
+            } else if (e.key === 'Enter' || e.key === 'F2') {
+                e.preventDefault();
+                const row = rowFor();
+                if (row) beginAdjustmentEdit(el, row, adjCells);
+            }
         });
     });
     // Wire row checkboxes
@@ -2276,44 +2480,68 @@ function recomputeAfterAdjustment(subsetRow, newAdj) {
     apply(subsetRow.__origRef);
 }
 
-// Inline Adjustment editor. Password-gated once per browser session via
-// sessionStorage.adjustmentUnlocked. On commit, POSTs to /api/update_adjustment
-// which writes column N of the matching sheet row.
-async function beginAdjustmentEdit(cellEl, row) {
-    if (sessionStorage.getItem('adjustmentUnlocked') !== '1') {
-        const input = prompt('Enter edit password to modify Adjustment:');
-        if (input === null) return;
-        if (input !== OFFERS_EDIT_PASSWORD) { alert('Incorrect password.'); return; }
-        sessionStorage.setItem('adjustmentUnlocked', '1');
-    }
+// Inline Adjustment editor (edit mode only; password gate happens upstream in
+// toggleOffersEditMode). On commit, POSTs to /api/update_adjustment which
+// writes column N of the matching sheet row. Google Sheets-style navigation:
+//   Enter          -> commit + move focus down (not editing)
+//   Tab            -> commit + move focus down (not editing)
+//   ArrowDown/Up   -> commit + move focus up/down (not editing)
+//   Escape         -> cancel + stay on current cell
+async function beginAdjustmentEdit(cellEl, row, allCells) {
+    if (!OFFERS_EDIT_MODE) return;
     const td = cellEl.closest('td');
     if (!td) return;
     const currentVal = numOrNull(row['Adjustment']);
-    td.innerHTML = `<input type="number" step="any" class="offer-adj-input" value="${currentVal ?? 0}" />`;
+    const myIdx = allCells ? allCells.indexOf(cellEl) : -1;
+    td.innerHTML = `<input type="text" inputmode="decimal" class="offer-adj-input" value="${currentVal ?? ''}" />`;
     const inp = td.querySelector('input');
     inp.focus();
     inp.select();
 
+    // Only allow digits, minus (first char), and one decimal point.
+    inp.addEventListener('input', () => {
+        const cleaned = inp.value
+            .replace(/[^\d.\-]/g, '')
+            .replace(/(?!^)-/g, '')     // minus only as first char
+            .replace(/(\..*)\./g, '$1'); // single decimal point
+        if (cleaned !== inp.value) inp.value = cleaned;
+    });
+
     let settled = false;
+    // renderOffersBody() replaces DOM nodes, so re-query cells after render.
+    const focusSibling = (delta) => {
+        if (myIdx < 0) return;
+        setTimeout(() => {
+            const fresh = document.querySelectorAll('#offers-table tbody .offer-adj-cell');
+            const target = fresh[Math.min(fresh.length - 1, Math.max(0, myIdx + delta))];
+            if (target) target.focus();
+        }, 0);
+    };
     const cancel = () => {
         if (settled) return;
         settled = true;
         renderOffersBody();
+        focusSibling(0);
     };
-    const commit = async () => {
+    const commit = async (advance) => {
         if (settled) return;
         settled = true;
         const raw = inp.value.trim();
-        if (raw === '') { renderOffersBody(); return; }
+        // Empty -> treat as cancel (no sheet write).
+        if (raw === '' || raw === '-' || raw === '.') {
+            renderOffersBody();
+            focusSibling(advance);
+            return;
+        }
         const newAdj = Number(raw);
         if (!Number.isFinite(newAdj)) {
-            alert('Adjustment must be a number.');
             renderOffersBody();
+            focusSibling(0);
             return;
         }
         if (currentVal !== null && newAdj === currentVal) {
-            // No change -> just re-render.
             renderOffersBody();
+            focusSibling(advance);
             return;
         }
         td.innerHTML = '<span class="offer-adj-pending">saving…</span>';
@@ -2336,19 +2564,23 @@ async function beginAdjustmentEdit(cellEl, row) {
             }
             recomputeAfterAdjustment(row, newAdj);
             renderOffersBody();
-            // Refresh the main dashboard so roster/KPIs/charts reflect the edit.
             if (typeof renderAll === 'function') renderAll();
+            focusSibling(advance);
         } catch (e) {
             alert('Save failed: ' + (e && e.message ? e.message : e));
             renderOffersBody();
+            focusSibling(0);
         }
     };
 
     inp.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') { e.preventDefault(); commit(); }
-        else if (e.key === 'Escape') { e.preventDefault(); cancel(); }
+        if (e.key === 'Enter' || e.key === 'Tab')     { e.preventDefault(); commit(1); }
+        else if (e.key === 'ArrowDown')                { e.preventDefault(); commit(1); }
+        else if (e.key === 'ArrowUp')                  { e.preventDefault(); commit(-1); }
+        else if (e.key === 'Escape')                   { e.preventDefault(); cancel(); }
     });
-    inp.addEventListener('blur', commit);
+    // Blur commits (click away = save, matches Sheets).
+    inp.addEventListener('blur', () => commit(0));
 }
 
 // =============================================================================
