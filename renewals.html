@@ -130,6 +130,22 @@
         .offer-adj-cell:hover .offer-edit-icon,
         .offer-adj-cell:focus .offer-edit-icon { opacity: 1; }
 
+        /* Unsaved (dirty) Adjustment cells: amber accent until Save */
+        .offer-adj-cell.dirty { color: #c2410c; font-weight: 700; }
+        .offer-adj-cell.dirty .offer-edit-icon { color: #c2410c; opacity: 1; }
+        .offer-adj-cell.dirty:focus {
+            border-color: #ea580c;
+            background: rgba(234, 88, 12, 0.14);
+            box-shadow: 0 0 0 2px rgba(234, 88, 12, 0.28);
+        }
+        .dark .offer-adj-cell.dirty { color: #fdba74; }
+        .dark .offer-adj-cell.dirty .offer-edit-icon { color: #fdba74; }
+        .dark .offer-adj-cell.dirty:focus {
+            border-color: #fb923c;
+            background: rgba(251, 146, 60, 0.18);
+            box-shadow: 0 0 0 2px rgba(251, 146, 60, 0.3);
+        }
+
         .offer-adj-input {
             width: 76px;
             padding: 3px 6px;
@@ -2157,8 +2173,13 @@ const OFFER_COLUMNS = [
     { key: 'Adjustment',     label: 'Adjustment',      align: 'center', isAdjustment: true,
       fmt: (v, row) => {
           const txt = (v === null || v === undefined || v === '') ? '—' : signedMoney(v);
-          if (!OFFERS_EDIT_MODE) return txt;
-          return `<span class="offer-adj-cell" data-offer-row="${row.__offerIdx}" tabindex="0" title="Enter to edit">`
+          const dirty = isPendingDirty(row);
+          if (!OFFERS_EDIT_MODE) {
+              return dirty
+                  ? `<span class="offer-adj-cell dirty" tabindex="-1" title="Unsaved">${txt}</span>`
+                  : txt;
+          }
+          return `<span class="offer-adj-cell${dirty ? ' dirty' : ''}" data-offer-row="${row.__offerIdx}" tabindex="0" title="Enter to edit">`
                + `<span>${txt}</span>`
                + `<svg class="offer-edit-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>`
                + `</span>`;
@@ -2190,6 +2211,16 @@ let OFFERS_SELECTED = new Set();  // __offerIdx values that are currently checke
 const OFFERS_PASSWORD = 'SnsRenewals123457$';
 const OFFERS_EDIT_PASSWORD = 'TaliRenewals123457$';
 let OFFERS_EDIT_MODE = false;
+let OFFERS_SAVING = false;
+// key = `${tab}|${unit}|${expMonth}`, value = { newAdj, origAdj, row }
+const OFFERS_PENDING_EDITS = new Map();
+
+function pendingKey(row) {
+    return `${row.property}|${row['Unit']}|${row['Expiring Month']}`;
+}
+function isPendingDirty(row) {
+    return OFFERS_PENDING_EDITS.has(pendingKey(row));
+}
 
 // In-app password modal. Returns a Promise<boolean> that resolves to true if
 // the user submitted the correct password, false if they cancelled/dismissed.
@@ -2264,6 +2295,18 @@ async function openOffersModal() {
     document.getElementById('offers-modal').classList.remove('hidden');
 }
 function closeOffersModal() {
+    if (OFFERS_SAVING) return;  // don't close mid-save
+    if (OFFERS_EDIT_MODE && OFFERS_PENDING_EDITS.size > 0) {
+        const n = OFFERS_PENDING_EDITS.size;
+        if (!confirm(`Discard ${n} unsaved Adjustment edit${n > 1 ? 's' : ''}?`)) return;
+        // Revert each row to its original value so the main dashboard isn't
+        // left showing phantom numbers.
+        for (const { row, origAdj } of OFFERS_PENDING_EDITS.values()) {
+            recomputeAfterAdjustment(row, origAdj);
+        }
+        OFFERS_PENDING_EDITS.clear();
+        if (typeof renderAll === 'function') renderAll();
+    }
     document.getElementById('offers-modal').classList.add('hidden');
     // Leaving the popup also exits edit mode -- password will be re-asked on next entry.
     OFFERS_EDIT_MODE = false;
@@ -2271,11 +2314,16 @@ function closeOffersModal() {
 }
 
 async function toggleOffersEditMode() {
+    if (OFFERS_SAVING) return;
     if (OFFERS_EDIT_MODE) {
-        // Save/exit: changes are persisted per-cell, so this just drops the lock.
-        OFFERS_EDIT_MODE = false;
-        updateEditToggleButton();
-        renderOffersBody();
+        // Save path: push pending edits as one batch, then exit edit mode on success.
+        if (OFFERS_PENDING_EDITS.size === 0) {
+            OFFERS_EDIT_MODE = false;
+            updateEditToggleButton();
+            renderOffersBody();
+            return;
+        }
+        await savePendingEdits();
         return;
     }
     const ok = await askPassword(OFFERS_EDIT_PASSWORD, {
@@ -2284,10 +2332,10 @@ async function toggleOffersEditMode() {
         username: 'renewals-edit',
     });
     if (!ok) return;
+    OFFERS_PENDING_EDITS.clear();
     OFFERS_EDIT_MODE = true;
     updateEditToggleButton();
     renderOffersBody();
-    // Focus first Adjustment cell so arrow nav works immediately.
     setTimeout(() => {
         const first = document.querySelector('#offers-table tbody .offer-adj-cell');
         if (first) first.focus();
@@ -2298,14 +2346,81 @@ function updateEditToggleButton() {
     const btn = document.getElementById('offers-edit-toggle');
     const label = document.getElementById('offers-edit-label');
     if (!btn || !label) return;
+    btn.disabled = OFFERS_SAVING;
+    if (OFFERS_SAVING) {
+        btn.classList.add('edit-active');
+        label.textContent = `Saving ${OFFERS_PENDING_EDITS.size}…`;
+        btn.setAttribute('data-hover-tip', 'Writing to Google Sheet');
+        return;
+    }
     if (OFFERS_EDIT_MODE) {
         btn.classList.add('edit-active');
-        label.textContent = 'Save';
-        btn.setAttribute('data-hover-tip', 'Exit edit mode (changes already saved per cell)');
+        const n = OFFERS_PENDING_EDITS.size;
+        label.textContent = n > 0 ? `Save (${n})` : 'Save';
+        btn.setAttribute('data-hover-tip',
+            n > 0 ? `Push ${n} edit${n > 1 ? 's' : ''} to the sheet` : 'Exit edit mode');
     } else {
         btn.classList.remove('edit-active');
         label.textContent = 'Edit';
         btn.setAttribute('data-hover-tip', 'Edit Adjustment values inline (password required)');
+    }
+}
+
+// Push every pending edit to the sheet in ONE batch request. Keeps rows that
+// fail server-side so the user can retry; drops rows that succeed.
+async function savePendingEdits() {
+    if (OFFERS_PENDING_EDITS.size === 0) return;
+    const edits = Array.from(OFFERS_PENDING_EDITS.entries()).map(([key, e]) => ({
+        key,
+        tab: e.row.property,
+        unit: String(e.row['Unit'] ?? ''),
+        expMonth: e.row['Expiring Month'],
+        adjustment: e.newAdj,
+    }));
+    OFFERS_SAVING = true;
+    updateEditToggleButton();
+    try {
+        const resp = await fetch('/api/update_adjustments_batch', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                password: OFFERS_EDIT_PASSWORD,
+                edits: edits.map(({ key, ...rest }) => rest),
+            }),
+        });
+        let data = {};
+        try { data = await resp.json(); } catch (_) {}
+        if (!resp.ok) {
+            throw new Error(data.error || ('HTTP ' + resp.status));
+        }
+        // Match each returned result back to its pending key.
+        const results = data.results || [];
+        const failed = [];
+        for (let i = 0; i < edits.length; i++) {
+            const r = results[i];
+            if (r && r.ok) {
+                OFFERS_PENDING_EDITS.delete(edits[i].key);
+            } else {
+                failed.push({ edit: edits[i], error: (r && r.error) || 'unknown error' });
+            }
+        }
+        if (failed.length) {
+            alert(
+                `${failed.length} of ${edits.length} edit${edits.length > 1 ? 's' : ''} failed:\n\n`
+                + failed.map(f => `• ${f.edit.tab} / ${f.edit.unit}: ${f.error}`).join('\n')
+                + `\n\nFailed rows remain highlighted; try Save again or Esc to discard.`
+            );
+        }
+        if (OFFERS_PENDING_EDITS.size === 0) {
+            OFFERS_EDIT_MODE = false;
+        }
+        if (typeof renderAll === 'function') renderAll();
+    } catch (e) {
+        alert('Save failed: ' + (e && e.message ? e.message : e));
+    } finally {
+        OFFERS_SAVING = false;
+        updateEditToggleButton();
+        renderOffersBody();
     }
 }
 
@@ -2480,15 +2595,16 @@ function recomputeAfterAdjustment(subsetRow, newAdj) {
     apply(subsetRow.__origRef);
 }
 
-// Inline Adjustment editor (edit mode only; password gate happens upstream in
-// toggleOffersEditMode). On commit, POSTs to /api/update_adjustment which
-// writes column N of the matching sheet row. Google Sheets-style navigation:
-//   Enter          -> commit + move focus down (not editing)
-//   Tab            -> commit + move focus down (not editing)
-//   ArrowDown/Up   -> commit + move focus up/down (not editing)
-//   Escape         -> cancel + stay on current cell
-async function beginAdjustmentEdit(cellEl, row, allCells) {
-    if (!OFFERS_EDIT_MODE) return;
+// Inline Adjustment editor (edit mode only). Purely local: writes the new
+// value into OFFERS_PENDING_EDITS and recomputes the row immediately. The
+// batch is pushed to the sheet only when the user clicks Save. Google
+// Sheets-style navigation:
+//   Enter / Tab / ArrowDown -> commit + move focus down
+//   ArrowUp                 -> commit + move focus up
+//   Escape                  -> cancel + stay on current cell
+//   Blur                    -> commit (click away)
+function beginAdjustmentEdit(cellEl, row, allCells) {
+    if (!OFFERS_EDIT_MODE || OFFERS_SAVING) return;
     const td = cellEl.closest('td');
     if (!td) return;
     const currentVal = numOrNull(row['Adjustment']);
@@ -2502,8 +2618,8 @@ async function beginAdjustmentEdit(cellEl, row, allCells) {
     inp.addEventListener('input', () => {
         const cleaned = inp.value
             .replace(/[^\d.\-]/g, '')
-            .replace(/(?!^)-/g, '')     // minus only as first char
-            .replace(/(\..*)\./g, '$1'); // single decimal point
+            .replace(/(?!^)-/g, '')
+            .replace(/(\..*)\./g, '$1');
         if (cleaned !== inp.value) inp.value = cleaned;
     });
 
@@ -2523,11 +2639,10 @@ async function beginAdjustmentEdit(cellEl, row, allCells) {
         renderOffersBody();
         focusSibling(0);
     };
-    const commit = async (advance) => {
+    const commit = (advance) => {
         if (settled) return;
         settled = true;
         const raw = inp.value.trim();
-        // Empty -> treat as cancel (no sheet write).
         if (raw === '' || raw === '-' || raw === '.') {
             renderOffersBody();
             focusSibling(advance);
@@ -2539,47 +2654,35 @@ async function beginAdjustmentEdit(cellEl, row, allCells) {
             focusSibling(0);
             return;
         }
-        if (currentVal !== null && newAdj === currentVal) {
+        const key = pendingKey(row);
+        const existing = OFFERS_PENDING_EDITS.get(key);
+        const origAdj = existing ? existing.origAdj : currentVal;
+        if (newAdj === currentVal) {
+            // No change vs current displayed value -> no-op (but keep any
+            // existing pending state alone).
             renderOffersBody();
             focusSibling(advance);
             return;
         }
-        td.innerHTML = '<span class="offer-adj-pending">saving…</span>';
-        try {
-            const resp = await fetch('/api/update_adjustment', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    tab: row.property,
-                    unit: String(row['Unit'] ?? ''),
-                    expMonth: row['Expiring Month'],
-                    adjustment: newAdj,
-                    password: OFFERS_EDIT_PASSWORD,
-                }),
-            });
-            let data = {};
-            try { data = await resp.json(); } catch (_) {}
-            if (!resp.ok || data.ok === false) {
-                throw new Error(data.error || ('HTTP ' + resp.status));
-            }
-            recomputeAfterAdjustment(row, newAdj);
-            renderOffersBody();
-            if (typeof renderAll === 'function') renderAll();
-            focusSibling(advance);
-        } catch (e) {
-            alert('Save failed: ' + (e && e.message ? e.message : e));
-            renderOffersBody();
-            focusSibling(0);
+        if (newAdj === origAdj) {
+            // User reverted to the original sheet value -> drop pending edit.
+            OFFERS_PENDING_EDITS.delete(key);
+        } else {
+            OFFERS_PENDING_EDITS.set(key, { newAdj, origAdj, row });
         }
+        // Local optimistic recompute of all dependent fields on this row.
+        recomputeAfterAdjustment(row, newAdj);
+        updateEditToggleButton();
+        renderOffersBody();
+        focusSibling(advance);
     };
 
     inp.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === 'Tab')     { e.preventDefault(); commit(1); }
+        if (e.key === 'Enter' || e.key === 'Tab')      { e.preventDefault(); commit(1); }
         else if (e.key === 'ArrowDown')                { e.preventDefault(); commit(1); }
         else if (e.key === 'ArrowUp')                  { e.preventDefault(); commit(-1); }
         else if (e.key === 'Escape')                   { e.preventDefault(); cancel(); }
     });
-    // Blur commits (click away = save, matches Sheets).
     inp.addEventListener('blur', () => commit(0));
 }
 
