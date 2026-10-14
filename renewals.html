@@ -91,6 +91,50 @@
         .dark .offer-letter-link { color: #38bdf8; text-decoration-color: rgba(56,189,248,0.4); }
         .dark .offer-letter-link:hover { color: #7dd3fc; text-decoration-color: #7dd3fc; }
 
+        /* Editable Adjustment cell inside Offers table */
+        .offer-adj-cell {
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 1px 6px;
+            border-radius: 4px;
+            border: 1px dashed transparent;
+            transition: background-color 0.15s, border-color 0.15s;
+        }
+        .offer-adj-cell:hover {
+            border-color: #06b6d4;
+            background: rgba(6, 182, 212, 0.08);
+        }
+        .dark .offer-adj-cell:hover {
+            border-color: #22d3ee;
+            background: rgba(34, 211, 238, 0.12);
+        }
+        .offer-adj-cell .offer-edit-icon {
+            width: 10px; height: 10px; opacity: 0.35;
+        }
+        .offer-adj-cell:hover .offer-edit-icon { opacity: 1; }
+        .offer-adj-input {
+            width: 76px;
+            padding: 3px 6px;
+            font-size: 12px;
+            border: 1px solid #06b6d4;
+            border-radius: 4px;
+            background: #ffffff;
+            color: #0f172a;
+            text-align: center;
+            outline: none;
+        }
+        .dark .offer-adj-input {
+            background: #0f172a; color: #e2e8f0; border-color: #22d3ee;
+        }
+        .offer-adj-pending {
+            color: #64748b;
+            font-size: 11px;
+            font-style: italic;
+        }
+        .dark .offer-adj-pending { color: #94a3b8; }
+
         /* Narrower multi-select triggers on small screens */
         @media (max-width: 640px) {
             .multi-trigger { min-width: 140px; padding: 8px 10px; font-size: 12px; }
@@ -2022,6 +2066,15 @@ const OFFER_COLUMNS = [
       } },
     { key: 'Base Rent',      label: 'Current Rent',    align: 'center', fmt: moneyOrDash },
     { key: 'currentTotal',   label: 'Current Total',   align: 'center', fmt: fmtMoney },
+    { key: 'RnF Rent',       label: 'RnF',             align: 'center', fmt: moneyOrDash },
+    { key: 'Adjustment',     label: 'Adjustment',      align: 'center', isAdjustment: true,
+      fmt: (v, row) => {
+          const txt = (v === null || v === undefined || v === '') ? '—' : signedMoney(v);
+          return `<span class="offer-adj-cell" data-offer-row="${row.__offerIdx}" title="Click to edit">`
+               + `<span>${txt}</span>`
+               + `<svg class="offer-edit-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>`
+               + `</span>`;
+      } },
     { key: '__rentDelta',    label: 'Rent Δ',          align: 'center', fmt: v => signedMoney(v) },
     { key: 'deltaA',         label: 'Total Δ',         align: 'center', fmt: v => signedMoney(v) },
     { key: 'Rent A',         label: 'Rent Offer',      align: 'center', fmt: moneyOrDash },
@@ -2037,15 +2090,32 @@ const OFFER_COLUMNS = [
     { key: 'Storage',        label: 'Storage',         align: 'center', fmt: moneyOrDash },
     { key: 'Total Other',    label: 'Total Other',     align: 'center', fmt: moneyOrDash },
     { key: 'totalOfferA',    label: 'Total Offer',     align: 'center', fmt: fmtMoney },
+    { key: 'Deposit',        label: 'Deposit',         align: 'center', fmt: moneyOrDash },
+    { key: 'R Deposit',      label: 'R Deposit',       align: 'center', fmt: moneyOrDash },
+    { key: 'Deposit D',      label: 'Deposit Δ',       align: 'center', fmt: v => signedMoney(v) },
 ];
 
 let OFFERS_SUBSET = [];
 let OFFERS_SORT = { col: 'property', dir: 'asc' };
 let OFFERS_SELECTED = new Set();  // __offerIdx values that are currently checked
 
+const OFFERS_PASSWORD = 'SnsRenewals123457$';
+const OFFERS_EDIT_PASSWORD = 'TaliRenewals123457$';
+
 function openOffersModal() {
-    // Freeze a snapshot of currently filtered rows + attach derived fields
-    OFFERS_SUBSET = filtered().map((r, i) => Object.assign({ __offerIdx: i }, r, {
+    if (sessionStorage.getItem('offersUnlocked') !== '1') {
+        const input = prompt('Enter password to view Renewal Offers:');
+        if (input === null) return;
+        if (input !== OFFERS_PASSWORD) {
+            alert('Incorrect password.');
+            return;
+        }
+        sessionStorage.setItem('offersUnlocked', '1');
+    }
+    // Freeze a snapshot of currently filtered rows + attach derived fields.
+    // __origRef points back at the STATE.rows entry so saved edits flow through
+    // to the main dashboard (KPIs, charts, roster) without a full refetch.
+    OFFERS_SUBSET = filtered().map((r, i) => Object.assign({ __offerIdx: i, __origRef: r }, r, {
         __rentDelta: rentDelta(r),
         __totalUtil: sumUtilities(r) || null,
     }));
@@ -2124,6 +2194,15 @@ function renderOffersBody() {
             if (row) openOfferLetter(row);
         });
     });
+    // Wire Adjustment cell click -> inline editor (password-gated)
+    tbody.querySelectorAll('.offer-adj-cell').forEach(el => {
+        el.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const i = Number(el.dataset.offerRow);
+            const row = OFFERS_SUBSET.find(x => x.__offerIdx === i);
+            if (row) beginAdjustmentEdit(el, row);
+        });
+    });
     // Wire row checkboxes
     tbody.querySelectorAll('.offer-chk').forEach(cb => {
         cb.addEventListener('click', e => e.stopPropagation());
@@ -2147,8 +2226,8 @@ function renderOffersBody() {
 // Rent Δ / Total Δ sums represent the aggregate monthly $ swing if
 // everyone renewed at the offer.
 function renderOffersFooter(rows) {
-    const sumKeys = new Set(['Base Rent','currentTotal','Rent A','Utility','Valet','Pest','Amenity','Internet','__totalUtil','Pet','Parking','WD','Storage','Total Other','totalOfferA']);
-    const signedSumKeys = new Set(['__rentDelta','deltaA']);
+    const sumKeys = new Set(['Base Rent','currentTotal','RnF Rent','Rent A','Utility','Valet','Pest','Amenity','Internet','__totalUtil','Pet','Parking','WD','Storage','Total Other','totalOfferA','Deposit','R Deposit']);
+    const signedSumKeys = new Set(['Adjustment','__rentDelta','deltaA','Deposit D']);
     const sum = (key) => rows.reduce((acc, r) => acc + (numOrNull(r[key]) || 0), 0);
     const totalCell = (c) => {
         if (c.isCheckbox) return '';
@@ -2163,6 +2242,113 @@ function renderOffersFooter(rows) {
     return `<tr>${OFFER_COLUMNS.map(c =>
         `<td class="px-${c.isCheckbox?'2':'3'} py-2 text-${c.align} text-slate-800 dark:text-slate-100">${totalCell(c)}</td>`
     ).join('')}</tr>`;
+}
+
+// Recompute every value in the row that depends on Adjustment, mirroring the
+// Google Sheet's formulas: P = M+N, Q = P+AF, R = Q-L, S = R/L.
+// Updates both the modal-snapshot row AND its __origRef in STATE.rows so the
+// main dashboard reflects the edit immediately.
+function recomputeAfterAdjustment(subsetRow, newAdj) {
+    const rnf = numOrNull(subsetRow['RnF Rent']) || 0;
+    const base = numOrNull(subsetRow['Base Rent']) || 0;
+    const totalOther = numOrNull(subsetRow['Total Other']) || 0;
+    const currentTotal = numOrNull(subsetRow['Current Total']) || 0;
+
+    const rentA = rnf + newAdj;
+    const totalOfferA = rentA + totalOther;
+    const deltaA = totalOfferA - currentTotal;
+    const deltaApct = currentTotal ? (deltaA / currentTotal) : 0;
+    const rentDeltaVal = rentA - base;
+
+    const apply = (o) => {
+        if (!o) return;
+        o['Adjustment'] = newAdj;
+        o['Rent A'] = rentA;
+        o['Total Offer A'] = totalOfferA;
+        o['Delta A'] = deltaA;
+        o['Delta A %'] = deltaApct;
+        o.totalOfferA = totalOfferA;
+        o.deltaA = deltaA;
+        o.deltaApct = deltaApct;
+    };
+    apply(subsetRow);
+    subsetRow.__rentDelta = rentDeltaVal;
+    apply(subsetRow.__origRef);
+}
+
+// Inline Adjustment editor. Password-gated once per browser session via
+// sessionStorage.adjustmentUnlocked. On commit, POSTs to /api/update_adjustment
+// which writes column N of the matching sheet row.
+async function beginAdjustmentEdit(cellEl, row) {
+    if (sessionStorage.getItem('adjustmentUnlocked') !== '1') {
+        const input = prompt('Enter edit password to modify Adjustment:');
+        if (input === null) return;
+        if (input !== OFFERS_EDIT_PASSWORD) { alert('Incorrect password.'); return; }
+        sessionStorage.setItem('adjustmentUnlocked', '1');
+    }
+    const td = cellEl.closest('td');
+    if (!td) return;
+    const currentVal = numOrNull(row['Adjustment']);
+    td.innerHTML = `<input type="number" step="any" class="offer-adj-input" value="${currentVal ?? 0}" />`;
+    const inp = td.querySelector('input');
+    inp.focus();
+    inp.select();
+
+    let settled = false;
+    const cancel = () => {
+        if (settled) return;
+        settled = true;
+        renderOffersBody();
+    };
+    const commit = async () => {
+        if (settled) return;
+        settled = true;
+        const raw = inp.value.trim();
+        if (raw === '') { renderOffersBody(); return; }
+        const newAdj = Number(raw);
+        if (!Number.isFinite(newAdj)) {
+            alert('Adjustment must be a number.');
+            renderOffersBody();
+            return;
+        }
+        if (currentVal !== null && newAdj === currentVal) {
+            // No change -> just re-render.
+            renderOffersBody();
+            return;
+        }
+        td.innerHTML = '<span class="offer-adj-pending">saving…</span>';
+        try {
+            const resp = await fetch('/api/update_adjustment', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    tab: row.property,
+                    unit: String(row['Unit'] ?? ''),
+                    expMonth: row['Expiring Month'],
+                    adjustment: newAdj,
+                    password: OFFERS_EDIT_PASSWORD,
+                }),
+            });
+            let data = {};
+            try { data = await resp.json(); } catch (_) {}
+            if (!resp.ok || data.ok === false) {
+                throw new Error(data.error || ('HTTP ' + resp.status));
+            }
+            recomputeAfterAdjustment(row, newAdj);
+            renderOffersBody();
+            // Refresh the main dashboard so roster/KPIs/charts reflect the edit.
+            if (typeof renderAll === 'function') renderAll();
+        } catch (e) {
+            alert('Save failed: ' + (e && e.message ? e.message : e));
+            renderOffersBody();
+        }
+    };
+
+    inp.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); commit(); }
+        else if (e.key === 'Escape') { e.preventDefault(); cancel(); }
+    });
+    inp.addEventListener('blur', commit);
 }
 
 // =============================================================================
