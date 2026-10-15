@@ -1,0 +1,11 @@
+{
+  "runId": "20261015-170449-96d92c",
+  "startedAt": "2026-10-15T17:05:27",
+  "mode": "dry-run",
+  "status": "running",
+  "total": 3,
+  "sent": [],
+  "staged": [],
+  "failed": [],
+  "completedAt": null
+}
