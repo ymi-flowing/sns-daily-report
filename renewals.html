@@ -2952,13 +2952,36 @@ function openOfferLetter(row) {
 
 // Combine N letters into a single HTML document with a page-break between
 // each, so one Ctrl+P → one multi-page PDF.
+// Dashboard tab name -> ResMan property abbreviation used by send_letters.py.
+// TRA-AN3 is a shared tab for two legally-distinct LLCs; the sheet doesn't
+// label individual rows. For bulk send we default to TRA (The River). AN3
+// rows need to be sent via the standalone CLI until the schema distinguishes.
+const TAB_TO_ABBR = {
+    '49thStr': '49THSTR',
+    'ORT': 'ORT',
+    'AP': 'AP',
+    'TV': 'TV',
+    'MOC': 'MOC',
+    'MUSO': 'MUSO',
+    'SJ': 'SJ',
+    'ROP': 'ROP',
+    'EAST': 'EAST',
+    'TRA-AN3': 'TRA',
+};
+
+function buildSendPayload(rows) {
+    return rows.map(r => ({
+        property: TAB_TO_ABBR[r.property] || r.property,
+        month: parseExpMonth(r['Expiring Month']),  // 'YYYY-MM'
+        unit: String(r['Unit'] ?? '').trim(),
+        resident: String(r['Resident Name'] ?? '').trim(),
+    })).filter(p => p.property && p.month && p.unit);
+}
+
 function openBulkLetters(rows) {
     if (!rows.length) return;
     const letters = rows.map(r => fillLetterTemplate(buildLetterContext(r)));
-    // Extract style + body of each letter, stacking inside one page.
     const docs = letters.map((html, idx) => {
-        // Each letter is a full HTML doc. Pull its body + inherit its style
-        // (identical across letters) only once.
         const bodyMatch = html.match(/<body[^>]*>([\s\S]*)<\/body>/i);
         const body = bodyMatch ? bodyMatch[1] : html;
         const sep = idx === 0 ? '' : '<div style="page-break-before: always; height: 0;"></div>';
@@ -2966,19 +2989,285 @@ function openBulkLetters(rows) {
     });
     const styleMatch = letters[0].match(/<style[^>]*>[\s\S]*?<\/style>/i);
     const style = styleMatch ? styleMatch[0] : '';
+    const sendPayload = buildSendPayload(rows);
+    const payloadJson = JSON.stringify(sendPayload).replace(/</g, '\\u003c');
+    const editPwdJson = JSON.stringify(OFFERS_EDIT_PASSWORD).replace(/</g, '\\u003c');
+
     const combined = `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
 <title>Renewal Letters — ${rows.length} residents</title>
 ${style}
-<style>@media print { .no-print { display: none; } }</style>
+<style>
+  @media print { .no-print { display: none !important; } }
+  body { padding-top: 56px; }
+  .send-topbar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: #ffffff; border-bottom: 1px solid #e2e8f0;
+    padding: 10px 16px; display: flex; gap: 12px; align-items: center;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  }
+  .send-topbar h1 { font-size: 14px; font-weight: 700; margin: 0; color: #0f172a; flex: 0 0 auto; }
+  .send-topbar .btn { padding: 7px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1px solid transparent; }
+  .send-topbar .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .btn-primary { background: #06b6d4; color: white; border-color: #0891b2; }
+  .btn-primary:hover:not(:disabled) { background: #0891b2; }
+  .btn-success { background: #10b981; color: white; border-color: #047857; }
+  .btn-success:hover:not(:disabled) { background: #059669; }
+  .btn-ghost { background: #f1f5f9; color: #334155; border-color: #e2e8f0; }
+  .btn-ghost:hover:not(:disabled) { background: #e2e8f0; }
+  .btn-amber { background: #f59e0b; color: white; border-color: #d97706; }
+  .btn-amber:hover:not(:disabled) { background: #d97706; }
+  .send-progress-wrap { flex: 1; min-width: 150px; display: none; flex-direction: column; gap: 3px; }
+  .send-progress-bar { height: 5px; background: #e2e8f0; border-radius: 3px; overflow: hidden; }
+  .send-progress-bar-fill { height: 100%; background: #10b981; width: 0%; transition: width 0.3s; }
+  .send-progress-text { font-size: 10px; color: #475569; line-height: 1.2; }
+  .send-log {
+    position: fixed; bottom: 0; left: 0; right: 0; max-height: 200px; overflow-y: auto;
+    background: #0f172a; color: #cbd5e1; font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+    font-size: 11px; padding: 8px 16px; z-index: 99; display: none;
+    border-top: 2px solid #475569;
+  }
+  .send-log-line { padding: 1px 0; line-height: 1.4; }
+  .send-log-line.sent { color: #86efac; }
+  .send-log-line.staged { color: #93c5fd; }
+  .send-log-line.failed { color: #fca5a5; }
+  .send-log-line.info { color: #cbd5e1; }
+  .send-modal {
+    position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px);
+    display: none; align-items: center; justify-content: center; z-index: 1000;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+  }
+  .send-modal-box { background: white; border-radius: 14px; padding: 24px; width: 440px; max-width: 90vw; max-height: 85vh; overflow-y: auto; }
+  .send-modal-box h2 { font-size: 17px; font-weight: 700; margin: 0 0 10px; color: #0f172a; }
+  .send-modal-box p { font-size: 13px; color: #334155; margin: 0 0 12px; line-height: 1.5; }
+  .send-prop-list { max-height: 180px; overflow-y: auto; background: #f8fafc; border-radius: 8px; padding: 8px 12px; font-size: 12px; margin: 10px 0; }
+  .send-prop-item { padding: 3px 0; border-bottom: 1px solid #e2e8f0; }
+  .send-prop-item:last-child { border-bottom: 0; }
+  .send-stats { display: flex; gap: 10px; margin: 14px 0; }
+  .send-stat { flex: 1; padding: 10px; border-radius: 8px; text-align: center; }
+  .stat-sent { background: #ecfdf5; color: #065f46; }
+  .stat-staged { background: #eff6ff; color: #1e40af; }
+  .stat-failed { background: #fef2f2; color: #991b1b; }
+  .stat-num { font-size: 20px; font-weight: 700; line-height: 1; }
+  .stat-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 4px; }
+  .send-fail-list { background: #fef2f2; border-radius: 8px; padding: 10px 12px; font-size: 11px; max-height: 160px; overflow-y: auto; }
+  .send-fail-item { padding: 4px 0; border-bottom: 1px solid #fecaca; color: #991b1b; }
+  .send-fail-item:last-child { border-bottom: 0; }
+</style>
 </head>
 <body>
-<div class="no-print" style="position: fixed; top: 10px; right: 10px; z-index: 9999;">
-  <button onclick="window.print()" style="padding: 10px 16px; background: #06b6d4; color: white; border: 0; border-radius: 8px; font-weight: 600; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">Print / Save as PDF</button>
+
+<div class="send-topbar no-print">
+  <h1 id="send-title">${rows.length} renewal letter${rows.length !== 1 ? 's' : ''} ready</h1>
+  <div class="send-progress-wrap" id="send-progress">
+    <div class="send-progress-bar"><div class="send-progress-bar-fill" id="send-progress-fill"></div></div>
+    <div class="send-progress-text" id="send-progress-text">—</div>
+  </div>
+  <div style="margin-left: auto; display: flex; gap: 8px;">
+    <button class="btn btn-amber" id="send-dry-btn" onclick="startSend(true)">Dry-run</button>
+    <button class="btn btn-success" id="send-live-btn" onclick="startSend(false)">Send All</button>
+    <button class="btn btn-primary" onclick="window.print()">Print</button>
+  </div>
 </div>
+
+<div class="send-log no-print" id="send-log"></div>
+
+<div class="send-modal no-print" id="confirm-modal">
+  <div class="send-modal-box">
+    <h2 id="confirm-title">Confirm Send</h2>
+    <p id="confirm-text">—</p>
+    <div class="send-prop-list" id="confirm-props"></div>
+    <div style="display: flex; justify-content: flex-end; gap: 8px;">
+      <button class="btn btn-ghost" onclick="closeConfirm()">Cancel</button>
+      <button class="btn btn-success" id="confirm-go" onclick="dispatchSend()">Dispatch</button>
+    </div>
+  </div>
+</div>
+
+<div class="send-modal no-print" id="summary-modal">
+  <div class="send-modal-box">
+    <h2 id="summary-title">Send complete</h2>
+    <div class="send-stats" id="summary-stats"></div>
+    <div id="summary-fails"></div>
+    <div style="display: flex; justify-content: space-between; gap: 8px; margin-top: 16px;">
+      <button class="btn btn-ghost" onclick="closeSummary()">Close</button>
+      <button class="btn btn-amber" id="retry-btn" style="display: none;" onclick="retryFailed()">Retry failed</button>
+    </div>
+  </div>
+</div>
+
 ${docs.join('\n')}
+
+<script>
+const LETTERS = ${payloadJson};
+const EDIT_PWD = ${editPwdJson};
+let CURRENT_LETTERS = LETTERS.slice();
+let CURRENT_RUN = null;
+let CURRENT_DRY = true;
+let POLL_TIMER = null;
+let POLL_SEEN = { sent: 0, staged: 0, failed: 0 };
+
+function propBreakdown(letters) {
+  const by = {};
+  for (const L of letters) {
+    const key = L.property + ' / ' + L.month;
+    by[key] = (by[key] || 0) + 1;
+  }
+  return by;
+}
+function appendLog(cls, text) {
+  const log = document.getElementById('send-log');
+  const line = document.createElement('div');
+  line.className = 'send-log-line ' + cls;
+  line.textContent = text;
+  log.appendChild(line);
+  log.scrollTop = log.scrollHeight;
+}
+function startSend(dryRun) {
+  CURRENT_DRY = dryRun;
+  const breakdown = propBreakdown(CURRENT_LETTERS);
+  const propHtml = Object.entries(breakdown)
+    .map(([k, n]) => '<div class="send-prop-item">' + k + ': <b>' + n + '</b></div>')
+    .join('');
+  document.getElementById('confirm-title').textContent = dryRun ? 'Dry-run' : 'Confirm Live Send';
+  document.getElementById('confirm-text').textContent = dryRun
+    ? 'Stage every letter in ResMan without clicking Send. Nothing is actually mailed.'
+    : 'Send ' + CURRENT_LETTERS.length + ' letters via ResMan. This cannot be undone.';
+  document.getElementById('confirm-props').innerHTML = propHtml;
+  document.getElementById('confirm-go').textContent = dryRun ? 'Start dry-run' : 'Send live';
+  document.getElementById('confirm-modal').style.display = 'flex';
+}
+function closeConfirm() { document.getElementById('confirm-modal').style.display = 'none'; }
+function closeSummary() { document.getElementById('summary-modal').style.display = 'none'; }
+
+async function dispatchSend() {
+  closeConfirm();
+  document.getElementById('send-dry-btn').disabled = true;
+  document.getElementById('send-live-btn').disabled = true;
+  document.getElementById('send-progress').style.display = 'flex';
+  document.getElementById('send-progress-fill').style.width = '0%';
+  document.getElementById('send-progress-text').textContent = 'Dispatching...';
+  document.getElementById('send-log').style.display = 'block';
+  document.getElementById('send-log').innerHTML = '';
+  POLL_SEEN = { sent: 0, staged: 0, failed: 0 };
+  appendLog('info', '[' + new Date().toLocaleTimeString() + '] Dispatching batch (' + CURRENT_LETTERS.length + ' letters, ' + (CURRENT_DRY ? 'DRY-RUN' : 'LIVE') + ')...');
+  try {
+    const r = await fetch('/api/trigger_send_letters', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        password: EDIT_PWD,
+        dryRun: CURRENT_DRY,
+        letters: CURRENT_LETTERS,
+      }),
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok || !data.ok) throw new Error(data.error || ('HTTP ' + r.status));
+    CURRENT_RUN = data.runId;
+    appendLog('info', 'runId: ' + data.runId + ' — waiting for GH Actions runner...');
+    document.getElementById('send-progress-text').textContent = 'Dispatched. Waiting for runner...';
+    pollStatus();
+  } catch (e) {
+    appendLog('failed', 'Dispatch failed: ' + e.message);
+    document.getElementById('send-dry-btn').disabled = false;
+    document.getElementById('send-live-btn').disabled = false;
+    document.getElementById('send-progress-text').textContent = 'Dispatch failed';
+  }
+}
+
+async function pollStatus() {
+  if (!CURRENT_RUN) return;
+  try {
+    const r = await fetch('/api/send_progress?runId=' + encodeURIComponent(CURRENT_RUN) + '&t=' + Date.now(), { cache: 'no-store' });
+    if (r.ok) {
+      const s = await r.json();
+      updateProgress(s);
+      if (s.status === 'complete') { showSummary(s); return; }
+    }
+  } catch (_) { /* 404 is expected before first commit */ }
+  POLL_TIMER = setTimeout(pollStatus, 3000);
+}
+
+function updateProgress(s) {
+  const sent = (s.sent || []).length;
+  const staged = (s.staged || []).length;
+  const failed = (s.failed || []).length;
+  const total = s.total || CURRENT_LETTERS.length;
+  const done = sent + staged + failed;
+  const pct = total ? Math.round((done / total) * 100) : 0;
+  document.getElementById('send-progress-fill').style.width = pct + '%';
+  document.getElementById('send-progress-text').textContent =
+    done + ' / ' + total + '  (' + sent + ' sent, ' + staged + ' staged, ' + failed + ' failed)';
+  for (let i = POLL_SEEN.sent; i < sent; i++) {
+    const e = s.sent[i];
+    appendLog('sent', '✓ sent  ' + e.property + '/' + e.unit + '  ' + (e.resident || ''));
+  }
+  POLL_SEEN.sent = sent;
+  for (let i = POLL_SEEN.staged; i < staged; i++) {
+    const e = s.staged[i];
+    appendLog('staged', '• staged ' + e.property + '/' + e.unit + '  ' + (e.resident || ''));
+  }
+  POLL_SEEN.staged = staged;
+  for (let i = POLL_SEEN.failed; i < failed; i++) {
+    const e = s.failed[i];
+    appendLog('failed', '✗ failed ' + e.property + '/' + e.unit + '  ' + (e.detail || ''));
+  }
+  POLL_SEEN.failed = failed;
+}
+
+function showSummary(s) {
+  const sent = (s.sent || []).length;
+  const staged = (s.staged || []).length;
+  const failed = (s.failed || []).length;
+  const stats = document.getElementById('summary-stats');
+  stats.innerHTML = '';
+  const addStat = (cls, num, label) => {
+    if (num <= 0) return;
+    stats.innerHTML += '<div class="send-stat ' + cls + '"><div class="stat-num">' + num + '</div><div class="stat-label">' + label + '</div></div>';
+  };
+  addStat('stat-sent', sent, 'Sent');
+  addStat('stat-staged', staged, 'Staged');
+  addStat('stat-failed', failed, 'Failed');
+  document.getElementById('summary-title').textContent = s.mode === 'dry-run' ? 'Dry-run complete' : 'Send complete';
+  const failsDiv = document.getElementById('summary-fails');
+  if (failed > 0) {
+    failsDiv.innerHTML = '<div class="send-fail-list">' + (s.failed || []).map(f =>
+      '<div class="send-fail-item"><b>' + f.property + '/' + f.unit + '</b> &nbsp; ' + (f.detail || 'unknown error') + '</div>'
+    ).join('') + '</div>';
+    document.getElementById('retry-btn').style.display = 'inline-block';
+  } else {
+    failsDiv.innerHTML = '';
+    document.getElementById('retry-btn').style.display = 'none';
+  }
+  document.getElementById('summary-modal').style.display = 'flex';
+  document.getElementById('send-dry-btn').disabled = false;
+  document.getElementById('send-live-btn').disabled = false;
+  appendLog('info', '[' + new Date().toLocaleTimeString() + '] Run complete: ' + sent + ' sent, ' + staged + ' staged, ' + failed + ' failed.');
+}
+
+async function retryFailed() {
+  try {
+    const r = await fetch('/api/send_progress?runId=' + encodeURIComponent(CURRENT_RUN) + '&t=' + Date.now(), { cache: 'no-store' });
+    if (!r.ok) throw new Error('could not re-read status');
+    const s = await r.json();
+    const failedKeys = new Set((s.failed || []).map(f => f.property + '|' + f.month + '|' + f.unit));
+    CURRENT_LETTERS = LETTERS.filter(L => failedKeys.has(L.property + '|' + L.month + '|' + L.unit));
+    if (!CURRENT_LETTERS.length) { alert('No failed letters to retry.'); return; }
+    document.getElementById('send-title').textContent = CURRENT_LETTERS.length + ' retry letter' + (CURRENT_LETTERS.length !== 1 ? 's' : '');
+    CURRENT_RUN = null;
+    POLL_SEEN = { sent: 0, staged: 0, failed: 0 };
+    document.getElementById('summary-modal').style.display = 'none';
+    document.getElementById('send-progress-fill').style.width = '0%';
+    document.getElementById('send-log').innerHTML = '';
+    startSend(CURRENT_DRY);
+  } catch (e) {
+    alert('Retry failed: ' + e.message);
+  }
+}
+<\/script>
 </body>
 </html>`;
     const w = window.open('', '_blank');

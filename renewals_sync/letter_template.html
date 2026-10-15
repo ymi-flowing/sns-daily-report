@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Renewal Letter — {{property_name}} · {{apartment}} · {{month_label}}</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+    background: #f0f2f5;
+    color: #111;
+    line-height: 1.5;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .letter-wrapper {
+    width: 620px;
+    max-width: 100%;
+    margin: 40px auto;
+  }
+
+  .letter-container {
+    background: #fff;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+  }
+
+  /* Header */
+  .letter-header {
+    padding: 6px;
+    background: #fff;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .letter-logo {
+    border-radius: 16px;
+    overflow: hidden;
+    display: inline-block;
+  }
+
+  .letter-logo img {
+    display: block;
+    height: auto;
+    max-width: 200px;
+  }
+
+  .header-meta {
+    padding-right: 14px;
+    text-align: right;
+    font-size: 12px;
+    color: #555;
+    line-height: 1.4;
+  }
+
+  .header-meta .property {
+    font-weight: 900;
+    color: #003f75;
+    font-size: 13px;
+  }
+
+  .header-meta .date { color: #666; }
+
+  /* Body */
+  .letter-body { padding: 26px; }
+
+  .letter-title {
+    font-size: 22px;
+    font-weight: 900;
+    color: #111;
+    margin-bottom: 14px;
+  }
+
+  .greeting {
+    font-size: 14px;
+    color: #111;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+
+  .letter-intro {
+    font-size: 14px;
+    color: #333;
+    margin-bottom: 16px;
+  }
+
+  .letter-intro strong { font-weight: 900; color: #111; }
+
+  /* Compact lease details bar (one line, four data points) */
+  .lease-bar {
+    display: flex;
+    background: #fafafa;
+    border: 1px solid #eee;
+    border-radius: 12px;
+    padding: 10px 16px;
+    margin-bottom: 16px;
+    font-size: 13px;
+    color: #222;
+    gap: 10px;
+  }
+  .lease-bar .item { flex: 1; }
+  .lease-bar .item + .item {
+    padding-left: 12px;
+    border-left: 1px solid #e5e5e5;
+  }
+  .lease-bar .k {
+    display: block;
+    font-size: 10.5px;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 700;
+    margin-bottom: 2px;
+  }
+  .lease-bar .v {
+    font-size: 13px;
+    font-weight: 900;
+    color: #111;
+  }
+
+  /* Section card (renewal offer) */
+  .section-card {
+    border: 1px solid #eee;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #fff;
+    margin-bottom: 16px;
+  }
+
+  .section-card-header {
+    padding: 12px 14px;
+    background: #fafafa;
+    border-bottom: 1px solid #eee;
+  }
+
+  .section-card-header h3 {
+    font-size: 15px;
+    font-weight: 900;
+    color: #003f75;
+    margin-bottom: 3px;
+  }
+
+  .section-card-header .subtitle {
+    font-size: 12px;
+    color: #666;
+  }
+
+  .section-card-body { padding: 12px 14px; }
+
+  /* Offer table */
+  .charges-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .charges-table tr td {
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+    font-size: 13px;
+  }
+
+  .charges-table tr:last-child td { border-bottom: none; }
+  .charges-table .label { color: #111; }
+  .charges-table .value {
+    text-align: right;
+    font-weight: 900;
+    color: #111;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .charges-table .total-row td {
+    padding-top: 12px;
+    border-top: 2px solid #003f75;
+    border-bottom: none;
+  }
+  .charges-table .total-row .label {
+    font-weight: 900;
+    color: #003f75;
+  }
+  .charges-table .total-row .value {
+    font-size: 17px;
+    color: #003f75;
+  }
+
+  /* Deposit sub-line (only when required addition > 0) */
+  .deposit-inline {
+    margin-top: 12px;
+    padding: 10px 12px;
+    background: #f0f7ff;
+    border-radius: 8px;
+    font-size: 12px;
+    color: #333;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+  }
+  .deposit-inline .item strong { color: #003f75; font-weight: 900; }
+
+  /* Fine print card */
+  .card {
+    background: #fafafa;
+    border: 1px solid #eee;
+    border-radius: 14px;
+    margin-bottom: 16px;
+  }
+
+  .card-body { padding: 16px; }
+
+  .card-title {
+    font-size: 14px;
+    font-weight: 900;
+    color: #111;
+    margin-bottom: 10px;
+  }
+
+  .card-list {
+    margin: 0;
+    padding: 0 0 0 18px;
+    font-size: 13px;
+    color: #222;
+  }
+
+  .card-list li { margin-bottom: 6px; }
+  .card-list li:last-child { margin-bottom: 0; }
+  .card-list strong { font-weight: 900; }
+
+  /* Footer */
+  .letter-footer {
+    text-align: center;
+    border-top: 1px solid #eee;
+    padding-top: 12px;
+    margin-top: 4px;
+  }
+
+  .closing-message {
+    font-size: 13px;
+    color: #333;
+    margin-bottom: 8px;
+  }
+
+  .footer-contact {
+    font-size: 12px;
+    color: #666;
+  }
+
+  .footer-contact .property-name {
+    font-weight: 900;
+    color: #111;
+  }
+
+  /* ========== PRINT (A4) ========== */
+  @media print {
+    * {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    body { background: #fff; font-size: 13px; line-height: 1.4; }
+
+    .letter-wrapper { width: 100%; max-width: 100%; margin: 0; }
+    .letter-container { box-shadow: none; border-radius: 0; }
+
+    .letter-header { padding: 4px 6px; }
+    .letter-logo img { max-width: 165px; }
+    .header-meta { font-size: 11px; padding-right: 10px; }
+    .header-meta .property { font-size: 12.5px; }
+
+    .letter-body { padding: 16px 22px; }
+    .letter-title { font-size: 22px; margin-bottom: 12px; }
+
+    .greeting { font-size: 14px; margin-bottom: 8px; }
+    .letter-intro { font-size: 13.5px; margin-bottom: 14px; }
+
+    .lease-bar { padding: 10px 14px; margin-bottom: 14px; }
+    .lease-bar .k { font-size: 11px; }
+    .lease-bar .v { font-size: 13px; }
+
+    .section-card { margin-bottom: 12px; border-radius: 10px; }
+    .section-card-header { padding: 10px 14px; }
+    .section-card-header h3 { font-size: 15px; margin-bottom: 4px; }
+    .section-card-header .subtitle { font-size: 12.5px; }
+    .section-card-body { padding: 11px 14px; }
+
+    .charges-table tr td { padding: 6px 0; font-size: 13px; }
+    .charges-table .total-row td { padding-top: 10px; border-top: 2px solid #003f75; }
+    .charges-table .total-row .label { font-size: 14px; }
+    .charges-table .total-row .value { font-size: 17px; }
+
+    .deposit-inline { margin-top: 10px; padding: 9px 12px; font-size: 12px; }
+
+    .card { margin-bottom: 10px; border-radius: 10px; }
+    .card-body { padding: 12px 14px; }
+    .card-title { font-size: 14px; margin-bottom: 8px; }
+    .card-list { font-size: 13px; padding-left: 16px; line-height: 1.45; }
+    .card-list li { margin-bottom: 4px; }
+
+    .letter-footer { padding-top: 10px; margin-top: 6px; }
+    .closing-message { font-size: 13px; margin-bottom: 6px; }
+    .footer-contact { font-size: 12px; }
+
+    @page { margin: 10mm; size: A4; }
+  }
+</style>
+</head>
+<body>
+  <div class="letter-wrapper">
+    <div class="letter-container">
+      <!-- Header -->
+      <div class="letter-header">
+        <div class="letter-logo">
+          <img src="https://www.dropbox.com/scl/fi/8i6y3e0lnjhm65s2ymhr9/SNS.jpg?rlkey=6ca6wtkxp5hr4l16ppu9hkj1z&raw=1" alt="SNS Logo" />
+        </div>
+        <div class="header-meta">
+          <div class="property">{{property_name}}</div>
+          <div class="date">{{header_date}}</div>
+        </div>
+      </div>
+
+      <!-- Body -->
+      <div class="letter-body">
+        <div class="letter-title">Renewal Letter</div>
+
+        <div class="greeting">Dear {{first_name}},</div>
+        <div class="letter-intro">
+          Thank you for making <strong>{{property_name}}</strong> your home. We'd love for
+          you to continue calling us home after your current lease expires on
+          <strong>{{exp_date}}</strong>. Please see our renewal offer for you below.
+        </div>
+
+        <!-- Compact lease bar -->
+        <div class="lease-bar">
+          <div class="item">
+            <span class="k">Resident</span>
+            <span class="v">{{resident_name}}</span>
+          </div>
+          <div class="item">
+            <span class="k">Apartment</span>
+            <span class="v">{{apartment}}</span>
+          </div>
+          <div class="item">
+            <span class="k">Floorplan</span>
+            <span class="v">{{floorplan}}</span>
+          </div>
+          <div class="item">
+            <span class="k">Lease Expires</span>
+            <span class="v">{{exp_date}}</span>
+          </div>
+        </div>
+
+        <!-- Renewal offer -->
+        <div class="section-card">
+          <div class="section-card-header">
+            <h3>Here's our renewal offer for you</h3>
+            <div class="subtitle"><strong>12-month</strong> lease beginning on {{lease_start}}.</div>
+          </div>
+          <div class="section-card-body">
+            <table class="charges-table">
+{{charges_rows}}
+              <tr class="total-row"><td class="label">Total Monthly Charges</td><td class="value">{{total_display}}</td></tr>
+            </table>
+{{deposit_block}}
+          </div>
+        </div>
+
+        <!-- Please note -->
+        <div class="card">
+          <div class="card-body">
+            <div class="card-title">Please note</div>
+            <ul class="card-list">
+              <li>The leasing team may require a valid ID and SSN for all leaseholders to complete the renewal.</li>
+              <li>This letter serves as formal written notice of any rent adjustments and lease changes effective at the end of the current lease term.</li>
+              <li>If no lease is signed and no notice to vacate is provided, your lease will automatically convert to month-to-month with the charges above plus a Month-to-Month Fee of $150.</li>
+              <li>Any unpaid balance on your account must be paid in full before the renewal lease can be signed.</li>
+              <li>This renewal offer may be withdrawn at any time by Management prior to both parties' written acceptance and execution of a Lease Renewal or new lease.</li>
+              <li>If you choose to move out at the end of your term, please provide at least 60 days written notice to avoid an Insufficient Notice Penalty.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="letter-footer">
+          <div class="closing-message">
+            We appreciate you being part of our community and look forward to your reply.
+          </div>
+          <div class="footer-contact">
+            <div class="property-name">{{property_name}}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

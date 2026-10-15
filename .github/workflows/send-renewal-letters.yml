@@ -1,0 +1,129 @@
+name: Send Renewal Letters
+
+# Triggered by /api/trigger_send_letters via repository_dispatch.
+# client_payload: { runId, dryRun, letters: [{property, month, unit, resident}, ...] }
+#
+# For each (property, month) group:
+#   1. generate_letters.py produces per-unit PDFs
+#   2. send_batch.py drives Playwright through ResMan's Send Email dialog
+#      for each unit (dry-run = everything up to Send, but no click)
+# Status is streamed into send-status/<runId>.json, committed every ~10s so
+# the dashboard can poll it as a static asset while the run is in flight.
+
+on:
+  repository_dispatch:
+    types: [send-renewal-letters]
+
+permissions:
+  contents: write
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install playwright pypdf
+          python -m playwright install --with-deps chromium
+
+      - name: Dump client_payload to batch.json
+        env:
+          PAYLOAD: ${{ toJSON(github.event.client_payload) }}
+        run: |
+          mkdir -p send-status
+          # Use python to parse-and-reformat so we validate the JSON up front.
+          python - <<'PY'
+          import json, os, pathlib
+          payload = json.loads(os.environ["PAYLOAD"])
+          runId = payload.get("runId") or "no-run-id"
+          # Expose a few things to later steps
+          with open(os.environ["GITHUB_ENV"], "a") as f:
+              f.write(f"RUN_ID={runId}\n")
+              f.write(f"DRY_RUN={'1' if payload.get('dryRun') else '0'}\n")
+          pathlib.Path("send-status").mkdir(exist_ok=True)
+          pathlib.Path("send-status/batch.json").write_text(json.dumps(payload, indent=2))
+          print(f"runId={runId}  letters={len(payload.get('letters', []))}  dryRun={payload.get('dryRun')}")
+          PY
+
+      - name: Status committer (background)
+        # Commits send-status/<runId>.json every 15s while the send is running
+        # so the dashboard can poll a fresh snapshot.
+        shell: bash
+        run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+          cat > /tmp/status_committer.sh <<'EOF'
+          #!/bin/bash
+          STATUS_FILE="send-status/${RUN_ID}.json"
+          while true; do
+            if [ -f "$STATUS_FILE" ]; then
+              git add "$STATUS_FILE" 2>/dev/null || true
+              if ! git diff --staged --quiet; then
+                git commit -m "Send status: ${RUN_ID} tick [$(date -u '+%H:%M:%S UTC')]" >/dev/null 2>&1 || true
+                # Rebase+push to tolerate concurrent auto-refresh commits.
+                for i in 1 2 3; do
+                  git pull --rebase --autostash origin main >/dev/null 2>&1 || true
+                  if git push origin main >/dev/null 2>&1; then
+                    break
+                  fi
+                  sleep 2
+                done
+              fi
+            fi
+            sleep 15
+          done
+          EOF
+          chmod +x /tmp/status_committer.sh
+          nohup /tmp/status_committer.sh > /tmp/committer.log 2>&1 &
+          echo $! > /tmp/committer.pid
+
+      - name: Run the batch (generate PDFs + send via Playwright)
+        env:
+          SHEETS_WEBHOOK_URL: ${{ secrets.SHEETS_WEBHOOK_URL }}
+          SHARED_SECRET: ${{ secrets.SHARED_SECRET }}
+          # Playwright inside send_letters.py uses the hardcoded SNS_Assistant creds
+          # (see renewals_sync/send_letters.py); no secrets needed for login.
+        working-directory: renewals_sync
+        run: |
+          STATUS_FILE="../send-status/${RUN_ID}.json"
+          DRY_FLAG=""
+          if [ "$DRY_RUN" = "1" ]; then DRY_FLAG="--dry-run"; fi
+          python send_batch.py \
+            ../send-status/batch.json \
+            --status-file "$STATUS_FILE" \
+            --headless \
+            $DRY_FLAG
+
+      - name: Stop status committer
+        if: always()
+        run: |
+          if [ -f /tmp/committer.pid ]; then
+            kill "$(cat /tmp/committer.pid)" 2>/dev/null || true
+          fi
+
+      - name: Final commit of status file
+        if: always()
+        shell: bash
+        run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+          STATUS_FILE="send-status/${RUN_ID}.json"
+          if [ -f "$STATUS_FILE" ]; then
+            git add "$STATUS_FILE"
+            git diff --staged --quiet || git commit -m "Send status: ${RUN_ID} final [$(date -u '+%Y-%m-%d %H:%M UTC')]"
+            for i in 1 2 3; do
+              git pull --rebase --autostash origin main >/dev/null 2>&1 || true
+              if git push origin main; then break; fi
+              sleep 3
+            done
+          fi
