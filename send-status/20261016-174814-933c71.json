@@ -2,10 +2,41 @@
   "runId": "20261016-174814-933c71",
   "startedAt": "2026-10-16T17:48:53",
   "mode": "dry-run",
-  "status": "running",
+  "status": "complete",
   "total": 3,
   "sent": [],
-  "staged": [],
+  "staged": [
+    {
+      "property": "49THSTR",
+      "month": "2027-01",
+      "unit": "1524",
+      "resident": "Helina Basic",
+      "status": "STAGED",
+      "detail": "dry-run, Send not clicked",
+      "attachment": "49th - Jan 2027 - 1524.pdf",
+      "at": "2026-10-16T17:49:10"
+    },
+    {
+      "property": "49THSTR",
+      "month": "2027-01",
+      "unit": "901",
+      "resident": "Matthew Wilmsen",
+      "status": "STAGED",
+      "detail": "dry-run, Send not clicked",
+      "attachment": "49th - Jan 2027 - 901.pdf",
+      "at": "2026-10-16T17:49:13"
+    },
+    {
+      "property": "49THSTR",
+      "month": "2027-01",
+      "unit": "803",
+      "resident": "Daivis Linares Moreno",
+      "status": "STAGED",
+      "detail": "dry-run, Send not clicked",
+      "attachment": "49th - Jan 2027 - 803.pdf",
+      "at": "2026-10-16T17:49:15"
+    }
+  ],
   "failed": [],
-  "completedAt": null
+  "completedAt": "2026-10-16T17:49:16"
 }
