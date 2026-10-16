@@ -3000,72 +3000,184 @@ function openBulkLetters(rows) {
 ${style}
 <style>
   @media print { .no-print { display: none !important; } }
-  body { padding-top: 56px; }
+  body {
+    padding-top: 68px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+  }
   .send-topbar {
     position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-    background: #ffffff; border-bottom: 1px solid #e2e8f0;
-    padding: 10px 16px; display: flex; gap: 12px; align-items: center;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    background: rgba(255,255,255,0.92); backdrop-filter: saturate(180%) blur(14px);
+    -webkit-backdrop-filter: saturate(180%) blur(14px);
+    border-bottom: 1px solid #e2e8f0;
+    padding: 14px 24px; display: flex; gap: 16px; align-items: center;
+    box-shadow: 0 1px 2px rgba(15,23,42,0.04), 0 4px 16px rgba(15,23,42,0.04);
   }
-  .send-topbar h1 { font-size: 14px; font-weight: 700; margin: 0; color: #0f172a; flex: 0 0 auto; }
-  .send-topbar .btn { padding: 7px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1px solid transparent; }
-  .send-topbar .btn:disabled { opacity: 0.45; cursor: not-allowed; }
-  .btn-primary { background: #06b6d4; color: white; border-color: #0891b2; }
-  .btn-primary:hover:not(:disabled) { background: #0891b2; }
-  .btn-success { background: #10b981; color: white; border-color: #047857; }
-  .btn-success:hover:not(:disabled) { background: #059669; }
+  .send-topbar h1 {
+    font-size: 15px; font-weight: 600; margin: 0; color: #0f172a; letter-spacing: -0.01em;
+    flex: 0 0 auto; display: flex; align-items: center; gap: 10px;
+  }
+  .send-topbar h1 .count-pill {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 28px; height: 22px; padding: 0 8px;
+    border-radius: 999px; background: #0f172a; color: #fff;
+    font-size: 12px; font-weight: 700; letter-spacing: 0;
+  }
+  .send-topbar .btn {
+    padding: 9px 16px; border-radius: 10px; font-size: 13px; font-weight: 600;
+    cursor: pointer; border: 1px solid transparent; letter-spacing: 0;
+    transition: transform 0.08s ease, box-shadow 0.15s ease, background 0.15s ease;
+    display: inline-flex; align-items: center; gap: 6px; line-height: 1;
+  }
+  .send-topbar .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .send-topbar .btn:hover:not(:disabled) { transform: translateY(-1px); }
+  .btn-primary { background: #06b6d4; color: white; border-color: #0891b2; box-shadow: 0 1px 2px rgba(6,182,212,0.3); }
+  .btn-primary:hover:not(:disabled) { background: #0891b2; box-shadow: 0 4px 10px rgba(6,182,212,0.35); }
+  .btn-success { background: #10b981; color: white; border-color: #047857; box-shadow: 0 1px 2px rgba(16,185,129,0.3); }
+  .btn-success:hover:not(:disabled) { background: #059669; box-shadow: 0 4px 10px rgba(16,185,129,0.35); }
   .btn-ghost { background: #f1f5f9; color: #334155; border-color: #e2e8f0; }
   .btn-ghost:hover:not(:disabled) { background: #e2e8f0; }
-  .btn-amber { background: #f59e0b; color: white; border-color: #d97706; }
-  .btn-amber:hover:not(:disabled) { background: #d97706; }
-  .send-progress-wrap { flex: 1; min-width: 150px; display: none; flex-direction: column; gap: 3px; }
-  .send-progress-bar { height: 5px; background: #e2e8f0; border-radius: 3px; overflow: hidden; }
-  .send-progress-bar-fill { height: 100%; background: #10b981; width: 0%; transition: width 0.3s; }
-  .send-progress-text { font-size: 10px; color: #475569; line-height: 1.2; }
-  .send-log {
-    position: fixed; bottom: 0; left: 0; right: 0; max-height: 200px; overflow-y: auto;
-    background: #0f172a; color: #cbd5e1; font-family: ui-monospace, 'SF Mono', Menlo, monospace;
-    font-size: 11px; padding: 8px 16px; z-index: 99; display: none;
-    border-top: 2px solid #475569;
+  .btn-amber { background: #f59e0b; color: white; border-color: #d97706; box-shadow: 0 1px 2px rgba(245,158,11,0.3); }
+  .btn-amber:hover:not(:disabled) { background: #d97706; box-shadow: 0 4px 10px rgba(245,158,11,0.35); }
+  .send-progress-wrap { flex: 1; min-width: 180px; display: none; flex-direction: column; gap: 4px; }
+  .send-progress-bar { height: 6px; background: #e2e8f0; border-radius: 999px; overflow: hidden; }
+  .send-progress-bar-fill {
+    height: 100%; width: 0%; border-radius: 999px;
+    background: linear-gradient(90deg, #10b981 0%, #06b6d4 100%);
+    transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   }
-  .send-log-line { padding: 1px 0; line-height: 1.4; }
+  .send-progress-text { font-size: 11px; color: #475569; line-height: 1.2; font-variant-numeric: tabular-nums; }
+  .send-log {
+    position: fixed; bottom: 0; left: 0; right: 0; max-height: 220px; overflow-y: auto;
+    background: #0b1220; color: #cbd5e1;
+    font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+    font-size: 12px; padding: 10px 20px; z-index: 99; display: none;
+    border-top: 1px solid #1e293b;
+  }
+  .send-log-line { padding: 2px 0; line-height: 1.5; font-variant-numeric: tabular-nums; }
+  .send-log-line .ts { color: #64748b; margin-right: 10px; }
   .send-log-line.sent { color: #86efac; }
   .send-log-line.staged { color: #93c5fd; }
   .send-log-line.failed { color: #fca5a5; }
   .send-log-line.info { color: #cbd5e1; }
   .send-modal {
-    position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px);
+    position: fixed; inset: 0; background: rgba(15, 23, 42, 0.55); backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
     display: none; align-items: center; justify-content: center; z-index: 1000;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+    animation: modal-fade 0.18s ease-out;
   }
-  .send-modal-box { background: white; border-radius: 14px; padding: 24px; width: 440px; max-width: 90vw; max-height: 85vh; overflow-y: auto; }
-  .send-modal-box h2 { font-size: 17px; font-weight: 700; margin: 0 0 10px; color: #0f172a; }
-  .send-modal-box p { font-size: 13px; color: #334155; margin: 0 0 12px; line-height: 1.5; }
-  .send-prop-list { max-height: 180px; overflow-y: auto; background: #f8fafc; border-radius: 8px; padding: 8px 12px; font-size: 12px; margin: 10px 0; }
-  .send-prop-item { padding: 3px 0; border-bottom: 1px solid #e2e8f0; }
-  .send-prop-item:last-child { border-bottom: 0; }
-  .send-stats { display: flex; gap: 10px; margin: 14px 0; }
-  .send-stat { flex: 1; padding: 10px; border-radius: 8px; text-align: center; }
-  .stat-sent { background: #ecfdf5; color: #065f46; }
-  .stat-staged { background: #eff6ff; color: #1e40af; }
-  .stat-failed { background: #fef2f2; color: #991b1b; }
-  .stat-num { font-size: 20px; font-weight: 700; line-height: 1; }
-  .stat-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 4px; }
-  .send-fail-list { background: #fef2f2; border-radius: 8px; padding: 10px 12px; font-size: 11px; max-height: 160px; overflow-y: auto; }
-  .send-fail-item { padding: 4px 0; border-bottom: 1px solid #fecaca; color: #991b1b; }
-  .send-fail-item:last-child { border-bottom: 0; }
+  @keyframes modal-fade { from { opacity: 0; } to { opacity: 1; } }
+  .send-modal-box {
+    background: white; border-radius: 16px; padding: 28px 28px 24px;
+    width: 540px; max-width: 92vw; max-height: 88vh; overflow-y: auto;
+    box-shadow: 0 25px 50px -12px rgba(15,23,42,0.35), 0 0 0 1px rgba(15,23,42,0.04);
+  }
+  .send-modal-box.wide { width: 760px; }
+  .send-modal-header { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
+  .send-modal-header .mode-icon {
+    width: 36px; height: 36px; border-radius: 10px; display: flex;
+    align-items: center; justify-content: center; font-size: 18px;
+    background: #ecfdf5; color: #047857;
+  }
+  .send-modal-header .mode-icon.dry { background: #fffbeb; color: #b45309; }
+  .send-modal-header .mode-icon.done { background: #eff6ff; color: #1e40af; }
+  .send-modal-box h2 { font-size: 19px; font-weight: 700; margin: 0; color: #0f172a; letter-spacing: -0.015em; }
+  .send-modal-box p { font-size: 13.5px; color: #475569; margin: 2px 0 16px; line-height: 1.55; }
+  .send-prop-list {
+    max-height: 200px; overflow-y: auto; background: #f8fafc;
+    border: 1px solid #e2e8f0; border-radius: 10px;
+    padding: 6px 4px; margin: 10px 0 18px;
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 2px;
+  }
+  .send-prop-item {
+    padding: 7px 12px; font-size: 12.5px; color: #0f172a;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .send-prop-item b { font-weight: 700; color: #06b6d4; font-variant-numeric: tabular-nums; }
+  .send-stats { display: flex; gap: 10px; margin: 14px 0 18px; }
+  .send-stat {
+    flex: 1; padding: 14px 10px; border-radius: 12px; text-align: center;
+    border: 1px solid transparent;
+  }
+  .stat-sent { background: #ecfdf5; color: #065f46; border-color: #d1fae5; }
+  .stat-staged { background: #eff6ff; color: #1e40af; border-color: #dbeafe; }
+  .stat-failed { background: #fef2f2; color: #991b1b; border-color: #fee2e2; }
+  .stat-num { font-size: 26px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+  .stat-label { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.08em; margin-top: 6px; font-weight: 600; }
+
+  /* Final report table */
+  .send-report {
+    margin: 18px 0 8px; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; background: #fff;
+  }
+  .send-report-head {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 14px; background: #f8fafc; border-bottom: 1px solid #e2e8f0;
+    font-size: 12px; font-weight: 600; color: #475569; letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+  .send-report-head .count { color: #0f172a; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .send-report-scroll { max-height: 340px; overflow-y: auto; }
+  table.send-report-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.send-report-table thead th {
+    position: sticky; top: 0; z-index: 1;
+    background: #ffffff; text-align: left; padding: 9px 14px;
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.06em; color: #64748b; border-bottom: 1px solid #e2e8f0;
+  }
+  table.send-report-table td {
+    padding: 9px 14px; border-bottom: 1px solid #f1f5f9; color: #0f172a; vertical-align: middle;
+  }
+  table.send-report-table tr:last-child td { border-bottom: 0; }
+  table.send-report-table tr:hover td { background: #f8fafc; }
+  td.unit-cell { font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; width: 1%; }
+  td.resident-cell { color: #334155; }
+  td.status-cell { width: 1%; white-space: nowrap; }
+  td.file-cell {
+    color: #475569; font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+    font-size: 12px; max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .status-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 9px; border-radius: 999px; font-size: 11.5px; font-weight: 600;
+  }
+  .status-badge.sent { background: #ecfdf5; color: #047857; }
+  .status-badge.staged { background: #eff6ff; color: #1e40af; }
+  .status-badge.failed { background: #fef2f2; color: #991b1b; }
+  .status-badge .checkmark { font-weight: 800; }
+  .fail-detail {
+    display: block; font-size: 11px; color: #991b1b; margin-top: 3px;
+    font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+    white-space: normal; word-break: break-word;
+  }
+  .send-modal-footer {
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 10px; margin-top: 18px;
+  }
+  .send-modal-footer .btn {
+    padding: 9px 18px; border-radius: 10px; font-size: 13px; font-weight: 600;
+    cursor: pointer; border: 1px solid transparent;
+    transition: transform 0.08s ease, box-shadow 0.15s ease, background 0.15s ease;
+  }
+  .send-modal-footer .btn:hover:not(:disabled) { transform: translateY(-1px); }
+  .send-modal-footer .btn.btn-success { background: #10b981; color: white; border-color: #047857; box-shadow: 0 1px 2px rgba(16,185,129,0.3); }
+  .send-modal-footer .btn.btn-success:hover:not(:disabled) { background: #059669; box-shadow: 0 4px 10px rgba(16,185,129,0.35); }
+  .send-modal-footer .btn.btn-amber { background: #f59e0b; color: white; border-color: #d97706; }
+  .send-modal-footer .btn.btn-amber:hover:not(:disabled) { background: #d97706; }
+  .send-modal-footer .btn.btn-ghost { background: #f1f5f9; color: #334155; border-color: #e2e8f0; }
+  .send-modal-footer .btn.btn-ghost:hover:not(:disabled) { background: #e2e8f0; }
 </style>
 </head>
 <body>
 
 <div class="send-topbar no-print">
-  <h1 id="send-title">${rows.length} renewal letter${rows.length !== 1 ? 's' : ''} ready</h1>
+  <h1 id="send-title">
+    <span class="count-pill">${rows.length}</span>
+    renewal letter${rows.length !== 1 ? 's' : ''}
+  </h1>
   <div class="send-progress-wrap" id="send-progress">
     <div class="send-progress-bar"><div class="send-progress-bar-fill" id="send-progress-fill"></div></div>
     <div class="send-progress-text" id="send-progress-text">—</div>
   </div>
-  <div style="margin-left: auto; display: flex; gap: 8px;">
+  <div style="margin-left: auto; display: flex; gap: 10px;">
     <button class="btn btn-amber" id="send-dry-btn" onclick="startSend(true)">Dry-run</button>
     <button class="btn btn-success" id="send-live-btn" onclick="startSend(false)">Send All</button>
     <button class="btn btn-primary" onclick="window.print()">Print</button>
@@ -3076,10 +3188,13 @@ ${style}
 
 <div class="send-modal no-print" id="confirm-modal">
   <div class="send-modal-box">
-    <h2 id="confirm-title">Confirm Send</h2>
+    <div class="send-modal-header">
+      <div class="mode-icon" id="confirm-icon">✉</div>
+      <h2 id="confirm-title">Confirm Send</h2>
+    </div>
     <p id="confirm-text">—</p>
     <div class="send-prop-list" id="confirm-props"></div>
-    <div style="display: flex; justify-content: flex-end; gap: 8px;">
+    <div class="send-modal-footer" style="justify-content: flex-end;">
       <button class="btn btn-ghost" onclick="closeConfirm()">Cancel</button>
       <button class="btn btn-success" id="confirm-go" onclick="dispatchSend()">Dispatch</button>
     </div>
@@ -3087,11 +3202,15 @@ ${style}
 </div>
 
 <div class="send-modal no-print" id="summary-modal">
-  <div class="send-modal-box">
-    <h2 id="summary-title">Send complete</h2>
+  <div class="send-modal-box wide">
+    <div class="send-modal-header">
+      <div class="mode-icon done" id="summary-icon">✓</div>
+      <h2 id="summary-title">Send complete</h2>
+    </div>
+    <p id="summary-subtitle" style="margin-top: 2px;">—</p>
     <div class="send-stats" id="summary-stats"></div>
-    <div id="summary-fails"></div>
-    <div style="display: flex; justify-content: space-between; gap: 8px; margin-top: 16px;">
+    <div id="summary-report"></div>
+    <div class="send-modal-footer">
       <button class="btn btn-ghost" onclick="closeSummary()">Close</button>
       <button class="btn btn-amber" id="retry-btn" style="display: none;" onclick="retryFailed()">Retry failed</button>
     </div>
@@ -3121,7 +3240,12 @@ function appendLog(cls, text) {
   const log = document.getElementById('send-log');
   const line = document.createElement('div');
   line.className = 'send-log-line ' + cls;
-  line.textContent = text;
+  const ts = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+  const tsSpan = document.createElement('span');
+  tsSpan.className = 'ts';
+  tsSpan.textContent = ts;
+  line.appendChild(tsSpan);
+  line.appendChild(document.createTextNode(text));
   log.appendChild(line);
   log.scrollTop = log.scrollHeight;
 }
@@ -3129,12 +3253,15 @@ function startSend(dryRun) {
   CURRENT_DRY = dryRun;
   const breakdown = propBreakdown(CURRENT_LETTERS);
   const propHtml = Object.entries(breakdown)
-    .map(([k, n]) => '<div class="send-prop-item">' + k + ': <b>' + n + '</b></div>')
+    .map(([k, n]) => '<div class="send-prop-item"><span>' + k + '</span><b>' + n + '</b></div>')
     .join('');
-  document.getElementById('confirm-title').textContent = dryRun ? 'Dry-run' : 'Confirm Live Send';
+  const icon = document.getElementById('confirm-icon');
+  icon.className = 'mode-icon' + (dryRun ? ' dry' : '');
+  icon.textContent = dryRun ? '⏸' : '✉';
+  document.getElementById('confirm-title').textContent = dryRun ? 'Dry-run' : 'Confirm live send';
   document.getElementById('confirm-text').textContent = dryRun
     ? 'Stage every letter in ResMan without clicking Send. Nothing is actually mailed.'
-    : 'Send ' + CURRENT_LETTERS.length + ' letters via ResMan. This cannot be undone.';
+    : 'Send ' + CURRENT_LETTERS.length + ' letter' + (CURRENT_LETTERS.length !== 1 ? 's' : '') + ' via ResMan. This cannot be undone.';
   document.getElementById('confirm-props').innerHTML = propHtml;
   document.getElementById('confirm-go').textContent = dryRun ? 'Start dry-run' : 'Send live';
   document.getElementById('confirm-modal').style.display = 'flex';
@@ -3152,7 +3279,7 @@ async function dispatchSend() {
   document.getElementById('send-log').style.display = 'block';
   document.getElementById('send-log').innerHTML = '';
   POLL_SEEN = { sent: 0, staged: 0, failed: 0 };
-  appendLog('info', '[' + new Date().toLocaleTimeString() + '] Dispatching batch (' + CURRENT_LETTERS.length + ' letters, ' + (CURRENT_DRY ? 'DRY-RUN' : 'LIVE') + ')...');
+  appendLog('info', 'Dispatching batch (' + CURRENT_LETTERS.length + ' letters, ' + (CURRENT_DRY ? 'DRY-RUN' : 'LIVE') + ')...');
   try {
     const r = await fetch('/api/trigger_send_letters', {
       method: 'POST',
@@ -3199,28 +3326,78 @@ function updateProgress(s) {
   const pct = total ? Math.round((done / total) * 100) : 0;
   document.getElementById('send-progress-fill').style.width = pct + '%';
   document.getElementById('send-progress-text').textContent =
-    done + ' / ' + total + '  (' + sent + ' sent, ' + staged + ' staged, ' + failed + ' failed)';
+    done + ' / ' + total + '  —  ' + sent + ' sent · ' + staged + ' staged · ' + failed + ' failed';
   for (let i = POLL_SEEN.sent; i < sent; i++) {
     const e = s.sent[i];
-    appendLog('sent', '✓ sent  ' + e.property + '/' + e.unit + '  ' + (e.resident || ''));
+    const tail = e.attachment ? '  ' + e.attachment : '';
+    appendLog('sent', '✓  ' + e.property + '/' + e.unit + '  ' + (e.resident || '') + tail);
   }
   POLL_SEEN.sent = sent;
   for (let i = POLL_SEEN.staged; i < staged; i++) {
     const e = s.staged[i];
-    appendLog('staged', '• staged ' + e.property + '/' + e.unit + '  ' + (e.resident || ''));
+    const tail = e.attachment ? '  ' + e.attachment : '';
+    appendLog('staged', '•  ' + e.property + '/' + e.unit + '  ' + (e.resident || '') + tail);
   }
   POLL_SEEN.staged = staged;
   for (let i = POLL_SEEN.failed; i < failed; i++) {
     const e = s.failed[i];
-    appendLog('failed', '✗ failed ' + e.property + '/' + e.unit + '  ' + (e.detail || ''));
+    appendLog('failed', '✗  ' + e.property + '/' + e.unit + '  ' + (e.detail || ''));
   }
   POLL_SEEN.failed = failed;
+}
+
+function escapeHtml(x) {
+  return String(x == null ? '' : x)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function buildReport(s) {
+  // Flatten all entries into one ordered list, grouped by property.
+  const all = []
+    .concat((s.sent || []).map(e => Object.assign({ _bucket: 'sent' }, e)))
+    .concat((s.staged || []).map(e => Object.assign({ _bucket: 'staged' }, e)))
+    .concat((s.failed || []).map(e => Object.assign({ _bucket: 'failed' }, e)));
+  all.sort((a, b) => {
+    const ap = (a.property || '') + '/' + (a.unit || '');
+    const bp = (b.property || '') + '/' + (b.unit || '');
+    return ap.localeCompare(bp);
+  });
+  if (!all.length) return '';
+  const rows = all.map(e => {
+    const badgeCls = e._bucket;
+    const mark = e._bucket === 'sent' ? '✓' : (e._bucket === 'staged' ? '•' : '✗');
+    const label = e._bucket === 'sent' ? 'Sent' : (e._bucket === 'staged' ? 'Staged' : 'Failed');
+    const attach = e.attachment || '';
+    const fail = (e._bucket === 'failed' && e.detail)
+      ? '<span class="fail-detail">' + escapeHtml(e.detail) + '</span>' : '';
+    return '<tr>' +
+      '<td class="unit-cell">' + escapeHtml(e.property || '') + ' · ' + escapeHtml(e.unit || '') + '</td>' +
+      '<td class="resident-cell">' + escapeHtml(e.resident || '—') + '</td>' +
+      '<td class="status-cell"><span class="status-badge ' + badgeCls + '">' +
+        '<span class="checkmark">' + mark + '</span>' + label +
+      '</span></td>' +
+      '<td class="file-cell" title="' + escapeHtml(attach) + '">' + escapeHtml(attach || '—') + fail + '</td>' +
+    '</tr>';
+  }).join('');
+  return '<div class="send-report">' +
+    '<div class="send-report-head"><span>Report</span><span class="count">' + all.length + ' total</span></div>' +
+    '<div class="send-report-scroll">' +
+    '<table class="send-report-table">' +
+    '<thead><tr>' +
+      '<th>Unit</th><th>Resident</th><th>Status</th><th>Attachment</th>' +
+    '</tr></thead>' +
+    '<tbody>' + rows + '</tbody>' +
+    '</table>' +
+    '</div></div>';
 }
 
 function showSummary(s) {
   const sent = (s.sent || []).length;
   const staged = (s.staged || []).length;
   const failed = (s.failed || []).length;
+  const total = sent + staged + failed;
+  const dry = s.mode === 'dry-run';
   const stats = document.getElementById('summary-stats');
   stats.innerHTML = '';
   const addStat = (cls, num, label) => {
@@ -3230,21 +3407,19 @@ function showSummary(s) {
   addStat('stat-sent', sent, 'Sent');
   addStat('stat-staged', staged, 'Staged');
   addStat('stat-failed', failed, 'Failed');
-  document.getElementById('summary-title').textContent = s.mode === 'dry-run' ? 'Dry-run complete' : 'Send complete';
-  const failsDiv = document.getElementById('summary-fails');
-  if (failed > 0) {
-    failsDiv.innerHTML = '<div class="send-fail-list">' + (s.failed || []).map(f =>
-      '<div class="send-fail-item"><b>' + f.property + '/' + f.unit + '</b> &nbsp; ' + (f.detail || 'unknown error') + '</div>'
-    ).join('') + '</div>';
-    document.getElementById('retry-btn').style.display = 'inline-block';
-  } else {
-    failsDiv.innerHTML = '';
-    document.getElementById('retry-btn').style.display = 'none';
-  }
+  const icon = document.getElementById('summary-icon');
+  icon.className = 'mode-icon ' + (failed > 0 ? 'dry' : 'done');
+  icon.textContent = failed > 0 ? '!' : '✓';
+  document.getElementById('summary-title').textContent =
+    dry ? 'Dry-run complete' : (failed > 0 ? 'Send finished with issues' : 'Send complete');
+  document.getElementById('summary-subtitle').textContent =
+    total + ' letter' + (total !== 1 ? 's' : '') + ' processed · ' + sent + ' sent · ' + staged + ' staged · ' + failed + ' failed';
+  document.getElementById('summary-report').innerHTML = buildReport(s);
+  document.getElementById('retry-btn').style.display = failed > 0 ? 'inline-block' : 'none';
   document.getElementById('summary-modal').style.display = 'flex';
   document.getElementById('send-dry-btn').disabled = false;
   document.getElementById('send-live-btn').disabled = false;
-  appendLog('info', '[' + new Date().toLocaleTimeString() + '] Run complete: ' + sent + ' sent, ' + staged + ' staged, ' + failed + ' failed.');
+  appendLog('info', 'Run complete: ' + sent + ' sent, ' + staged + ' staged, ' + failed + ' failed.');
 }
 
 async function retryFailed() {

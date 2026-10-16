@@ -517,6 +517,7 @@ def status_record(status_path: Path, cfg: dict, result: dict) -> None:
         "resident": result.get("name"),
         "status": result.get("status"),
         "detail": result.get("detail", ""),
+        "attachment": result.get("attachment", ""),
         "at": datetime.now().isoformat(timespec="seconds"),
     }
     bucket = {"SENT": "sent", "STAGED": "staged"}.get(entry["status"], "failed")
