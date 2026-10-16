@@ -86,19 +86,6 @@ def append_rows(name: str, rows: list[list], batch_size: int = 500) -> int:
     return total
 
 
-def replace_tab(name: str, headers: list[str], rows: list[list], batch_size: int = 500) -> int:
-    _post({"action": "replace_tab", "tab": name, "headers": headers, "rows": []})
-    return append_rows(name, rows, batch_size=batch_size)
-
-
-def delete_tab(name: str) -> dict:
-    return _post({"action": "delete_tab", "tab": name})
-
-
-def delete_tabs_except(keep: list[str]) -> dict:
-    return _post({"action": "delete_tabs_except", "keep": keep})
-
-
 def get_column(name: str, header: str) -> list:
     return _post({"action": "get_column", "tab": name, "header": header})["values"]
 
@@ -131,16 +118,8 @@ def insert_column(name: str, header: str, after: str | None = None, values: list
     return _post({"action": "insert_column", "tab": name, "header": header, "after": after, "values": values or []})
 
 
-def delete_column(name: str, header: str) -> dict:
-    return _post({"action": "delete_column", "tab": name, "header": header})
-
-
 def set_formulas(name: str, header: str, formulas: list[str]) -> dict:
     return _post({"action": "set_formulas", "tab": name, "header": header, "formulas": formulas})
-
-
-def clear_column(name: str, header: str) -> dict:
-    return _post({"action": "clear_column", "tab": name, "header": header})
 
 
 if __name__ == "__main__":

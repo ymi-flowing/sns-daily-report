@@ -23,6 +23,7 @@ Output file layout:
 import json
 import os
 import sys
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -61,21 +62,30 @@ REPO_ROOT = HERE.parent
 OUTPUT = REPO_ROOT / "renewals_data.json"
 
 
-def fetch_tab(tab: str) -> dict:
-    data = sheets_client.get_range(tab, RANGE_PER_TAB)
-    values = data.get("values", [])
-    if not values:
-        return {"headers": [], "rows": []}
-    headers = values[0]
-    rows = []
-    for r in values[1:]:
-        # Skip empty rows (both Expiring Month and Unit empty)
-        if len(r) < 2 or (str(r[0]).strip() == "" and str(r[1]).strip() == ""):
-            continue
-        if len(r) < len(headers):
-            r = list(r) + [""] * (len(headers) - len(r))
-        rows.append(r)
-    return {"headers": headers, "rows": rows}
+def fetch_tab(tab: str, max_attempts: int = 3) -> dict:
+    # Apps Script webhook occasionally returns ok:true with empty values when
+    # under rate pressure. Verify empty responses against inspect_tab before
+    # accepting them, and retry on confirmed data loss.
+    for attempt in range(1, max_attempts + 1):
+        data = sheets_client.get_range(tab, RANGE_PER_TAB)
+        values = data.get("values", [])
+        if values:
+            headers = values[0]
+            rows = []
+            for r in values[1:]:
+                # Skip empty rows (both Expiring Month and Unit empty)
+                if len(r) < 2 or (str(r[0]).strip() == "" and str(r[1]).strip() == ""):
+                    continue
+                if len(r) < len(headers):
+                    r = list(r) + [""] * (len(headers) - len(r))
+                rows.append(r)
+            return {"headers": headers, "rows": rows}
+        row_count = sheets_client.inspect_tab(tab).get("rowCount", 0)
+        if row_count == 0:
+            return {"headers": [], "rows": []}
+        print(f"  [{tab}] empty response but inspect_tab says {row_count} rows; retrying ({attempt}/{max_attempts})")
+        time.sleep(2 ** attempt)  # 2s, 4s, 8s
+    raise RuntimeError(f"fetch_tab({tab}) returned empty despite rowCount>0 after {max_attempts} attempts")
 
 
 def build_resman_lookup(property_abbrs: list) -> dict:
@@ -168,6 +178,7 @@ def main() -> int:
     print(f"Fetching {len(PROPERTY_TABS)} tabs + ResMan dates...")
     tabs = {}
     total_rows = 0
+    failures = []
     for tab in PROPERTY_TABS:
         print(f"\n[{tab}]")
         try:
@@ -180,7 +191,13 @@ def main() -> int:
             total_rows += n
         except Exception as e:
             print(f"  ERROR: {e}")
-            tabs[tab] = {"headers": [], "rows": []}
+            failures.append((tab, str(e)))
+
+    if failures:
+        print("\nAborting: tabs failed to fetch. Keeping existing renewals_data.json.")
+        for tab, msg in failures:
+            print(f"  {tab}: {msg}")
+        return 1
 
     payload = {
         "generatedAt": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
