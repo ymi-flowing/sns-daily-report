@@ -23,7 +23,7 @@ Then open `dashboard_live.html` in a browser.
 ## Overview
 
 This dashboard provides a unified view of:
-- **Unit Status** - Occupancy, vacancies, NTV, evictions across 11 properties
+- **Unit Status** - Occupancy, vacancies, NTV, evictions across 9 properties
 - **Traffic Metrics** - Lead generation, applicants, and lease signing progress
 - **Expiring Leases** - 4-month forecast with renewal tracking
 - **Renovation Status** - Renovated / Partial / Classic breakdown per property
@@ -82,7 +82,6 @@ This dashboard provides a unified view of:
   - `GET /Units/Availability` - Unit vacancy, occupancy, move-out dates (primary endpoint)
   - `GET /Units` - Unit details, renovation status, `availableForOnlineMarketing` field
   - `GET /WorkOrders` - Open work orders and new orders in last 24h
-  - `GET /Prospects` - MTD prospects by first-contact date (used for **AN3 & TRA** traffic, which are not in the CRM sheet)
   - `GET /Transactions/Receivables` - Owed account balances as of a date (used for **Receivable MTD** / **Del %**)
 
 ### Google Sheets (Traffic)
@@ -99,14 +98,14 @@ This dashboard provides a unified view of:
 
 ---
 
-## Properties (11)
+## Properties (9)
 
 | Region | Properties |
 |--------|------------|
 | Tampa | 49thStr |
 | Orlando | TV, MOC, MUSO |
 | Jacksonville | AP, SJ, ROP, ORT |
-| Ft. Lauderdale | EAST, TRA, AN3 |
+| Ft. Lauderdale | EAST |
 
 **Note:** Down/Abated units are excluded from all counts and calculations.
 
@@ -201,14 +200,12 @@ Includes pre-leased vacant units as "rented".
 ### 2. Traffic Summary Table
 | Metric | Source | Description |
 |--------|--------|-------------|
-| Total Prospects | Google Sheets¹ | MTD leads per property |
-| Daily AVG | Google Sheets¹ | MTD prospects ÷ calendar days elapsed this month (zero-lead days included) |
+| Total Prospects | Google Sheets | MTD leads per property |
+| Daily AVG | Google Sheets | MTD prospects ÷ calendar days elapsed this month (zero-lead days included) |
 | **Total Applicants** | Partners API | Pending leases (future move-ins) |
 | Pending Approval | Partners API | `approvalDate` is null |
 | Approved | Partners API | Has `approvalDate`, no `leaseSignedDate` |
 | Signed Lease | Partners API | Has `leaseSignedDate` |
-
-¹ **AN3 & TRA** are not in the CRM Google Sheet — their Total Prospects / Daily AVG come from the ResMan Partners API `GET /Prospects` (prospects with first contact since the 1st of the month, **including Lost**).
 
 ### 3. Expiring Leases Table
 Shows leases expiring in current month + next 3 months (4 total).
@@ -468,7 +465,7 @@ Property · Unit · Lease End (all frozen) · Resident · Current Rent · Curren
 
 A checkbox column + select-all header lets the user pick specific residents. **"Print Letters"** button prints all selected (or all visible if none selected) by opening a single new tab with every letter stacked and separated by `page-break-before: always` — one Ctrl+P produces a multi-page PDF. Totals footer sums every $ column (deltas sum too).
 
-Each resident name is clickable → opens that resident's formal renewal letter in a new tab (A4, print-ready). The letter template is inlined into `renewals.html` as `LETTER_TEMPLATE`; placeholder data is produced by `buildLetterContext()`, which ports `letters/generate_letters.py` logic (first-name split, charges rows, deposit sub-block, Internet → Landscaping label for TRA/AN3). The SNS logo is self-hosted at `/SNS-letter-logo.jpg`.
+Each resident name is clickable → opens that resident's formal renewal letter in a new tab (A4, print-ready). The letter template is inlined into `renewals.html` as `LETTER_TEMPLATE`; placeholder data is produced by `buildLetterContext()`, which ports `letters/generate_letters.py` logic (first-name split, charges rows, deposit sub-block). The SNS logo is self-hosted at `/SNS-letter-logo.jpg`.
 
 ### `renewals_sync/` directory
 

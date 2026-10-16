@@ -39,7 +39,7 @@ SHARED_SECRET = os.environ.get("SHARED_SECRET", "")
 # Property tab names in the Renewal Letters sheet. Order mirrors sync_all.py.
 PROPERTY_TABS = [
     "49thStr", "ORT", "AP", "TV", "MOC", "MUSO",
-    "SJ", "ROP", "EAST", "TRA-AN3",
+    "SJ", "ROP", "EAST",
 ]
 
 # Max rows per tab. The sheet caps at ~250 rows per property historically.

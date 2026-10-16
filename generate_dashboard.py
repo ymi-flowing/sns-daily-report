@@ -40,8 +40,6 @@ FINANCIAL_PROPERTY_MAP = {
     'The Villas at Ortega': 'ORT',
     'The Village at Eastpointe Apts': 'EAST',
     'The Village at Eastpointe Apartments': 'EAST',
-    'The River Apartments': 'TRA',
-    'AN3 Investments': 'AN3'
 }
 
 # Property name mapping (Google Sheet names to abbreviations)
@@ -55,23 +53,21 @@ PROPERTY_NAME_MAP = {
     'Arbor Place Apartments': 'AP',
     'Riverside at Orange Park': 'ROP',
     'The Vista at Winter Park': 'TV',
-    'The River Apartments': 'TRA',
-    'AN3 Investments': 'AN3'
 }
 
-# Target properties (now including TRA and AN3)
+# Target properties
 # Ordered by property size (smallest first) to reduce API load and improve success rate
-TARGET_PROPERTIES = ["AN3", "TRA", "ROP", "TV", "SJ", "MUSO", "MOC", "EAST", "ORT", "49thStr", "AP"]
+TARGET_PROPERTIES = ["ROP", "TV", "SJ", "MUSO", "MOC", "EAST", "ORT", "49thStr", "AP"]
 
 # Properties whose traffic comes from the ResMan Prospects API instead of the CRM Google Sheet
-RESMAN_TRAFFIC_PROPERTIES = ["AN3", "TRA"]
+RESMAN_TRAFFIC_PROPERTIES = []
 
 # Property grouping by region
 PROPERTY_GROUPS = {
     "Tampa": ["49thStr"],
     "Orlando": ["TV", "MOC", "MUSO"],
     "Jacksonville": ["AP", "SJ", "ROP", "ORT"],
-    "Ft. Lauderdale": ["EAST", "TRA", "AN3"]
+    "Ft. Lauderdale": ["EAST"]
 }
 
 # API Configuration
@@ -3969,7 +3965,7 @@ def main():
     else:
         print("    Warning: No traffic data available")
 
-    # AN3 & TRA traffic comes from the ResMan Prospects API (not in the CRM sheet)
+    # Hook for properties whose traffic comes from the ResMan Prospects API instead of the CRM sheet
     for abbr in RESMAN_TRAFFIC_PROPERTIES:
         pid = properties_data.get(abbr, {}).get("property_id")
         if pid:
