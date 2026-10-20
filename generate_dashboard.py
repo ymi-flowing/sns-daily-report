@@ -2836,25 +2836,49 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
                     ? 'All Properties'
                     : (selectedCount === 1 ? Array.from(state.selected)[0] : `${{selectedCount}} selected`);
                 const chevron = state.dropdownOpen ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7';
+
+                function checkboxCell(isChecked) {{
+                    const base = 'relative inline-flex items-center justify-center w-4 h-4 rounded border-2 transition-colors flex-shrink-0';
+                    const stateCls = isChecked
+                        ? 'border-cyan-500 bg-cyan-500/10 dark:bg-cyan-400/10'
+                        : 'border-slate-300 dark:border-slate-500 bg-transparent group-hover:border-slate-400 dark:group-hover:border-slate-400';
+                    const check = isChecked
+                        ? '<svg class="w-3 h-3 text-cyan-500" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>'
+                        : '';
+                    return `<span class="${{base}} ${{stateCls}}">${{check}}</span>`;
+                }}
+
+                function rowCls(isSelected) {{
+                    const base = 'group flex items-center gap-2.5 px-3 py-2 cursor-pointer text-sm whitespace-nowrap transition-colors';
+                    const bg = isSelected
+                        ? 'bg-cyan-50/60 dark:bg-cyan-900/15 hover:bg-cyan-50 dark:hover:bg-cyan-900/25 text-slate-800 dark:text-slate-100'
+                        : 'hover:bg-slate-50 dark:hover:bg-slate-700/40 text-slate-700 dark:text-slate-200';
+                    return `${{base}} ${{bg}}`;
+                }}
+
                 let dropdownHtml = '';
                 if (state.dropdownOpen) {{
-                    const allChecked = state.selected.size === 0 ? 'checked' : '';
-                    dropdownHtml = `<div class="absolute z-10 mt-1 w-64 rounded-xl border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 shadow-lg max-h-80 overflow-auto">`
-                        + `<label class="flex items-center gap-2 px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-600 cursor-pointer text-sm font-medium text-slate-700 dark:text-slate-200 border-b border-slate-200 dark:border-slate-600">`
-                        + `<input type="checkbox" ${{allChecked}} onchange="${{cfg.varName}}.selectAll()" class="rounded border-slate-300 dark:border-slate-500 text-blue-500 focus:ring-blue-400"> All Properties`
+                    const allSelected = state.selected.size === 0;
+                    dropdownHtml = `<div class="absolute z-20 mt-1 w-72 rounded-xl border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 shadow-xl max-h-80 overflow-auto">`
+                        + `<label class="${{rowCls(allSelected)}} font-medium border-b border-slate-200 dark:border-slate-600">`
+                        + checkboxCell(allSelected)
+                        + `<input type="checkbox" ${{allSelected ? 'checked' : ''}} onchange="${{cfg.varName}}.selectAll()" class="sr-only">`
+                        + `<span>All Properties</span>`
                         + `</label>`;
                     abbrs.forEach(abbr => {{
                         const p = propertyTableData[abbr];
-                        const checked = state.selected.has(abbr) ? 'checked' : '';
-                        dropdownHtml += `<label class="flex items-center gap-2 px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-600 cursor-pointer text-sm text-slate-700 dark:text-slate-200">`
-                            + `<input type="checkbox" ${{checked}} onchange="${{cfg.varName}}.toggle('${{abbr}}')" class="rounded border-slate-300 dark:border-slate-500 text-blue-500 focus:ring-blue-400">`
-                            + `<span class="font-medium">${{abbr}}</span><span class="text-slate-400 dark:text-slate-500 text-xs">${{p.name || ''}}</span>`
+                        const isSelected = state.selected.has(abbr);
+                        dropdownHtml += `<label class="${{rowCls(isSelected)}}">`
+                            + checkboxCell(isSelected)
+                            + `<input type="checkbox" ${{isSelected ? 'checked' : ''}} onchange="${{cfg.varName}}.toggle('${{abbr}}')" class="sr-only">`
+                            + `<span class="font-medium">${{abbr}}</span>`
+                            + `<span class="text-slate-400 dark:text-slate-500 text-xs">${{p.name || ''}}</span>`
                             + `</label>`;
                     }});
                     dropdownHtml += `</div>`;
                 }}
-                container.innerHTML = `<button type="button" onclick="${{cfg.varName}}.toggleDropdown()" class="flex items-center justify-between w-64 h-10 rounded-xl border-2 border-slate-200 dark:border-slate-600 py-2 pl-4 pr-3 bg-white dark:bg-slate-700 text-slate-900 dark:text-white font-medium cursor-pointer text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all">`
-                    + `<span>${{buttonLabel}}</span>`
+                container.innerHTML = `<button type="button" onclick="${{cfg.varName}}.toggleDropdown()" class="flex items-center justify-between w-64 h-10 rounded-xl border-2 border-slate-200 dark:border-slate-600 py-2 pl-4 pr-3 bg-white dark:bg-slate-700 text-slate-900 dark:text-white font-medium cursor-pointer text-sm hover:border-slate-300 dark:hover:border-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 transition-all">`
+                    + `<span class="truncate">${{buttonLabel}}</span>`
                     + `<svg class="w-5 h-5 text-slate-400 ml-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${{chevron}}"></path></svg>`
                     + `</button>${{dropdownHtml}}`;
             }}
