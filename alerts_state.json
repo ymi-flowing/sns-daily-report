@@ -1,0 +1,453 @@
+{
+  "alerts": {
+    "49thStr|ntvList|07594c72-6157-44b0-9747-e748ddd61ada": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "49thStr|ntvList|41334cfc-0875-494f-b64f-1781c648caa2": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "49thStr|ntvList|422e58c5-0c24-487a-b8cf-12fc14721875": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 8 days to get ready"
+    },
+    "49thStr|ntvList|5cf0299c-54ae-4af6-b53b-97fef31bcf35": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 8 days to get ready"
+    },
+    "49thStr|ntvList|7e51334c-6779-4500-b3c0-d79302392042": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "49thStr|ntvList|84897db8-2e83-4b76-8624-059c3a556f95": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "49thStr|ntvList|acf426fe-fd83-427d-8ec3-60b6b8e55933": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 8 days to get ready"
+    },
+    "49thStr|ntvList|b3fc29c7-6c30-4b16-83e2-2ebbb10b616d": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "49thStr|ntvList|b6625a71-6bea-4473-a1d7-d9f538a09bca": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 11 days to get ready"
+    },
+    "49thStr|ntvList|dcd11060-d519-44c4-b1bc-05cf9a18f7f3": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 8 days to get ready"
+    },
+    "49thStr|ntvList|e4a537c4-5506-4e5c-89f8-fa4bbdac91ff": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 11 days to get ready"
+    },
+    "49thStr|ntvList|eff11fe6-9e34-487d-a807-3549a6c40e1d": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "49thStr|ntvList|f9810ad8-25a3-4d61-b6ce-054987eef98a": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 11 days to get ready"
+    },
+    "AP|ntvList|42dcd949-b239-4c52-8f53-afac6fc27dc8": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "AP|ntvList|5585100e-64aa-41d5-a292-b17d92495dd0": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 11 days to get ready"
+    },
+    "AP|ntvList|5dee2cd4-b937-4ae2-9533-76b51205aba0": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "AP|ntvList|63b155c4-d4f0-4f3d-996d-105b7a2bc049": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "AP|ntvList|852602d7-f6b8-4d01-bcbf-b3f919118f59": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "AP|ntvList|911388bd-a2ac-4b66-aeb3-1d356be7045b": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "AP|ntvList|9bbaf305-5988-44ef-ac2d-b7db3afc1a3a": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "AP|ntvList|be479898-7c5d-4c89-8b69-9ed954c663f4": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 12 days to get ready"
+    },
+    "AP|ntvList|d2651101-b797-40ef-a18a-0f5ba827d73e": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "AP|ntvList|dc4d0f3f-3d14-49b5-9182-9c970c5c2ba2": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "AP|ntvList|fda58e9d-ad3b-42b1-a0b1-a0a59a4b375e": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "EAST|ntvList|155fc106-3fad-4a10-99a6-65afafcad4fd": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 12 days to get ready"
+    },
+    "EAST|ntvList|1ae62faf-9246-4241-bd22-d40005b223aa": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 13 days to get ready"
+    },
+    "EAST|ntvList|28100b30-40c9-46a6-9978-7431007c0423": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 13 days to get ready"
+    },
+    "EAST|ntvList|3173fd9b-e4f7-4ed7-8116-eca337fe9711": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 8 days to get ready"
+    },
+    "EAST|ntvList|36530200-0645-4feb-b2ed-dbd62f593c29": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "EAST|ntvList|3bc342ec-f8be-41fb-9173-a3f60d2c308c": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "EAST|ntvList|41fdb9fd-5d32-45fc-ba14-f7f0fa4b5e11": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "EAST|ntvList|47681217-2a4a-4341-bb79-4b2484a9b178": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "EAST|ntvList|6653ca01-9390-4064-a1a3-6a079b2c15e1": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "EAST|ntvList|674b0ec2-dec8-4d00-a7d8-e7e16bef5e79": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "EAST|ntvList|70c7bf22-a9d9-477d-8b1a-05280e3b26c9": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "EAST|ntvList|71832130-60d9-4afa-b3b7-51ed8f545049": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "EAST|ntvList|72613360-f421-49fd-afee-4cbfba2b5ce5": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "EAST|ntvList|783788d6-4299-4cd0-8bc8-77ac5b0b1ce5": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "EAST|ntvList|864a848e-8977-4646-9ff7-f019967fca3f": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 11 days to get ready"
+    },
+    "EAST|ntvList|8a932a7c-fd8c-4c10-8697-0f991b948ce0": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 11 days to get ready"
+    },
+    "EAST|ntvList|a0559ada-d3c3-47fa-8ec0-a84e9e11b3b8": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 8 days to get ready"
+    },
+    "EAST|ntvList|a176e4c6-f1de-46b5-b4ff-1ee4cd7ea4c8": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "EAST|ntvList|ade3a273-8a15-4a62-a38b-b72448eb3882": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "EAST|ntvList|bd0603fc-471f-429f-9805-631528d591c6": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "EAST|ntvList|e50fdcea-b640-4cd7-99b7-a38974b9f746": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "EAST|ntvList|f9addc0c-2a17-4c94-96d3-227d073a6fa1": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "EAST|vacantNotReadyList|941197e0-5004-4248-b443-ecc3ef9ac136": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Past Available Date"
+    },
+    "MOC|ntvList|0f7f00af-5835-46aa-b462-5fd51b16154b": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "MOC|ntvList|5cb03864-e7dc-4568-915d-bb5e8016da57": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 8 days to get ready"
+    },
+    "MOC|ntvList|77ddfd84-203c-45cf-b2c8-35f75e465878": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "MOC|ntvList|91f9cca0-3ad3-44ca-ba7e-00970c4d47b6": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 11 days to get ready"
+    },
+    "MOC|ntvList|94b58b5b-72b0-4a20-a30f-48b4e047ea21": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "MOC|ntvList|c53b1efd-d6c8-4bce-936e-6057a4b9b8b4": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 12 days to get ready"
+    },
+    "MOC|ntvList|cede6e28-78a9-4212-b685-d486b01e9af1": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "MOC|vacantLeasedList|43035e45-662c-4f41-bafa-2225ddf909b1": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Past Move-In Date"
+    },
+    "MUSO|ntvList|29883bc3-0963-4802-8be8-97e9bd6a0d47": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 11 days to get ready"
+    },
+    "MUSO|ntvList|3cd7b432-daaf-4145-8ef2-db1b1fa626cb": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 11 days to get ready"
+    },
+    "MUSO|ntvList|526efe02-81be-4fd2-92f8-c0fa8c5a2160": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 12 days to get ready"
+    },
+    "MUSO|ntvList|7e16a5dd-7be1-4851-b767-e411002366cb": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "MUSO|ntvList|81f9cf2e-c591-420e-b9b0-f98eba9f5650": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 11 days to get ready"
+    },
+    "MUSO|ntvList|b919075f-9a00-4023-b728-8a4072ea5867": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 11 days to get ready"
+    },
+    "MUSO|ntvList|be2011b1-8514-4014-be13-ad4d3beb4633": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 11 days to get ready"
+    },
+    "MUSO|ntvList|cd0b4b39-e891-49f8-940b-20ed5aed9054": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 12 days to get ready"
+    },
+    "MUSO|ntvList|da9a4b5d-4ad5-4353-aa64-879e55e40325": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "MUSO|ntvList|ed295409-2a78-4417-9f7c-e6d7271521bb": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "ORT|ntvList|09eafdf0-9e7b-48b2-a049-271d40c2109a": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "ORT|ntvList|0ad7c7c1-dfe9-42ca-a830-b12364971613": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "ORT|ntvList|23b547b5-4353-42a5-a5b5-022a8255e1bc": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "ORT|ntvList|375b6001-3397-4d22-8171-745926587ad9": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "ORT|ntvList|418b7cb2-2ab6-4779-9f21-155ba935cb8b": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "ORT|ntvList|51fd625d-e435-4420-864a-50a5413a5278": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "ORT|ntvList|570dce8c-5eac-4231-b375-b3d009788931": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "ORT|ntvList|5924534c-0617-4d8c-b7a5-f2b26bbb9fff": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "ORT|ntvList|5c5b816f-8475-478a-a7fa-052add410759": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "ORT|ntvList|620c31b2-097e-45b7-8caf-9ef74a42b52a": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "ORT|ntvList|6cd4dab3-2207-42c4-b2b9-55832dfe1a9a": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 11 days to get ready"
+    },
+    "ORT|ntvList|6ee5f908-e7d8-4964-92ff-6956af9c6948": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "ORT|ntvList|857cc856-db34-40d4-85f3-7a402b6a6789": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "ORT|ntvList|8ade63b6-7330-413f-9ba2-22f57eeedf8a": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "ORT|ntvList|a1a8e4e5-43ea-4294-a3fa-b569b6ffc188": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "ORT|ntvList|a1e2cb4c-7413-40bd-84e9-f01dc93d5e02": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "ORT|ntvList|ac64a779-7524-4bca-9a35-27f9ac500a8b": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "ORT|ntvList|b698be75-73e1-4e56-8be4-708d6b139808": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 11 days to get ready"
+    },
+    "ORT|ntvList|c12ab20b-2c91-4f90-91ce-9bd04bdcb537": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "ORT|ntvList|ce0df9aa-4c59-4456-bf7c-f9735aede585": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 11 days to get ready"
+    },
+    "ORT|ntvList|f669f371-20bd-4d40-aa41-d7fe4164e4a6": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "ORT|vacantLeasedList|aacc2b0e-9e63-4e77-8401-a748688b0faa": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Past Move-In Date"
+    },
+    "ROP|ntvList|328ffdfd-f641-4247-8145-fa108ee17fff": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "ROP|ntvList|49849267-eb12-487a-9b40-9127d7105907": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "ROP|ntvList|d63d03f0-7624-42f1-815f-102252c1c371": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "ROP|ntvList|e893b571-bdb4-4bca-9be6-542d203a1a87": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "SJ|ntvList|1e9a7137-0837-44fe-a7f4-ba795b61631d": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "SJ|ntvList|6cbb0063-a39b-4b1c-8572-5e819cd322a5": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 12 days to get ready"
+    },
+    "SJ|ntvList|7cc58c89-0502-4256-9936-ce3a1dce7307": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 12 days to get ready"
+    },
+    "SJ|ntvList|85b3638b-24be-40eb-a83d-796da01b49e8": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Available 501 days BEFORE move-out"
+    },
+    "SJ|ntvList|b016b44a-8d17-4f8e-b370-d8b835691b51": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Available 423 days BEFORE move-out"
+    },
+    "SJ|ntvList|c1448ca1-4448-413e-a0df-ffd37cc36a71": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "SJ|ntvList|ddeaa601-a60e-4b85-81c4-42166cc13c98": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 12 days to get ready"
+    },
+    "SJ|ntvList|e158bd11-cc5a-4c13-9214-7fa836e681f0": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 12 days to get ready"
+    },
+    "SJ|vacantNotReadyList|60b517fb-fc6b-4483-bbe0-08f318be1379": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Past Available Date"
+    },
+    "TV|ntvList|0516fc85-00c6-4978-9f6c-d8fc1fe74e42": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "TV|ntvList|16083e50-ebe9-4497-9fbc-fd62183af61c": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "TV|ntvList|323b8bd9-a63d-4f2d-aacb-197265a93661": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "TV|ntvList|39c51b10-de64-4b09-a90a-58a6fd949f12": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "TV|ntvList|401f50ca-8c61-4f61-b951-938fa41d6bcb": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "TV|ntvList|44fa4733-a9d4-44eb-8a87-c6658dab8aa5": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "TV|ntvList|617ee5d1-2329-4b9f-818a-64098823eaa9": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "TV|ntvList|7167b0d2-3102-420c-bdd0-0d1fd8c91d5d": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "TV|ntvList|a7ff5cd0-311e-46bb-ad59-772b77c7c723": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "TV|ntvList|c9ecaf17-edfc-4b32-9dd8-5229a5e0c7ec": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 11 days to get ready"
+    },
+    "TV|ntvList|ed9ac06c-7f89-458b-8259-f6ddd175c3a5": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 10 days to get ready"
+    },
+    "TV|ntvList|ff0f3610-ade6-44b8-90db-2889f37a247b": {
+      "firstSeen": "2026-10-20",
+      "lastMsg": "Only 11 days to get ready"
+    }
+  },
+  "updated": "2026-10-20"
+}

@@ -18,7 +18,7 @@ PROPERTY_GROUPS = [
     ("Tampa", ["49thStr"]),
     ("Orlando", ["TV", "MOC", "MUSO"]),
     ("Jacksonville", ["AP", "SJ", "ROP", "ORT"]),
-    ("Ft. Lauderdale", ["EAST", "TRA", "AN3"]),
+    ("Ft. Lauderdale", ["EAST"]),
 ]
 
 ALL_PROPS = [abbr for _, abbrs in PROPERTY_GROUPS for abbr in abbrs]

@@ -11,6 +11,23 @@ from datetime import datetime, timedelta
 from collections import defaultdict
 import time
 
+from resman_patch import patch_date_available
+
+AUTO_PUSH_DRY_RUN = os.environ.get("AUTO_PUSH_DRY_RUN", "").strip().lower() in ("1", "true", "yes")
+
+
+def add_business_days(d, n):
+    cur = d
+    added = 0
+    while added < n:
+        cur += timedelta(days=1)
+        if cur.weekday() < 5:
+            added += 1
+    return cur
+
+
+_auto_push_log = []
+
 # API Credentials (from environment variables, fallback for local dev)
 API_KEY = os.environ.get("RESMAN_API_KEY", "43XzRFJkhvAJGLvR6GlJUpKy6nyc")
 PARTNER_ID = os.environ.get("RESMAN_PARTNER_ID", "SNSaPi")
@@ -1061,6 +1078,79 @@ def get_off_market_count(property_id, eviction_units=None, units_availability=No
         return 0
 
 
+def _ntv_alert_and_push(property_id, unit_id, unit_num, unit_type, mo_date, av_date, today):
+    """Compute NTV alert text; auto-PATCH DateAvailable to MO + 10 business days
+    when the gap is misaligned (and MO is not past). Returns
+    (has_alert, msg, auto_pushed_dict_or_none)."""
+    msg = ""
+    has_alert = False
+    auto_pushed = None
+
+    mo_dt = None
+    if mo_date:
+        try:
+            mo_dt = datetime.strptime(mo_date, "%Y-%m-%d").date()
+        except ValueError:
+            mo_dt = None
+
+    if mo_dt is not None:
+        if mo_dt < today:
+            has_alert = True
+            msg = "Past Move-Out Date"
+        elif av_date:
+            try:
+                av_dt = datetime.strptime(av_date, "%Y-%m-%d").date()
+            except ValueError:
+                av_dt = None
+            if av_dt is not None:
+                min_ready = add_business_days(mo_dt, 10)
+                max_ready = add_business_days(mo_dt, 20)
+                misaligned = av_dt < min_ready or av_dt > max_ready
+                if misaligned:
+                    days_gap = (av_dt - mo_dt).days
+                    if av_dt < min_ready:
+                        msg = (f"Available {abs(days_gap)} days BEFORE move-out"
+                               if days_gap < 0 else f"Only {days_gap} days to get ready")
+                    else:
+                        msg = f"Available {days_gap} days AFTER move-out"
+                    has_alert = True
+                    target = min_ready
+                    if AUTO_PUSH_DRY_RUN:
+                        auto_pushed = {
+                            "applied": False,
+                            "dryRun": True,
+                            "newAvDate": target.isoformat(),
+                            "ts": datetime.utcnow().isoformat(timespec="seconds") + "Z",
+                        }
+                        _auto_push_log.append(
+                            f"  [DRY-RUN] {unit_num}: would push avDate {av_date} -> {target.isoformat()}"
+                        )
+                    else:
+                        ok, err = patch_date_available(
+                            property_id, unit_id, target.isoformat(),
+                            description=f"{unit_num} auto-push"
+                        )
+                        if ok:
+                            auto_pushed = {
+                                "applied": True,
+                                "newAvDate": target.isoformat(),
+                                "ts": datetime.utcnow().isoformat(timespec="seconds") + "Z",
+                            }
+                            _auto_push_log.append(
+                                f"  AUTO-PUSH {unit_num}: avDate -> {target.isoformat()} (was {av_date})"
+                            )
+                        else:
+                            _auto_push_log.append(
+                                f"  AUTO-PUSH {unit_num}: FAILED ({err})"
+                            )
+
+    if unit_type and "classic" in unit_type.lower():
+        msg = (msg + " • " if has_alert else "") + "Classic Unit - please update the unit type"
+        has_alert = True
+
+    return has_alert, msg, auto_pushed
+
+
 def make_request(endpoint, extra_params=None):
     """Make authenticated request to ResMan API"""
     url = f"{BASE_URL}/{endpoint}"
@@ -1297,34 +1387,9 @@ def get_property_data(property_id, property_name, units_availability=None, lease
                     })
             else:
                 status_summary["NTV"].append(unit_num)
-                # Check for NTV alerts: past move-out, available less than 10 days after move-out, or available more than 20 days after move-out
-                ntv_alert = False
-                ntv_alert_msg = ""
-                if mo_date:
-                    try:
-                        mo_dt = datetime.strptime(mo_date, "%Y-%m-%d").date()
-                        if mo_dt < today:
-                            ntv_alert = True
-                            ntv_alert_msg = "Past Move-Out Date"
-                        elif av_date:
-                            av_dt = datetime.strptime(av_date, "%Y-%m-%d").date()
-                            min_ready_date = mo_dt + timedelta(days=10)
-                            max_ready_date = mo_dt + timedelta(days=20)
-                            if av_dt < min_ready_date:
-                                days_gap = (av_dt - mo_dt).days
-                                if days_gap < 0:
-                                    ntv_alert_msg = f"Available {abs(days_gap)} days BEFORE move-out"
-                                else:
-                                    ntv_alert_msg = f"Only {days_gap} days to get ready"
-                                ntv_alert = True
-                            elif av_dt > max_ready_date:
-                                days_gap = (av_dt - mo_dt).days
-                                ntv_alert_msg = f"Available {days_gap} days AFTER move-out"
-                                ntv_alert = True
-                    except: pass
-                if unit_type and 'classic' in unit_type.lower():
-                    ntv_alert_msg = (ntv_alert_msg + " • " if ntv_alert else "") + "Classic Unit - please update the unit type"
-                    ntv_alert = True
+                ntv_alert, ntv_alert_msg, auto_pushed = _ntv_alert_and_push(
+                    property_id, unit_id, unit_num, unit_type, mo_date, av_date, today
+                )
                 detailed_lists["ntvList"].append({
                     "unit": unit_num,
                     "unitId": unit_id,
@@ -1333,7 +1398,8 @@ def get_property_data(property_id, property_name, units_availability=None, lease
                     "moDate": mo_date,
                     "avDate": av_date,
                     "hasAlert": ntv_alert,
-                    "alertMsg": ntv_alert_msg
+                    "alertMsg": ntv_alert_msg,
+                    "autoPushed": auto_pushed,
                 })
         elif vacancy_status == "Notice to Vacate Pre-Leased":
             # Check if resident already moved out (lease is "Former") - treat as Vacant
@@ -1378,34 +1444,9 @@ def get_property_data(property_id, property_name, units_availability=None, lease
             else:
                 status_summary["NTV"].append(unit_num)  # Count in NTV total
                 status_summary["NTV Leased"].append(unit_num)  # Also track as leased
-                # Check for NTV alerts: past move-out, available less than 10 days after move-out, or available more than 20 days after move-out
-                ntv_alert = False
-                ntv_alert_msg = ""
-                if mo_date:
-                    try:
-                        mo_dt = datetime.strptime(mo_date, "%Y-%m-%d").date()
-                        if mo_dt < today:
-                            ntv_alert = True
-                            ntv_alert_msg = "Past Move-Out Date"
-                        elif av_date:
-                            av_dt = datetime.strptime(av_date, "%Y-%m-%d").date()
-                            min_ready_date = mo_dt + timedelta(days=10)
-                            max_ready_date = mo_dt + timedelta(days=20)
-                            if av_dt < min_ready_date:
-                                days_gap = (av_dt - mo_dt).days
-                                if days_gap < 0:
-                                    ntv_alert_msg = f"Available {abs(days_gap)} days BEFORE move-out"
-                                else:
-                                    ntv_alert_msg = f"Only {days_gap} days to get ready"
-                                ntv_alert = True
-                            elif av_dt > max_ready_date:
-                                days_gap = (av_dt - mo_dt).days
-                                ntv_alert_msg = f"Available {days_gap} days AFTER move-out"
-                                ntv_alert = True
-                    except: pass
-                if unit_type and 'classic' in unit_type.lower():
-                    ntv_alert_msg = (ntv_alert_msg + " • " if ntv_alert else "") + "Classic Unit - please update the unit type"
-                    ntv_alert = True
+                ntv_alert, ntv_alert_msg, auto_pushed = _ntv_alert_and_push(
+                    property_id, unit_id, unit_num, unit_type, mo_date, av_date, today
+                )
                 detailed_lists["ntvList"].append({
                     "unit": unit_num,
                     "unitId": unit_id,
@@ -1414,7 +1455,8 @@ def get_property_data(property_id, property_name, units_availability=None, lease
                     "moDate": mo_date,
                     "avDate": av_date,
                     "hasAlert": ntv_alert,
-                    "alertMsg": ntv_alert_msg
+                    "alertMsg": ntv_alert_msg,
+                    "autoPushed": auto_pushed,
                 })
         else:
             status_summary["Other"].append(unit_num)
@@ -1448,8 +1490,10 @@ def get_property_data(property_id, property_name, units_availability=None, lease
         "offMarketList": sorted(detailed_lists["offMarketList"], key=lambda x: x["unit"])
     }
 
-def generate_html(properties_data, traffic_data, leases_data, financial_data):
-    """Generate HTML dashboard"""
+def generate_html(properties_data, traffic_data, leases_data, financial_data,
+                  prev_alert_state=None, alert_today=None):
+    """Generate HTML dashboard. Returns (html_str, new_alert_state)."""
+    from alert_state import apply_state_to_properties
     # Use Florida time (Eastern Time)
     from zoneinfo import ZoneInfo
     florida_tz = ZoneInfo("America/New_York")
@@ -1621,6 +1665,11 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data):
             "futureMIList": future_mi_list_sorted,
             "futureMOList": future_moves.get("futureMOList", [])
         }
+
+    # Age alerts: mutate table_data entries to carry firstSeen + daysAgo; return
+    # new state dict so main() can persist it.
+    _alert_today = alert_today or datetime.now().date()
+    new_alert_state = apply_state_to_properties(table_data, prev_alert_state or {}, _alert_today)
 
     table_data_js = json.dumps(table_data)
     property_groups_js = json.dumps(PROPERTY_GROUPS)
@@ -2170,15 +2219,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data):
                 </div>
                 <div class="p-4 overflow-auto max-h-[calc(85vh-160px)]">
                     <table class="min-w-full text-sm">
-                        <thead class="bg-slate-50 dark:bg-slate-700/50">
-                            <tr>
-                                <th class="px-3 py-2 text-left font-semibold text-slate-600 dark:text-slate-300">Property</th>
-                                <th class="px-3 py-2 text-left font-semibold text-slate-600 dark:text-slate-300">Category</th>
-                                <th class="px-3 py-2 text-left font-semibold text-slate-600 dark:text-slate-300">Unit</th>
-                                <th class="px-3 py-2 text-left font-semibold text-slate-600 dark:text-slate-300">Resident / Applicant</th>
-                                <th class="px-3 py-2 text-left font-semibold text-slate-600 dark:text-slate-300">Alert</th>
-                            </tr>
-                        </thead>
+                        <thead id="alerts-thead" class="bg-slate-50 dark:bg-slate-700/50"></thead>
                         <tbody id="alerts-tbody" class="divide-y divide-slate-100 dark:divide-slate-700"></tbody>
                     </table>
                 </div>
@@ -2510,7 +2551,9 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data):
                     const isTransfer = isLastCol && row.isTransfer;
                     let indicatorHtml = '';
                     if (hasRowAlert) {{
-                        indicatorHtml = `<span class="alert-dot alert-tooltip" data-tooltip="${{row.alertMsg || 'Needs attention'}}"></span>`;
+                        const ageSuffix = (typeof row.daysAgo === 'number') ? ` (${{row.daysAgo}}d)` : '';
+                        const pushedSuffix = (row.autoPushed && row.autoPushed.applied) ? ` – auto-pushed to ${{row.autoPushed.newAvDate}}` : '';
+                        indicatorHtml = `<span class="alert-dot alert-tooltip" data-tooltip="${{(row.alertMsg || 'Needs attention') + ageSuffix + pushedSuffix}}"></span>`;
                     }} else if (isTransfer) {{
                         indicatorHtml = `<span class="transfer-dot alert-tooltip" data-tooltip="Transfer"></span>`;
                     }}
@@ -2604,7 +2647,10 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data):
                             unitId: item.unitId || '',
                             resident: item.applicant || item.name || item.resident || '',
                             leaseId: item.leaseId || '',
-                            alertMsg: item.alertMsg || 'Needs attention'
+                            alertMsg: item.alertMsg || 'Needs attention',
+                            firstSeen: item.firstSeen || '',
+                            daysAgo: (typeof item.daysAgo === 'number') ? item.daysAgo : null,
+                            autoPushed: item.autoPushed || null
                         }});
                     }});
                 }});
@@ -2640,18 +2686,75 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data):
             alertsFilterPopulated = true;
         }}
 
+        let alertsSortColumn = 'daysAgo';
+        let alertsSortAsc = false;
+        let alertsCurrentFilter = 'ALL';
+        const ALERTS_COLUMNS = [
+            {{key: 'abbr',       label: 'Property'}},
+            {{key: 'category',   label: 'Category'}},
+            {{key: 'unit',       label: 'Unit'}},
+            {{key: 'resident',   label: 'Resident / Applicant'}},
+            {{key: 'alertMsg',   label: 'Alert'}},
+            {{key: 'daysAgo',    label: 'Age'}}
+        ];
+        function renderAlertsHeader() {{
+            const thead = document.getElementById('alerts-thead');
+            if (!thead) return;
+            let h = '<tr>';
+            ALERTS_COLUMNS.forEach(col => {{
+                const sortIcon = alertsSortColumn === col.key ? (alertsSortAsc ? ' ▲' : ' ▼') : '';
+                h += `<th class="px-3 py-2 text-left font-semibold text-slate-600 dark:text-slate-300 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-600 whitespace-nowrap" onclick="sortAlerts('${{col.key}}')">${{col.label}}${{sortIcon}}</th>`;
+            }});
+            h += '</tr>';
+            thead.innerHTML = h;
+        }}
+        function sortAlerts(column) {{
+            if (alertsSortColumn === column) {{
+                alertsSortAsc = !alertsSortAsc;
+            }} else {{
+                alertsSortColumn = column;
+                alertsSortAsc = (column !== 'daysAgo');  // age defaults desc (oldest first)
+            }}
+            renderAlertsTable(alertsCurrentFilter);
+        }}
+        function compareAlertVals(a, b, col) {{
+            const va = a[col], vb = b[col];
+            const numA = typeof va === 'number' ? va : null;
+            const numB = typeof vb === 'number' ? vb : null;
+            if (numA !== null || numB !== null) {{
+                const ax = numA === null ? Number.NEGATIVE_INFINITY : numA;
+                const bx = numB === null ? Number.NEGATIVE_INFINITY : numB;
+                return ax - bx;
+            }}
+            return String(va || '').localeCompare(String(vb || ''), undefined, {{sensitivity: 'base'}});
+        }}
         function renderAlertsTable(filterAbbr) {{
+            alertsCurrentFilter = filterAbbr || 'ALL';
+            renderAlertsHeader();
             const tbody = document.getElementById('alerts-tbody');
             const countChip = document.getElementById('alerts-modal-count');
             if (!tbody) return;
             const all = collectAllAlerts();
-            const filtered = (filterAbbr && filterAbbr !== 'ALL')
+            let filtered = (filterAbbr && filterAbbr !== 'ALL')
                 ? all.filter(a => a.abbr === filterAbbr)
-                : all;
+                : all.slice();
+            filtered.sort((a, b) => {{
+                const cmp = compareAlertVals(a, b, alertsSortColumn);
+                return alertsSortAsc ? cmp : -cmp;
+            }});
             if (countChip) countChip.textContent = String(filtered.length);
             if (filtered.length === 0) {{
-                tbody.innerHTML = '<tr><td colspan="5" class="px-3 py-6 text-center text-slate-500 dark:text-slate-400">No alerts</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" class="px-3 py-6 text-center text-slate-500 dark:text-slate-400">No alerts</td></tr>';
                 return;
+            }}
+            function ageBadge(a) {{
+                if (a.daysAgo === null || a.daysAgo === undefined) return '<span class="text-slate-400">—</span>';
+                const d = a.daysAgo;
+                let cls = 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-200';
+                if (d >= 14) cls = 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-200';
+                else if (d >= 7) cls = 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200';
+                const title = a.firstSeen ? `first seen ${{a.firstSeen}}` : '';
+                return `<span title="${{title}}" class="inline-block px-2 py-0.5 rounded-full text-xs font-semibold ${{cls}}">${{d}}d</span>`;
             }}
             let html = '';
             filtered.forEach(a => {{
@@ -2661,12 +2764,16 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data):
                 const residentCell = (a.leaseId && a.resident)
                     ? `<a href="https://sns.myresman.com/#/Residents/Detail/${{a.leaseId}}" target="_blank" class="text-blue-600 dark:text-blue-400 hover:scale-105 inline-block transition-transform">${{a.resident}}</a>`
                     : (a.resident || '<span class="text-slate-400">—</span>');
+                const pushedBadge = (a.autoPushed && a.autoPushed.applied)
+                    ? ` <span class="ml-1 inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200" title="Auto-pushed to ${{a.autoPushed.newAvDate}}">AUTO-PUSHED ${{a.autoPushed.newAvDate}}</span>`
+                    : '';
                 html += `<tr class="hover:bg-slate-50 dark:hover:bg-slate-700/40">`
                     + `<td class="px-3 py-2 whitespace-nowrap font-medium text-slate-700 dark:text-slate-200">${{a.abbr}} <span class="text-slate-400 dark:text-slate-500 text-xs">${{a.propertyName}}</span></td>`
                     + `<td class="px-3 py-2 whitespace-nowrap text-slate-700 dark:text-slate-300">${{a.category}}</td>`
                     + `<td class="px-3 py-2 whitespace-nowrap">${{unitCell}}</td>`
                     + `<td class="px-3 py-2 whitespace-nowrap">${{residentCell}}</td>`
-                    + `<td class="px-3 py-2 whitespace-nowrap"><span class="inline-flex items-center gap-1.5"><span class="inline-block w-[6px] h-[6px] rounded-full bg-red-600 dark:bg-red-400"></span><span class="text-red-600 dark:text-red-400 font-medium">${{a.alertMsg}}</span></span></td>`
+                    + `<td class="px-3 py-2 whitespace-nowrap"><span class="inline-flex items-center gap-1.5"><span class="inline-block w-[6px] h-[6px] rounded-full bg-red-600 dark:bg-red-400"></span><span class="text-red-600 dark:text-red-400 font-medium">${{a.alertMsg}}</span>${{pushedBadge}}</span></td>`
+                    + `<td class="px-3 py-2 whitespace-nowrap">${{ageBadge(a)}}</td>`
                     + `</tr>`;
             }});
             tbody.innerHTML = html;
@@ -3879,7 +3986,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data):
     </script>
 </body>
 </html>'''
-    return html
+    return html, new_alert_state
 
 def main():
     print("=" * 60)
@@ -3988,9 +4095,27 @@ def main():
             income['receivable_mtd'] = get_receivables_mtd(pid)
             print(f"    Receivable MTD for {abbr}: ${income['receivable_mtd']:,.2f}")
 
+    # Load previous alert state so firstSeen carries across refreshes
+    from alert_state import load_alert_state, write_alert_state
+    alert_state_path = os.path.join(os.path.dirname(__file__), "alerts_state.json")
+    prev_alert_state = load_alert_state(alert_state_path)
+    alert_today = datetime.now().date()
+
+    # Report any auto-pushed Date Available PATCHes from this run
+    mode_tag = " (DRY-RUN)" if AUTO_PUSH_DRY_RUN else ""
+    if _auto_push_log:
+        print(f"\n[4b] Auto-pushed NTV avDates{mode_tag}:")
+        for line in _auto_push_log:
+            print(line)
+    else:
+        print(f"\n[4b] No NTV avDate auto-pushes this run{mode_tag}.")
+
     # Generate HTML
     print("\n[5] Generating HTML dashboard...")
-    html = generate_html(properties_data, traffic_data, leases_data, financial_data)
+    html, new_alert_state = generate_html(
+        properties_data, traffic_data, leases_data, financial_data,
+        prev_alert_state=prev_alert_state, alert_today=alert_today,
+    )
 
     # Save
     output_path = os.path.join(os.path.dirname(__file__), "dashboard_live.html")
@@ -3998,6 +4123,16 @@ def main():
         f.write(html)
 
     print(f"\n    Dashboard saved to: {output_path}")
+
+    # Persist alert state (keys dropped if alert cleared this run)
+    if AUTO_PUSH_DRY_RUN:
+        print(f"    [DRY-RUN] Skipping alert_state.json write ({len(new_alert_state)} would be active)")
+    else:
+        try:
+            write_alert_state(alert_state_path, new_alert_state, alert_today)
+            print(f"    Alert state saved to: {alert_state_path} ({len(new_alert_state)} active)")
+        except Exception as e:
+            print(f"    Warning: Alert state save failed: {e}")
 
     # Renewal summary JSON (current month, per-property) - fetched by n8n end-of-month
     print("\n[5b] Writing renewal_summary.json...")
