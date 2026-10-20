@@ -1204,19 +1204,23 @@ def get_property_data(property_id, property_name, units_availability=None, lease
 
     # Build leaseId -> leaseStatus map (to check if occupying lease is "Former")
     lease_status_by_id = {}
-    # Build unit -> latest Former moveOutDate map (for Days Vacant on Vacant units)
+    # Build unit -> latest past moveOutDate map (for Days Vacant on Vacant units).
+    # Scan every lease with a past MO date — not just leaseStatus=Former — because
+    # the most recent lease on a now-vacant unit sometimes still reads Transferred
+    # or similar until ResMan ticks it to Former.
+    today_iso = today.isoformat()
     last_mo_by_unit = {}
     for lease in leases:
         lease_id = lease.get("leaseId", "")
         if lease_id:
             lease_status_by_id[lease_id] = lease.get("leaseStatus", "")
-        if lease.get("leaseStatus") == "Former":
-            u_num = lease.get("unitNumber", "")
-            mo = (lease.get("moveOutDate") or "")[:10]
-            if u_num and mo:
-                prev = last_mo_by_unit.get(u_num)
-                if not prev or mo > prev:
-                    last_mo_by_unit[u_num] = mo
+        u_num = lease.get("unitNumber", "")
+        mo = (lease.get("moveOutDate") or "")[:10]
+        if not (u_num and mo and mo <= today_iso):
+            continue
+        prev = last_mo_by_unit.get(u_num)
+        if not prev or mo > prev:
+            last_mo_by_unit[u_num] = mo
 
     def _days_vacant(unit_num, fallback_mo=""):
         mo = last_mo_by_unit.get(unit_num) or (fallback_mo or "")[:10]

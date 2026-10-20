@@ -3,14 +3,6 @@
     "EAST|vacantNotReadyList|941197e0-5004-4248-b443-ecc3ef9ac136": {
       "firstSeen": "2026-10-20",
       "lastMsg": "Past Available Date"
-    },
-    "MOC|vacantLeasedList|43035e45-662c-4f41-bafa-2225ddf909b1": {
-      "firstSeen": "2026-10-20",
-      "lastMsg": "Past Move-In Date"
-    },
-    "SJ|vacantNotReadyList|60b517fb-fc6b-4483-bbe0-08f318be1379": {
-      "firstSeen": "2026-10-20",
-      "lastMsg": "Past Available Date"
     }
   },
   "updated": "2026-10-20"
