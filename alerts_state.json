@@ -64,14 +64,6 @@
       "firstSeen": "2026-10-20",
       "lastMsg": "Lease ends in 15d \u2014 no NTV filed"
     },
-    "EAST|vacantNotReadyList|941197e0-5004-4248-b443-ecc3ef9ac136": {
-      "firstSeen": "2026-10-20",
-      "lastMsg": "Past Available Date"
-    },
-    "MOC|ntvList|95203f8c-30f8-40e3-a6ef-63ad5ace2998": {
-      "firstSeen": "2026-10-20",
-      "lastMsg": "Only 11 days to get ready"
-    },
     "MUSO|insufficientNoticeList|a463f233-a675-4281-9339-6c31e549cf8c": {
       "firstSeen": "2026-10-20",
       "lastMsg": "Lease ends in 55d \u2014 no NTV filed"
