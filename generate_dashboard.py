@@ -455,17 +455,22 @@ def get_expiring_leases_data(property_id, leases=None, units_availability=None):
             return {"month1": {}, "month2": {}, "month3": {}, "month4": {}, "total": {}}
         today = datetime.now().date()
 
-        # Build unit -> noticeToVacateDate map from Units/Availability (not on the
-        # Leases response). Used to populate the NTV Date column + to double-check
-        # the Insufficient-Notice filter.
+        # Build unit -> noticeToVacateDate / moveOutDate maps from Units/Availability.
+        # The /Leasing/Leases response leaves moveOutDate blank on active NTV leases
+        # (that field only populates once the resident actually moves out), so we
+        # fall back to the occupying-lease MO date on the unit for NTV rows.
         ntv_by_unit = {}
+        mo_by_unit = {}
         if units_availability:
             for u in units_availability:
                 u_num = u.get("number", "")
                 occ = u.get("occupyingLease") or {}
                 ntv = (occ.get("noticeToVacateDate") or "")[:10]
+                mo = (occ.get("moveOutDate") or "")[:10]
                 if u_num and ntv:
                     ntv_by_unit[u_num] = ntv
+                if u_num and mo:
+                    mo_by_unit[u_num] = mo
 
         # Define month boundaries - current + next 3 months (4 total)
         current_month = today.month
@@ -627,7 +632,10 @@ def get_expiring_leases_data(property_id, leases=None, units_availability=None):
                                     pending_renewal = h
                                     break
 
-                            # Build detail entry for pop-up
+                            # Build detail entry for pop-up. Prefer the lease's
+                            # own moveOutDate; fall back to the planned MO date
+                            # on the occupying lease (NTV residents).
+                            mo_date_display = (mo_date_str[:10] if mo_date_str else "") or mo_by_unit.get(unit, "")
                             detail_entry = {
                                 "unit": unit,
                                 "unitId": lease.get("unitId", ""),
@@ -635,9 +643,10 @@ def get_expiring_leases_data(property_id, leases=None, units_availability=None):
                                 "resident": resident_name,
                                 "leaseId": lease_id,
                                 "leaseEnd": end_date_str[:10],
-                                "moDate": mo_date_str[:10] if mo_date_str else "",
+                                "moDate": mo_date_display,
                                 "renewalSigned": "",
                                 "ntvDate": ntv_by_unit.get(unit, ""),
+                                "isEarlyTermination": False,
                             }
 
                             # Determine status
@@ -651,6 +660,9 @@ def get_expiring_leases_data(property_id, leases=None, units_availability=None):
                                     add_to_bucket(bucket, "Pending Renewal", detail_entry)
                             elif lease_status == "Notice to Vacate":
                                 detail_entry["status"] = "NTV"
+                                detail_entry["isEarlyTermination"] = bool(
+                                    detail_entry["moDate"] and detail_entry["moDate"] < end_date_str[:10]
+                                )
                                 add_to_bucket(bucket, "NTV/Formers", detail_entry)
                             elif lease_status == "Under Eviction":
                                 detail_entry["status"] = "Under Eviction"
@@ -661,6 +673,9 @@ def get_expiring_leases_data(property_id, leases=None, units_availability=None):
                             elif lease_status == "Former":
                                 if is_mo_in_window(mo_date, bucket):
                                     detail_entry["status"] = "Former"
+                                    detail_entry["isEarlyTermination"] = bool(
+                                        detail_entry["moDate"] and detail_entry["moDate"] < end_date_str[:10]
+                                    )
                                     add_to_bucket(bucket, "NTV/Formers", detail_entry)
                             elif lease_status == "Evicted":
                                 if is_mo_in_window(mo_date, bucket):
@@ -2669,6 +2684,10 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
                     // Format date columns
                     if (dateColumns.includes(col.key)) {{
                         val = formatDate(val);
+                    }}
+                    // Early-termination dot after Move Out date (NTV + Former only)
+                    if (col.key === 'moDate' && row.isEarlyTermination) {{
+                        val = `${{val}} <span class="inline-block w-[7px] h-[7px] rounded-full bg-red-500 ml-1 align-middle" title="Early Termination — move-out before lease end"></span>`;
                     }}
                     // Alert/Transfer indicator for last column
                     const isLastCol = colIdx === popupColumns.length - 1;
