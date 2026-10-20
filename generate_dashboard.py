@@ -1204,10 +1204,32 @@ def get_property_data(property_id, property_name, units_availability=None, lease
 
     # Build leaseId -> leaseStatus map (to check if occupying lease is "Former")
     lease_status_by_id = {}
+    # Build unit -> latest Former moveOutDate map (for Days Vacant on Vacant units)
+    last_mo_by_unit = {}
     for lease in leases:
         lease_id = lease.get("leaseId", "")
         if lease_id:
             lease_status_by_id[lease_id] = lease.get("leaseStatus", "")
+        if lease.get("leaseStatus") == "Former":
+            u_num = lease.get("unitNumber", "")
+            mo = (lease.get("moveOutDate") or "")[:10]
+            if u_num and mo:
+                prev = last_mo_by_unit.get(u_num)
+                if not prev or mo > prev:
+                    last_mo_by_unit[u_num] = mo
+
+    def _days_vacant(unit_num, fallback_mo=""):
+        mo = last_mo_by_unit.get(unit_num) or (fallback_mo or "")[:10]
+        if not mo:
+            return "", None
+        try:
+            mo_dt = datetime.strptime(mo, "%Y-%m-%d").date()
+        except ValueError:
+            return "", None
+        days = (today - mo_dt).days
+        if days < 0:
+            return mo, 0
+        return mo, days
 
     # Build unit -> unit data lookup for quick access
     unit_data_map = {}
@@ -1283,11 +1305,14 @@ def get_property_data(property_id, property_name, units_availability=None, lease
             # Not leased vacant
             if is_ready:
                 status_summary["Vacant Ready"].append(unit_num)
+                _mo_v, _dv = _days_vacant(unit_num, mo_date)
                 detailed_lists["vacantReadyList"].append({
                     "unit": unit_num,
                     "unitId": unit_id,
                     "type": unit_type,
-                    "avDate": av_date
+                    "avDate": av_date,
+                    "lastMoDate": _mo_v,
+                    "daysVacant": _dv
                 })
             else:
                 status_summary["Vacant Not Ready"].append(unit_num)
@@ -1304,11 +1329,14 @@ def get_property_data(property_id, property_name, units_availability=None, lease
                 if unit_type and 'classic' in unit_type.lower():
                     vnr_alert_msg = (vnr_alert_msg + " • " if vnr_alert else "") + "Classic Unit - please update the unit type"
                     vnr_alert = True
+                _mo_v, _dv = _days_vacant(unit_num, mo_date)
                 detailed_lists["vacantNotReadyList"].append({
                     "unit": unit_num,
                     "unitId": unit_id,
                     "type": unit_type,
                     "avDate": av_date,
+                    "lastMoDate": _mo_v,
+                    "daysVacant": _dv,
                     "hasAlert": vnr_alert,
                     "alertMsg": vnr_alert_msg
                 })
@@ -1316,11 +1344,14 @@ def get_property_data(property_id, property_name, units_availability=None, lease
             # Leased vacant - add to appropriate ready/not ready AND track as leased
             if is_ready:
                 status_summary["Vacant Ready"].append(unit_num)
+                _mo_v, _dv = _days_vacant(unit_num, mo_date)
                 detailed_lists["vacantReadyList"].append({
                     "unit": unit_num,
                     "unitId": unit_id,
                     "type": unit_type,
-                    "avDate": av_date
+                    "avDate": av_date,
+                    "lastMoDate": _mo_v,
+                    "daysVacant": _dv
                 })
             else:
                 status_summary["Vacant Not Ready"].append(unit_num)
@@ -1337,11 +1368,14 @@ def get_property_data(property_id, property_name, units_availability=None, lease
                 if unit_type and 'classic' in unit_type.lower():
                     vnr_alert_msg = (vnr_alert_msg + " • " if vnr_alert else "") + "Classic Unit - please update the unit type"
                     vnr_alert = True
+                _mo_v, _dv = _days_vacant(unit_num, mo_date)
                 detailed_lists["vacantNotReadyList"].append({
                     "unit": unit_num,
                     "unitId": unit_id,
                     "type": unit_type,
                     "avDate": av_date,
+                    "lastMoDate": _mo_v,
+                    "daysVacant": _dv,
                     "hasAlert": vnr_alert,
                     "alertMsg": vnr_alert_msg
                 })
@@ -1356,11 +1390,14 @@ def get_property_data(property_id, property_name, units_availability=None, lease
                 # Resident moved out - treat as Vacant
                 if is_ready:
                     status_summary["Vacant Ready"].append(unit_num)
+                    _mo_v, _dv = _days_vacant(unit_num, mo_date)
                     detailed_lists["vacantReadyList"].append({
                         "unit": unit_num,
                         "unitId": unit_id,
                         "type": unit_type,
-                        "avDate": av_date
+                        "avDate": av_date,
+                        "lastMoDate": _mo_v,
+                        "daysVacant": _dv
                     })
                 else:
                     status_summary["Vacant Not Ready"].append(unit_num)
@@ -1377,11 +1414,14 @@ def get_property_data(property_id, property_name, units_availability=None, lease
                     if unit_type and 'classic' in unit_type.lower():
                         vnr_alert_msg = (vnr_alert_msg + " • " if vnr_alert else "") + "Classic Unit - please update the unit type"
                         vnr_alert = True
+                    _mo_v, _dv = _days_vacant(unit_num, mo_date)
                     detailed_lists["vacantNotReadyList"].append({
                         "unit": unit_num,
                         "unitId": unit_id,
                         "type": unit_type,
                         "avDate": av_date,
+                        "lastMoDate": _mo_v,
+                        "daysVacant": _dv,
                         "hasAlert": vnr_alert,
                         "alertMsg": vnr_alert_msg
                     })
@@ -1411,11 +1451,14 @@ def get_property_data(property_id, property_name, units_availability=None, lease
                 # Resident moved out - treat as Vacant (leased)
                 if is_ready:
                     status_summary["Vacant Ready"].append(unit_num)
+                    _mo_v, _dv = _days_vacant(unit_num, mo_date)
                     detailed_lists["vacantReadyList"].append({
                         "unit": unit_num,
                         "unitId": unit_id,
                         "type": unit_type,
-                        "avDate": av_date
+                        "avDate": av_date,
+                        "lastMoDate": _mo_v,
+                        "daysVacant": _dv
                     })
                 else:
                     status_summary["Vacant Not Ready"].append(unit_num)
@@ -1432,11 +1475,14 @@ def get_property_data(property_id, property_name, units_availability=None, lease
                     if unit_type and 'classic' in unit_type.lower():
                         vnr_alert_msg = (vnr_alert_msg + " • " if vnr_alert else "") + "Classic Unit - please update the unit type"
                         vnr_alert = True
+                    _mo_v, _dv = _days_vacant(unit_num, mo_date)
                     detailed_lists["vacantNotReadyList"].append({
                         "unit": unit_num,
                         "unitId": unit_id,
                         "type": unit_type,
                         "avDate": av_date,
+                        "lastMoDate": _mo_v,
+                        "daysVacant": _dv,
                         "hasAlert": vnr_alert,
                         "alertMsg": vnr_alert_msg
                     })
@@ -2298,6 +2344,8 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
                     columns = [
                         {{key: 'unit', label: 'Unit'}},
                         {{key: 'type', label: 'Type'}},
+                        {{key: 'lastMoDate', label: 'Last MO'}},
+                        {{key: 'daysVacant', label: 'Days Vacant'}},
                         {{key: 'avDate', label: 'Av. Date'}}
                     ];
                     titleText = `${{abbr}} - Vacant Ready (${{data.length}})`;
@@ -2307,6 +2355,8 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
                     columns = [
                         {{key: 'unit', label: 'Unit'}},
                         {{key: 'type', label: 'Type'}},
+                        {{key: 'lastMoDate', label: 'Last MO'}},
+                        {{key: 'daysVacant', label: 'Days Vacant'}},
                         {{key: 'avDate', label: 'Av. Date'}}
                     ];
                     titleText = `${{abbr}} - Vacant Not Ready (${{data.length}})`;
@@ -2518,7 +2568,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
         }}
 
         // Date columns that need formatting
-        const dateColumns = ['avDate', 'ntvDate', 'moDate', 'leaseEnd', 'moveIn', 'signed', 'appDate', 'approvedDate', 'signedDate', 'renewalSigned'];
+        const dateColumns = ['avDate', 'ntvDate', 'moDate', 'lastMoDate', 'leaseEnd', 'moveIn', 'signed', 'appDate', 'approvedDate', 'signedDate', 'renewalSigned'];
 
         function renderPopupTable() {{
             const thead = document.getElementById('popup-thead');
@@ -2552,7 +2602,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
                     let indicatorHtml = '';
                     if (hasRowAlert) {{
                         const ageSuffix = (typeof row.daysAgo === 'number') ? ` (${{row.daysAgo}}d)` : '';
-                        const pushedSuffix = (row.autoPushed && row.autoPushed.applied) ? ` – auto-pushed to ${{row.autoPushed.newAvDate}}` : '';
+                        const pushedSuffix = (row.autoPushed && row.autoPushed.applied) ? ` – Pushed to ${{formatDate(row.autoPushed.newAvDate)}}` : '';
                         indicatorHtml = `<span class="alert-dot alert-tooltip" data-tooltip="${{(row.alertMsg || 'Needs attention') + ageSuffix + pushedSuffix}}"></span>`;
                     }} else if (isTransfer) {{
                         indicatorHtml = `<span class="transfer-dot alert-tooltip" data-tooltip="Transfer"></span>`;
@@ -2765,7 +2815,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
                     ? `<a href="https://sns.myresman.com/#/Residents/Detail/${{a.leaseId}}" target="_blank" class="text-blue-600 dark:text-blue-400 hover:scale-105 inline-block transition-transform">${{a.resident}}</a>`
                     : (a.resident || '<span class="text-slate-400">—</span>');
                 const pushedBadge = (a.autoPushed && a.autoPushed.applied)
-                    ? ` <span class="ml-1 inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200" title="Auto-pushed to ${{a.autoPushed.newAvDate}}">AUTO-PUSHED ${{a.autoPushed.newAvDate}}</span>`
+                    ? ` <span class="ml-1 inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200" title="Pushed to ${{formatDate(a.autoPushed.newAvDate)}}">Pushed to ${{formatDate(a.autoPushed.newAvDate)}}</span>`
                     : '';
                 html += `<tr class="hover:bg-slate-50 dark:hover:bg-slate-700/40">`
                     + `<td class="px-3 py-2 whitespace-nowrap font-medium text-slate-700 dark:text-slate-200">${{a.abbr}} <span class="text-slate-400 dark:text-slate-500 text-xs">${{a.propertyName}}</span></td>`
