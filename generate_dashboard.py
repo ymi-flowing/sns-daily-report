@@ -431,12 +431,14 @@ def get_pending_leases_data(property_id, leases=None):
         print(f"    Warning: Could not fetch lease data: {e}")
         return {"total_applicants": 0, "pending_approval": 0, "approved": 0, "signed_lease": 0, "signed_leases_mtd": 0, "applicantsList": []}
 
-def get_expiring_leases_data(property_id, leases=None):
+def get_expiring_leases_data(property_id, leases=None, units_availability=None):
     """Get expiring leases data for current + next 3 months
 
     Args:
         property_id: Property ID (used if leases not provided)
         leases: Pre-fetched leases data (optional, to avoid duplicate API call)
+        units_availability: Pre-fetched Units/Availability list; used to source
+            noticeToVacateDate per unit (not available on /Leasing/Leases).
 
     Includes:
     - Current leases with leaseEndDate in range
@@ -452,6 +454,18 @@ def get_expiring_leases_data(property_id, leases=None):
         if not leases:
             return {"month1": {}, "month2": {}, "month3": {}, "month4": {}, "total": {}}
         today = datetime.now().date()
+
+        # Build unit -> noticeToVacateDate map from Units/Availability (not on the
+        # Leases response). Used to populate the NTV Date column + to double-check
+        # the Insufficient-Notice filter.
+        ntv_by_unit = {}
+        if units_availability:
+            for u in units_availability:
+                u_num = u.get("number", "")
+                occ = u.get("occupyingLease") or {}
+                ntv = (occ.get("noticeToVacateDate") or "")[:10]
+                if u_num and ntv:
+                    ntv_by_unit[u_num] = ntv
 
         # Define month boundaries - current + next 3 months (4 total)
         current_month = today.month
@@ -622,7 +636,8 @@ def get_expiring_leases_data(property_id, leases=None):
                                 "leaseId": lease_id,
                                 "leaseEnd": end_date_str[:10],
                                 "moDate": mo_date_str[:10] if mo_date_str else "",
-                                "renewalSigned": ""
+                                "renewalSigned": "",
+                                "ntvDate": ntv_by_unit.get(unit, ""),
                             }
 
                             # Determine status
@@ -676,7 +691,8 @@ def get_expiring_leases_data(property_id, leases=None):
                                     "leaseId": lease_id,
                                     "leaseEnd": h_end_str[:10],
                                     "moDate": "",
-                                    "renewalSigned": (h.get("signedDate") or "")[:10]
+                                    "renewalSigned": (h.get("signedDate") or "")[:10],
+                                    "ntvDate": ntv_by_unit.get(unit, ""),
                                 }
                                 add_to_bucket(bucket, "Renewed", detail_entry)
                     except:
@@ -685,6 +701,29 @@ def get_expiring_leases_data(property_id, leases=None):
         # Sort expiring lists by unit
         for month_key in expiring_lists:
             expiring_lists[month_key] = sorted(expiring_lists[month_key], key=lambda x: x["unit"])
+
+        # Build Insufficient-Notice list: Current or Pending Renewal rows whose
+        # lease ends in <60 days and have no NTV filed. Mutate the shared row
+        # dicts so the Expiring popup also shows the alert dot.
+        insufficient_notice_list = []
+        for month_key in expiring_lists:
+            for row in expiring_lists[month_key]:
+                if row.get("status") not in ("Current", "Pending Renewal"):
+                    continue
+                le = row.get("leaseEnd") or ""
+                try:
+                    le_dt = datetime.strptime(le[:10], "%Y-%m-%d").date()
+                except ValueError:
+                    continue
+                days_left = (le_dt - today).days
+                if days_left >= 60 or days_left < 0:
+                    continue
+                row["hasAlert"] = True
+                row["daysLeft"] = days_left
+                row["alertMsg"] = f"Lease ends in {days_left}d — no NTV filed"
+                insufficient_notice_list.append(row)
+
+        insufficient_notice_list.sort(key=lambda r: (r.get("daysLeft", 999), r.get("unit", "")))
 
         # Add month labels
         month_names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
@@ -698,7 +737,8 @@ def get_expiring_leases_data(property_id, leases=None):
             "month4": month4,
             "month4_label": month_names[m4 - 1],
             "total": total,
-            "expiringLists": expiring_lists
+            "expiringLists": expiring_lists,
+            "insufficientNoticeList": insufficient_notice_list,
         }
     except Exception as e:
         print(f"    Warning: Could not fetch expiring leases: {e}")
@@ -1713,7 +1753,8 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
             "vacantLeasedList": vacant_leased_list,
             "ntvLeasedList": ntv_leased_list,
             "futureMIList": future_mi_list_sorted,
-            "futureMOList": future_moves.get("futureMOList", [])
+            "futureMOList": future_moves.get("futureMOList", []),
+            "insufficientNoticeList": lease_info.get("expiring", {}).get("insufficientNoticeList", []),
         }
 
     # Age alerts: mutate table_data entries to carry firstSeen + daysAgo; return
@@ -2464,9 +2505,10 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
                         {{key: 'unit', label: 'Unit'}},
                         {{key: 'type', label: 'Type'}},
                         {{key: 'resident', label: 'Resident'}},
-                        {{key: 'leaseEnd', label: 'Lease End'}},
+                        {{key: 'renewalSigned', label: 'Lease Signed'}},
+                        {{key: 'ntvDate', label: 'NTV Date'}},
                         {{key: 'moDate', label: 'Move Out'}},
-                        {{key: 'renewalSigned', label: 'Renewal Signed'}}
+                        {{key: 'leaseEnd', label: 'Lease End'}}
                     ];
                     titleText = `${{abbr}} - Expiring ${{monthLabel}} (${{data.length}})`;
                     break;
@@ -2681,7 +2723,8 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
         const ALERT_CATEGORY_LABELS = {{
             vacantNotReadyList: 'Vacant – Not Ready',
             ntvList: 'NTV',
-            vacantLeasedList: 'Vacant – Leased'
+            vacantLeasedList: 'Vacant – Leased',
+            insufficientNoticeList: 'Insufficient Notice'
         }};
 
         function collectAllAlerts() {{
@@ -2689,7 +2732,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
             Object.keys(propertyTableData).forEach(abbr => {{
                 const p = propertyTableData[abbr];
                 if (!p) return;
-                ['vacantNotReadyList', 'ntvList', 'vacantLeasedList'].forEach(listKey => {{
+                ['vacantNotReadyList', 'ntvList', 'vacantLeasedList', 'insufficientNoticeList'].forEach(listKey => {{
                     const items = p[listKey] || [];
                     items.forEach(item => {{
                         if (!item.hasAlert) return;
@@ -4083,7 +4126,7 @@ def main():
         print(f"    Applicants: {lease_data['total_applicants']} (Pending: {lease_data['pending_approval']}, Approved: {lease_data['approved']}, Signed: {lease_data['signed_lease']}, MTD New: {lease_data['signed_leases_mtd']})")
 
         # Get expiring leases data (using pre-fetched leases)
-        expiring_data = get_expiring_leases_data(property_id, leases=all_leases)
+        expiring_data = get_expiring_leases_data(property_id, leases=all_leases, units_availability=units_availability)
         leases_data[abbr]["expiring"] = expiring_data
         exp_total = sum(expiring_data.get("total", {}).values())
         print(f"    Expiring (4mo): {exp_total}")
