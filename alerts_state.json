@@ -76,13 +76,9 @@
       "firstSeen": "2026-10-20",
       "lastMsg": "Lease ends in 35d \u2014 no NTV filed"
     },
-    "SJ|insufficientNoticeList|5e82fbc0-b019-4be3-906a-7452fecd6825": {
-      "firstSeen": "2026-10-20",
-      "lastMsg": "Lease ends in 53d \u2014 no NTV filed"
-    },
-    "TV|insufficientNoticeList|a0d4000e-d02d-4787-8487-962703dd8134": {
-      "firstSeen": "2026-10-20",
-      "lastMsg": "Lease ends in 12d \u2014 no NTV filed"
+    "TV|ntvList|a0d4000e-d02d-4787-8487-962703dd8134": {
+      "firstSeen": "2026-10-21",
+      "lastMsg": "Available 51 days BEFORE move-out"
     }
   },
   "updated": "2026-10-21"
