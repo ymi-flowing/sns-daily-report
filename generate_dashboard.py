@@ -2285,18 +2285,18 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
     <div id="popup-modal" class="hidden fixed inset-0 z-50 overflow-y-auto" onclick="if(event.target===this)closePopup()">
         <div class="flex items-center justify-center min-h-screen p-4">
             <div class="fixed inset-0 bg-black/50 dark:bg-black/70"></div>
-            <div class="relative bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-fit max-w-[90vw] max-h-[80vh] overflow-hidden">
-                <div class="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700">
+            <div class="relative bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-[min(1100px,92vw)] h-[85vh] overflow-hidden flex flex-col">
+                <div class="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700 flex-shrink-0">
                     <h3 id="popup-title" class="text-lg font-bold text-slate-800 dark:text-white"></h3>
                     <button onclick="closePopup()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-2xl leading-none">&times;</button>
                 </div>
-                <div id="popup-filters" class="hidden px-4 py-2 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/30">
+                <div id="popup-filters" class="hidden px-4 py-3 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/30 flex-shrink-0">
                     <div class="flex flex-wrap gap-3 items-center">
-                        <span class="text-sm font-medium text-slate-600 dark:text-slate-300">Filter:</span>
-                        <div id="popup-filter-checkboxes" class="flex flex-wrap gap-2"></div>
+                        <label class="text-sm font-medium text-slate-600 dark:text-slate-300">Status:</label>
+                        <div id="popup-status-filter" class="relative"></div>
                     </div>
                 </div>
-                <div class="p-4 overflow-auto max-h-[calc(80vh-120px)]">
+                <div class="p-4 overflow-auto flex-1 min-h-0">
                     <table id="popup-table" class="min-w-full text-sm">
                         <thead id="popup-thead" class="bg-slate-50 dark:bg-slate-700/50"></thead>
                         <tbody id="popup-tbody" class="divide-y divide-slate-100 dark:divide-slate-700"></tbody>
@@ -2310,21 +2310,21 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
     <div id="alerts-modal" class="hidden fixed inset-0 z-50 overflow-y-auto" onclick="if(event.target===this)opsAlerts.close()">
         <div class="flex items-center justify-center min-h-screen p-4">
             <div class="fixed inset-0 bg-black/50 dark:bg-black/70"></div>
-            <div class="relative bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-fit max-w-[95vw] max-h-[85vh] overflow-hidden">
-                <div class="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700">
+            <div class="relative bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-[min(1300px,95vw)] h-[85vh] overflow-hidden flex flex-col">
+                <div class="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700 flex-shrink-0">
                     <h3 class="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
                         <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
                         Operational Alerts <span id="alerts-modal-count" class="text-sm font-semibold text-white bg-red-500 rounded-full px-2 py-0.5">0</span>
                     </h3>
                     <button onclick="opsAlerts.close()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-2xl leading-none">&times;</button>
                 </div>
-                <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/30">
+                <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/30 flex-shrink-0">
                     <div class="flex flex-wrap gap-3 items-center">
                         <label class="text-sm font-medium text-slate-600 dark:text-slate-300">Properties:</label>
                         <div id="alerts-property-filter" class="relative"></div>
                     </div>
                 </div>
-                <div class="p-4 overflow-auto max-h-[calc(85vh-160px)]">
+                <div class="p-4 overflow-auto flex-1 min-h-0">
                     <table class="min-w-full text-sm">
                         <thead id="alerts-thead" class="bg-slate-50 dark:bg-slate-700/50"></thead>
                         <tbody id="alerts-tbody" class="divide-y divide-slate-100 dark:divide-slate-700"></tbody>
@@ -2338,21 +2338,21 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
     <div id="leasing-modal" class="hidden fixed inset-0 z-50 overflow-y-auto" onclick="if(event.target===this)leasingAlerts.close()">
         <div class="flex items-center justify-center min-h-screen p-4">
             <div class="fixed inset-0 bg-black/50 dark:bg-black/70"></div>
-            <div class="relative bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-fit max-w-[95vw] max-h-[85vh] overflow-hidden">
-                <div class="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700">
+            <div class="relative bg-white dark:bg-slate-800 rounded-2xl shadow-xl w-[min(1300px,95vw)] h-[85vh] overflow-hidden flex flex-col">
+                <div class="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700 flex-shrink-0">
                     <h3 class="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
                         <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                         Leasing Alerts <span id="leasing-modal-count" class="text-sm font-semibold text-white bg-amber-500 rounded-full px-2 py-0.5">0</span>
                     </h3>
                     <button onclick="leasingAlerts.close()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-2xl leading-none">&times;</button>
                 </div>
-                <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/30">
+                <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/30 flex-shrink-0">
                     <div class="flex flex-wrap gap-3 items-center">
                         <label class="text-sm font-medium text-slate-600 dark:text-slate-300">Properties:</label>
                         <div id="leasing-property-filter" class="relative"></div>
                     </div>
                 </div>
-                <div class="p-4 overflow-auto max-h-[calc(85vh-160px)]">
+                <div class="p-4 overflow-auto flex-1 min-h-0">
                     <table class="min-w-full text-sm">
                         <thead id="leasing-thead" class="bg-slate-50 dark:bg-slate-700/50"></thead>
                         <tbody id="leasing-tbody" class="divide-y divide-slate-100 dark:divide-slate-700"></tbody>
@@ -2573,43 +2573,17 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
 
             // Set up filters for applicants and expiring
             const filtersContainer = document.getElementById('popup-filters');
-            const checkboxesContainer = document.getElementById('popup-filter-checkboxes');
 
             if (category === 'applicants' || category === 'expiring') {{
                 popupHasFilters = true;
-                // Get unique statuses
-                const statuses = [...new Set(data.map(d => d.status).filter(s => s))];
-                popupActiveFilters = new Set(statuses);  // All checked by default
-
-                // Build checkboxes
-                let checkboxHtml = '';
-                const statusColors = {{
-                    'Pending': 'text-amber-600 dark:text-amber-400',
-                    'Approved': 'text-cyan-600 dark:text-cyan-400',
-                    'Signed': 'text-emerald-600 dark:text-emerald-400',
-                    'Current': 'text-slate-600 dark:text-slate-400',
-                    'Pending Renewal': 'text-amber-600 dark:text-amber-400',
-                    'Renewed': 'text-emerald-600 dark:text-emerald-400',
-                    'NTV': 'text-orange-600 dark:text-orange-400',
-                    'Former': 'text-orange-600 dark:text-orange-400',
-                    'Evicted': 'text-red-600 dark:text-red-400',
-                    'Under Eviction': 'text-red-600 dark:text-red-400'
-                }};
-                statuses.forEach(status => {{
-                    const color = statusColors[status] || 'text-slate-600 dark:text-slate-300';
-                    const count = data.filter(d => d.status === status).length;
-                    checkboxHtml += `
-                        <label class="flex items-center gap-1.5 cursor-pointer select-none">
-                            <input type="checkbox" checked class="w-4 h-4 rounded border-slate-300 dark:border-slate-600 text-blue-600 focus:ring-blue-500" onchange="togglePopupFilter('${{status}}')" data-status="${{status}}">
-                            <span class="text-sm font-medium ${{color}}">${{status}} (${{count}})</span>
-                        </label>
-                    `;
-                }});
-                checkboxesContainer.innerHTML = checkboxHtml;
+                popupActiveFilters = new Set();  // empty = all statuses (alerts convention)
+                popupStatusDropdownOpen = false;
+                renderPopupStatusFilter();
                 filtersContainer.classList.remove('hidden');
             }} else {{
                 popupHasFilters = false;
                 popupActiveFilters.clear();
+                popupStatusDropdownOpen = false;
                 filtersContainer.classList.add('hidden');
             }}
 
@@ -2619,27 +2593,106 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
             document.body.style.overflow = 'hidden';
         }}
 
-        function togglePopupFilter(status) {{
-            if (popupActiveFilters.has(status)) {{
-                popupActiveFilters.delete(status);
-            }} else {{
-                popupActiveFilters.add(status);
+        const POPUP_STATUS_COLORS = {{
+            'Pending': 'text-amber-600 dark:text-amber-400',
+            'Approved': 'text-cyan-600 dark:text-cyan-400',
+            'Signed': 'text-emerald-600 dark:text-emerald-400',
+            'Current': 'text-slate-600 dark:text-slate-400',
+            'Pending Renewal': 'text-amber-600 dark:text-amber-400',
+            'Renewed': 'text-emerald-600 dark:text-emerald-400',
+            'NTV': 'text-orange-600 dark:text-orange-400',
+            'Former': 'text-orange-600 dark:text-orange-400',
+            'Evicted': 'text-red-600 dark:text-red-400',
+            'Under Eviction': 'text-red-600 dark:text-red-400'
+        }};
+
+        let popupStatusDropdownOpen = false;
+
+        function renderPopupStatusFilter() {{
+            const container = document.getElementById('popup-status-filter');
+            if (!container) return;
+            const statuses = [...new Set(popupFullData.map(d => d.status).filter(s => s))];
+            const selectedCount = popupActiveFilters.size;
+            const buttonLabel = selectedCount === 0
+                ? 'All Statuses'
+                : (selectedCount === 1 ? Array.from(popupActiveFilters)[0] : `${{selectedCount}} selected`);
+            const chevron = popupStatusDropdownOpen ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7';
+
+            function checkboxCell(isChecked) {{
+                const base = 'relative inline-flex items-center justify-center w-4 h-4 rounded border-2 transition-colors flex-shrink-0';
+                const stateCls = isChecked
+                    ? 'border-cyan-500 bg-cyan-500/10 dark:bg-cyan-400/10'
+                    : 'border-slate-300 dark:border-slate-500 bg-transparent group-hover:border-slate-400 dark:group-hover:border-slate-400';
+                const check = isChecked
+                    ? '<svg class="w-3 h-3 text-cyan-500" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>'
+                    : '';
+                return `<span class="${{base}} ${{stateCls}}">${{check}}</span>`;
             }}
+
+            function rowCls(isSelected) {{
+                const base = 'group flex items-center gap-2.5 px-3 py-2 cursor-pointer text-sm whitespace-nowrap transition-colors';
+                const bg = isSelected
+                    ? 'bg-cyan-50/60 dark:bg-cyan-900/15 hover:bg-cyan-50 dark:hover:bg-cyan-900/25 text-slate-800 dark:text-slate-100'
+                    : 'hover:bg-slate-50 dark:hover:bg-slate-700/40 text-slate-700 dark:text-slate-200';
+                return `${{base}} ${{bg}}`;
+            }}
+
+            let dropdownHtml = '';
+            if (popupStatusDropdownOpen) {{
+                const allSelected = popupActiveFilters.size === 0;
+                dropdownHtml = `<div class="absolute z-20 mt-1 w-64 rounded-xl border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 shadow-xl max-h-80 overflow-auto">`
+                    + `<label class="${{rowCls(allSelected)}} font-medium border-b border-slate-200 dark:border-slate-600">`
+                    + checkboxCell(allSelected)
+                    + `<input type="checkbox" ${{allSelected ? 'checked' : ''}} onchange="selectAllPopupStatuses()" class="sr-only">`
+                    + `<span>All Statuses</span>`
+                    + `</label>`;
+                statuses.forEach(status => {{
+                    const isSelected = popupActiveFilters.has(status);
+                    const color = POPUP_STATUS_COLORS[status] || 'text-slate-600 dark:text-slate-300';
+                    const count = popupFullData.filter(d => d.status === status).length;
+                    dropdownHtml += `<label class="${{rowCls(isSelected)}}">`
+                        + checkboxCell(isSelected)
+                        + `<input type="checkbox" ${{isSelected ? 'checked' : ''}} onchange="togglePopupStatus('${{status.replace(/'/g, "\\\\'")}}')" class="sr-only">`
+                        + `<span class="font-medium ${{color}}">${{status}}</span>`
+                        + `<span class="text-slate-400 dark:text-slate-500 text-xs ml-auto">${{count}}</span>`
+                        + `</label>`;
+                }});
+                dropdownHtml += `</div>`;
+            }}
+            container.innerHTML = `<button type="button" onclick="togglePopupStatusDropdown()" class="flex items-center justify-between w-56 h-10 rounded-xl border-2 border-slate-200 dark:border-slate-600 py-2 pl-4 pr-3 bg-white dark:bg-slate-700 text-slate-900 dark:text-white font-medium cursor-pointer text-sm hover:border-slate-300 dark:hover:border-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 transition-all">`
+                + `<span class="truncate">${{buttonLabel}}</span>`
+                + `<svg class="w-5 h-5 text-slate-400 ml-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${{chevron}}"></path></svg>`
+                + `</button>${{dropdownHtml}}`;
+        }}
+
+        function togglePopupStatusDropdown() {{
+            popupStatusDropdownOpen = !popupStatusDropdownOpen;
+            renderPopupStatusFilter();
+        }}
+
+        function togglePopupStatus(status) {{
+            if (popupActiveFilters.has(status)) popupActiveFilters.delete(status);
+            else popupActiveFilters.add(status);
+            renderPopupStatusFilter();
+            applyPopupFilters();
+        }}
+
+        function selectAllPopupStatuses() {{
+            popupActiveFilters.clear();
+            renderPopupStatusFilter();
             applyPopupFilters();
         }}
 
         function applyPopupFilters() {{
             if (popupHasFilters && popupActiveFilters.size > 0) {{
                 popupData = popupFullData.filter(d => popupActiveFilters.has(d.status));
-            }} else if (popupHasFilters && popupActiveFilters.size === 0) {{
-                popupData = [];  // No filters selected = show nothing
             }} else {{
-                popupData = [...popupFullData];
+                popupData = [...popupFullData];  // empty set = show all
             }}
-            // Re-apply current sort
+            // Re-apply current sort (two toggles = preserve direction while re-sorting)
             if (popupSortColumn) {{
                 sortPopupTable(popupSortColumn);
-                sortPopupTable(popupSortColumn);  // Toggle back to maintain direction
+                sortPopupTable(popupSortColumn);
             }} else {{
                 renderPopupTable();
             }}
@@ -2763,6 +2816,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
         }}
 
         function closePopup() {{
+            popupStatusDropdownOpen = false;
             document.getElementById('popup-modal').classList.add('hidden');
             document.body.style.overflow = '';
         }}
