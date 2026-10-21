@@ -1,36 +1,36 @@
 {
   "alerts": {
-    "49thStr|insufficientNoticeList|45f77bfa-a1be-4556-8a49-a27f8235c63b": {
-      "firstSeen": "2026-10-20",
-      "lastMsg": "Lease ends in 41d \u2014 no NTV filed"
-    },
-    "49thStr|insufficientNoticeList|67699972-3e51-4925-b9d0-8c07589f4e17": {
-      "firstSeen": "2026-10-20",
-      "lastMsg": "Lease ends in 40d \u2014 no NTV filed"
-    },
-    "49thStr|insufficientNoticeList|7ebef7d3-94e9-453e-a92d-e6b01ad50181": {
-      "firstSeen": "2026-10-20",
-      "lastMsg": "Lease ends in 13d \u2014 no NTV filed"
-    },
-    "49thStr|insufficientNoticeList|92a2a00e-f714-4417-81a2-cfd9a640dcb3": {
-      "firstSeen": "2026-10-20",
-      "lastMsg": "Lease ends in 28d \u2014 no NTV filed"
-    },
     "49thStr|insufficientNoticeList|963abaf5-40d4-4f9c-a1e5-c16a7e596454": {
       "firstSeen": "2026-10-20",
       "lastMsg": "Lease ends in 11d \u2014 no NTV filed"
     },
-    "49thStr|insufficientNoticeList|a0f0e779-5aa4-45b0-adfc-e85050f70208": {
+    "49thStr|ntvList|45f77bfa-a1be-4556-8a49-a27f8235c63b": {
       "firstSeen": "2026-10-21",
-      "lastMsg": "Lease ends in 59d \u2014 no NTV filed"
+      "lastMsg": "Only 8 days to get ready"
     },
-    "49thStr|insufficientNoticeList|d859066d-cd92-4e45-a427-1ef9b0e1a0d2": {
-      "firstSeen": "2026-10-20",
-      "lastMsg": "Lease ends in 45d \u2014 no NTV filed"
-    },
-    "49thStr|vacantNotReadyList|32e6a44c-9c78-44bf-b957-aa5fd41461b1": {
+    "49thStr|ntvList|67699972-3e51-4925-b9d0-8c07589f4e17": {
       "firstSeen": "2026-10-21",
-      "lastMsg": "Past Available Date"
+      "lastMsg": "Only 8 days to get ready \u2022 Classic Unit - please update the unit type"
+    },
+    "49thStr|ntvList|7ebef7d3-94e9-453e-a92d-e6b01ad50181": {
+      "firstSeen": "2026-10-21",
+      "lastMsg": "Only 8 days to get ready"
+    },
+    "49thStr|ntvList|92a2a00e-f714-4417-81a2-cfd9a640dcb3": {
+      "firstSeen": "2026-10-21",
+      "lastMsg": "Only 8 days to get ready"
+    },
+    "49thStr|ntvList|a0f0e779-5aa4-45b0-adfc-e85050f70208": {
+      "firstSeen": "2026-10-21",
+      "lastMsg": "Only 8 days to get ready"
+    },
+    "49thStr|ntvList|d859066d-cd92-4e45-a427-1ef9b0e1a0d2": {
+      "firstSeen": "2026-10-21",
+      "lastMsg": "Only 8 days to get ready"
+    },
+    "49thStr|ntvList|e17711cb-075c-4e23-8f40-5fbc169622be": {
+      "firstSeen": "2026-10-21",
+      "lastMsg": "Only 8 days to get ready"
     },
     "AP|insufficientNoticeList|383aec81-99a3-42e4-b03f-5704123bb18c": {
       "firstSeen": "2026-10-20",
@@ -107,10 +107,6 @@
     "SJ|vacantLeasedList|60b517fb-fc6b-4483-bbe0-08f318be1379": {
       "firstSeen": "2026-10-21",
       "lastMsg": "Past Move-In Date"
-    },
-    "SJ|vacantNotReadyList|0ad81c5f-5686-4650-b78b-b629bd255c79": {
-      "firstSeen": "2026-10-21",
-      "lastMsg": "Past Available Date"
     },
     "TV|insufficientNoticeList|a0d4000e-d02d-4787-8487-962703dd8134": {
       "firstSeen": "2026-10-20",
