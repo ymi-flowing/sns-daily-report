@@ -4,9 +4,9 @@
       "firstSeen": "2026-10-20",
       "lastMsg": "Lease ends in 11d \u2014 no NTV filed"
     },
-    "49thStr|ntvList|67699972-3e51-4925-b9d0-8c07589f4e17": {
+    "49thStr|ntvList|7ebef7d3-94e9-453e-a92d-e6b01ad50181": {
       "firstSeen": "2026-10-21",
-      "lastMsg": "Classic Unit - please update the unit type"
+      "lastMsg": "Available 33 days AFTER move-out"
     },
     "AP|insufficientNoticeList|383aec81-99a3-42e4-b03f-5704123bb18c": {
       "firstSeen": "2026-10-20",
@@ -48,9 +48,9 @@
       "firstSeen": "2026-10-20",
       "lastMsg": "Lease ends in 14d \u2014 no NTV filed"
     },
-    "EAST|ntvList|783788d6-4299-4cd0-8bc8-77ac5b0b1ce5": {
+    "MOC|ntvList|4294d31d-467d-4aab-bfd1-52852dcc02cd": {
       "firstSeen": "2026-10-21",
-      "lastMsg": "Past Move-Out Date"
+      "lastMsg": "Only 8 days to get ready"
     },
     "MUSO|insufficientNoticeList|04c3429f-f328-462b-9040-3a2df098698a": {
       "firstSeen": "2026-10-21",
@@ -76,9 +76,9 @@
       "firstSeen": "2026-10-20",
       "lastMsg": "Lease ends in 35d \u2014 no NTV filed"
     },
-    "TV|ntvList|a0d4000e-d02d-4787-8487-962703dd8134": {
+    "ORT|ntvList|ecb1e44c-b07f-4a69-aee1-13965e3f1614": {
       "firstSeen": "2026-10-21",
-      "lastMsg": "Available 51 days BEFORE move-out"
+      "lastMsg": "Only 6 days to get ready"
     }
   },
   "updated": "2026-10-21"
