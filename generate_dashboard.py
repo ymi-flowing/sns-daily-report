@@ -2640,7 +2640,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
             let dropdownHtml = '';
             if (popupStatusDropdownOpen) {{
                 const allSelected = popupActiveFilters.size === 0;
-                dropdownHtml = `<div class="absolute z-20 mt-1 w-64 rounded-xl border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 shadow-xl max-h-80 overflow-auto">`
+                dropdownHtml = `<div class="absolute z-20 mt-1 w-max min-w-[14rem] max-w-[90vw] rounded-xl border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 shadow-xl max-h-80 overflow-y-auto overflow-x-hidden">`
                     + `<label class="${{rowCls(allSelected)}} font-medium border-b border-slate-200 dark:border-slate-600">`
                     + checkboxCell(allSelected)
                     + `<input type="checkbox" ${{allSelected ? 'checked' : ''}} onchange="selectAllPopupStatuses()" class="sr-only">`
@@ -2932,7 +2932,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
                 let dropdownHtml = '';
                 if (state.dropdownOpen) {{
                     const allSelected = state.selected.size === 0;
-                    dropdownHtml = `<div class="absolute z-20 mt-1 w-72 rounded-xl border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 shadow-xl max-h-80 overflow-auto">`
+                    dropdownHtml = `<div class="absolute z-20 mt-1 w-max min-w-[14rem] max-w-[90vw] rounded-xl border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 shadow-xl max-h-80 overflow-y-auto overflow-x-hidden">`
                         + `<label class="${{rowCls(allSelected)}} font-medium border-b border-slate-200 dark:border-slate-600">`
                         + checkboxCell(allSelected)
                         + `<input type="checkbox" ${{allSelected ? 'checked' : ''}} onchange="${{cfg.varName}}.selectAll()" class="sr-only">`
