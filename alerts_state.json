@@ -1,5 +1,9 @@
 {
   "alerts": {
+    "49thStr|insufficientNoticeList|45f77bfa-a1be-4556-8a49-a27f8235c63b": {
+      "firstSeen": "2026-10-22",
+      "lastMsg": "Lease ends in 40d \u2014 no NTV filed"
+    },
     "49thStr|insufficientNoticeList|963abaf5-40d4-4f9c-a1e5-c16a7e596454": {
       "firstSeen": "2026-10-20",
       "lastMsg": "Lease ends in 10d \u2014 no NTV filed"
@@ -51,10 +55,6 @@
     "EAST|insufficientNoticeList|fae77acb-2830-4cda-8a28-fba06f9aa4cc": {
       "firstSeen": "2026-10-20",
       "lastMsg": "Lease ends in 13d \u2014 no NTV filed"
-    },
-    "EAST|ntvList|71832130-60d9-4afa-b3b7-51ed8f545049": {
-      "firstSeen": "2026-10-22",
-      "lastMsg": "Past Move-Out Date"
     },
     "MUSO|insufficientNoticeList|04c3429f-f328-462b-9040-3a2df098698a": {
       "firstSeen": "2026-10-21",
