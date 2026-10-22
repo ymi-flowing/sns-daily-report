@@ -12,10 +12,6 @@
       "firstSeen": "2026-10-21",
       "lastMsg": "Past Move-Out Date"
     },
-    "49thStr|vacantNotReadyList|db80da3e-9261-476a-aa3a-5b11432ea6dd": {
-      "firstSeen": "2026-10-22",
-      "lastMsg": "Past Available Date"
-    },
     "AP|insufficientNoticeList|383aec81-99a3-42e4-b03f-5704123bb18c": {
       "firstSeen": "2026-10-20",
       "lastMsg": "Lease ends in 28d \u2014 no NTV filed"
@@ -39,10 +35,6 @@
     "EAST|insufficientNoticeList|558433d4-21f5-47a7-943b-d397678199e9": {
       "firstSeen": "2026-10-20",
       "lastMsg": "Lease ends in 51d \u2014 no NTV filed"
-    },
-    "EAST|insufficientNoticeList|5d465fda-2391-48a1-9f6e-7315e21d9f41": {
-      "firstSeen": "2026-10-20",
-      "lastMsg": "Lease ends in 42d \u2014 no NTV filed"
     },
     "EAST|insufficientNoticeList|861c5238-549b-4524-b45e-af73f5053cca": {
       "firstSeen": "2026-10-20",
@@ -80,15 +72,11 @@
       "firstSeen": "2026-10-20",
       "lastMsg": "Lease ends in 34d \u2014 no NTV filed"
     },
+    "ORT|ntvList|5deee7d2-4aea-4e85-92a5-a014c99be94c": {
+      "firstSeen": "2026-10-22",
+      "lastMsg": "Only 10 days to get ready"
+    },
     "ROP|vacantNotReadyList|9a63fe77-9bd8-49ac-a35a-e1705b85da2b": {
-      "firstSeen": "2026-10-22",
-      "lastMsg": "Past Available Date"
-    },
-    "TV|vacantNotReadyList|b5ee9383-8c75-4109-9963-45c320ba86ee": {
-      "firstSeen": "2026-10-22",
-      "lastMsg": "Past Available Date"
-    },
-    "TV|vacantNotReadyList|debdb7ff-749c-49e3-80fd-e3ad0656c190": {
       "firstSeen": "2026-10-22",
       "lastMsg": "Past Available Date"
     }
