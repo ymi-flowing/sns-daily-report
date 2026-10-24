@@ -20,14 +20,6 @@
       "firstSeen": "2026-10-20",
       "lastMsg": "Lease ends in 48d \u2014 no NTV filed"
     },
-    "AP|vacantNotReadyList|5ca23e45-8aac-41ef-9a34-914b34a53c9d": {
-      "firstSeen": "2026-10-24",
-      "lastMsg": "Past Available Date"
-    },
-    "AP|vacantNotReadyList|c149192a-eb5b-4d8e-b572-91f01afd3c5c": {
-      "firstSeen": "2026-10-24",
-      "lastMsg": "Past Available Date"
-    },
     "EAST|insufficientNoticeList|0aac499b-070d-45b9-879c-867a2ee1b11e": {
       "firstSeen": "2026-10-20",
       "lastMsg": "Lease ends in 37d \u2014 no NTV filed"
@@ -52,21 +44,13 @@
       "firstSeen": "2026-10-20",
       "lastMsg": "Lease ends in 11d \u2014 no NTV filed"
     },
-    "EAST|vacantLeasedList|82ab8946-20e0-4faf-830a-f293a7aaaa80": {
-      "firstSeen": "2026-10-23",
-      "lastMsg": "Past Move-In Date"
+    "EAST|ntvList|ef427f14-a0fd-460e-b07e-57c5e339b0ab": {
+      "firstSeen": "2026-10-24",
+      "lastMsg": "Available 47 days AFTER move-out"
     },
-    "MOC|ntvList|31efd155-7a43-4ca2-9c17-bc6eb2a7e328": {
+    "MOC|ntvList|976494e6-b5f5-46b1-a2c8-b7f15965b443": {
       "firstSeen": "2026-10-24",
       "lastMsg": "Only 8 days to get ready"
-    },
-    "MOC|vacantNotReadyList|927f4159-dea7-4a11-af72-95cb39eea1c2": {
-      "firstSeen": "2026-10-24",
-      "lastMsg": "Past Available Date"
-    },
-    "MOC|vacantNotReadyList|a455d5f6-01e6-4612-8595-89835cd73d8f": {
-      "firstSeen": "2026-10-24",
-      "lastMsg": "Past Available Date"
     },
     "MUSO|insufficientNoticeList|04c3429f-f328-462b-9040-3a2df098698a": {
       "firstSeen": "2026-10-21",
@@ -100,29 +84,9 @@
       "firstSeen": "2026-10-24",
       "lastMsg": "Past Available Date"
     },
-    "SJ|ntvList|60b74a9d-98da-40cf-9581-86175faf73c3": {
-      "firstSeen": "2026-10-24",
-      "lastMsg": "Only 6 days to get ready"
-    },
-    "SJ|ntvList|6cbb0063-a39b-4b1c-8572-5e819cd322a5": {
-      "firstSeen": "2026-10-24",
-      "lastMsg": "Only 5 days to get ready"
-    },
     "SJ|ntvList|7cc58c89-0502-4256-9936-ce3a1dce7307": {
       "firstSeen": "2026-10-24",
       "lastMsg": "Past Move-Out Date"
-    },
-    "SJ|ntvList|ddeaa601-a60e-4b85-81c4-42166cc13c98": {
-      "firstSeen": "2026-10-24",
-      "lastMsg": "Only 6 days to get ready"
-    },
-    "SJ|vacantNotReadyList|0ad81c5f-5686-4650-b78b-b629bd255c79": {
-      "firstSeen": "2026-10-24",
-      "lastMsg": "Past Available Date"
-    },
-    "SJ|vacantNotReadyList|8ee520c9-f652-4d69-b5cd-6db0e32f688e": {
-      "firstSeen": "2026-10-24",
-      "lastMsg": "Past Available Date"
     }
   },
   "updated": "2026-10-24"
