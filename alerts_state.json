@@ -20,10 +20,6 @@
       "firstSeen": "2026-10-26",
       "lastMsg": "Lease ends in 33d \u2014 no NTV filed"
     },
-    "EAST|insufficientNoticeList|410354e4-cf54-43ef-b0af-97a15d0194cc": {
-      "firstSeen": "2026-10-20",
-      "lastMsg": "Lease ends in 22d \u2014 no NTV filed"
-    },
     "EAST|insufficientNoticeList|558433d4-21f5-47a7-943b-d397678199e9": {
       "firstSeen": "2026-10-20",
       "lastMsg": "Lease ends in 47d \u2014 no NTV filed"
@@ -40,25 +36,37 @@
       "firstSeen": "2026-10-20",
       "lastMsg": "Lease ends in 9d \u2014 no NTV filed"
     },
-    "MUSO|insufficientNoticeList|04c3429f-f328-462b-9040-3a2df098698a": {
-      "firstSeen": "2026-10-21",
-      "lastMsg": "Lease ends in 54d \u2014 no NTV filed"
-    },
     "MUSO|insufficientNoticeList|201ad744-d3bc-4f22-adcf-47a1d70406b6": {
       "firstSeen": "2026-10-24",
       "lastMsg": "Lease ends in 57d \u2014 no NTV filed"
+    },
+    "MUSO|insufficientNoticeList|9254eefb-bafd-40a0-abe9-bac9d1434ef7": {
+      "firstSeen": "2026-10-26",
+      "lastMsg": "Lease ends in 49d \u2014 no NTV filed"
     },
     "MUSO|insufficientNoticeList|bb90d0e4-fd27-4178-a298-d11f94ed33b4": {
       "firstSeen": "2026-10-20",
       "lastMsg": "Lease ends in 49d \u2014 no NTV filed"
     },
+    "MUSO|ntvList|04c3429f-f328-462b-9040-3a2df098698a": {
+      "firstSeen": "2026-10-26",
+      "lastMsg": "Only 8 days to get ready"
+    },
     "ORT|insufficientNoticeList|4aa32b6a-c6b5-4f84-9fea-4e7ed48dccba": {
       "firstSeen": "2026-10-20",
       "lastMsg": "Lease ends in 47d \u2014 no NTV filed"
     },
-    "ORT|insufficientNoticeList|a0da5cce-202c-4136-82cd-348d2915fbea": {
-      "firstSeen": "2026-10-20",
-      "lastMsg": "Lease ends in 30d \u2014 no NTV filed"
+    "ORT|ntvList|a0da5cce-202c-4136-82cd-348d2915fbea": {
+      "firstSeen": "2026-10-26",
+      "lastMsg": "Only 6 days to get ready"
+    },
+    "ORT|ntvList|ad1c8bf9-60b6-49b4-9d4e-ae397492dd2a": {
+      "firstSeen": "2026-10-26",
+      "lastMsg": "Available 35 days AFTER move-out"
+    },
+    "ORT|ntvList|c8a6cbe6-0c4a-4f55-8374-2c10f78059a8": {
+      "firstSeen": "2026-10-26",
+      "lastMsg": "Only 6 days to get ready"
     },
     "SJ|insufficientNoticeList|5e82fbc0-b019-4be3-906a-7452fecd6825": {
       "firstSeen": "2026-10-26",
