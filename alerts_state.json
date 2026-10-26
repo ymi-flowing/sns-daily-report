@@ -2,7 +2,7 @@
   "alerts": {
     "49thStr|insufficientNoticeList|963abaf5-40d4-4f9c-a1e5-c16a7e596454": {
       "firstSeen": "2026-10-20",
-      "lastMsg": "Lease ends in 7d \u2014 no NTV filed"
+      "lastMsg": "Lease ends in 6d \u2014 no NTV filed"
     },
     "49thStr|vacantLeasedList|cdf251e9-a955-4868-94b2-6dbd33f64ff8": {
       "firstSeen": "2026-10-25",
@@ -14,51 +14,51 @@
     },
     "AP|insufficientNoticeList|967b93fd-dc3c-4d9e-94e8-a848b3ec6f0c": {
       "firstSeen": "2026-10-20",
-      "lastMsg": "Lease ends in 45d \u2014 no NTV filed"
+      "lastMsg": "Lease ends in 44d \u2014 no NTV filed"
     },
     "AP|insufficientNoticeList|990bf8d0-37f5-4a27-bfe1-422ea3807e23": {
       "firstSeen": "2026-10-20",
-      "lastMsg": "Lease ends in 47d \u2014 no NTV filed"
+      "lastMsg": "Lease ends in 46d \u2014 no NTV filed"
     },
     "EAST|insufficientNoticeList|0aac499b-070d-45b9-879c-867a2ee1b11e": {
       "firstSeen": "2026-10-20",
-      "lastMsg": "Lease ends in 36d \u2014 no NTV filed"
+      "lastMsg": "Lease ends in 35d \u2014 no NTV filed"
     },
     "EAST|insufficientNoticeList|410354e4-cf54-43ef-b0af-97a15d0194cc": {
       "firstSeen": "2026-10-20",
-      "lastMsg": "Lease ends in 23d \u2014 no NTV filed"
+      "lastMsg": "Lease ends in 22d \u2014 no NTV filed"
     },
     "EAST|insufficientNoticeList|558433d4-21f5-47a7-943b-d397678199e9": {
       "firstSeen": "2026-10-20",
-      "lastMsg": "Lease ends in 48d \u2014 no NTV filed"
+      "lastMsg": "Lease ends in 47d \u2014 no NTV filed"
     },
     "EAST|insufficientNoticeList|861c5238-549b-4524-b45e-af73f5053cca": {
       "firstSeen": "2026-10-20",
-      "lastMsg": "Lease ends in 29d \u2014 no NTV filed"
+      "lastMsg": "Lease ends in 28d \u2014 no NTV filed"
     },
     "EAST|insufficientNoticeList|de1b88e0-b477-4fd9-b8d9-07ed088edc53": {
       "firstSeen": "2026-10-20",
-      "lastMsg": "Lease ends in 5d \u2014 no NTV filed"
+      "lastMsg": "Lease ends in 4d \u2014 no NTV filed"
     },
     "EAST|insufficientNoticeList|fae77acb-2830-4cda-8a28-fba06f9aa4cc": {
       "firstSeen": "2026-10-20",
-      "lastMsg": "Lease ends in 10d \u2014 no NTV filed"
+      "lastMsg": "Lease ends in 9d \u2014 no NTV filed"
     },
     "MUSO|insufficientNoticeList|04c3429f-f328-462b-9040-3a2df098698a": {
       "firstSeen": "2026-10-21",
-      "lastMsg": "Lease ends in 55d \u2014 no NTV filed"
+      "lastMsg": "Lease ends in 54d \u2014 no NTV filed"
     },
     "MUSO|insufficientNoticeList|201ad744-d3bc-4f22-adcf-47a1d70406b6": {
       "firstSeen": "2026-10-24",
-      "lastMsg": "Lease ends in 58d \u2014 no NTV filed"
+      "lastMsg": "Lease ends in 57d \u2014 no NTV filed"
     },
     "MUSO|insufficientNoticeList|a463f233-a675-4281-9339-6c31e549cf8c": {
       "firstSeen": "2026-10-20",
-      "lastMsg": "Lease ends in 50d \u2014 no NTV filed"
+      "lastMsg": "Lease ends in 49d \u2014 no NTV filed"
     },
     "MUSO|insufficientNoticeList|bb90d0e4-fd27-4178-a298-d11f94ed33b4": {
       "firstSeen": "2026-10-20",
-      "lastMsg": "Lease ends in 50d \u2014 no NTV filed"
+      "lastMsg": "Lease ends in 49d \u2014 no NTV filed"
     },
     "MUSO|ntvList|2036e76e-661b-4464-8659-8f8fe315e652": {
       "firstSeen": "2026-10-25",
@@ -70,11 +70,11 @@
     },
     "ORT|insufficientNoticeList|4aa32b6a-c6b5-4f84-9fea-4e7ed48dccba": {
       "firstSeen": "2026-10-20",
-      "lastMsg": "Lease ends in 48d \u2014 no NTV filed"
+      "lastMsg": "Lease ends in 47d \u2014 no NTV filed"
     },
     "ORT|insufficientNoticeList|a0da5cce-202c-4136-82cd-348d2915fbea": {
       "firstSeen": "2026-10-20",
-      "lastMsg": "Lease ends in 31d \u2014 no NTV filed"
+      "lastMsg": "Lease ends in 30d \u2014 no NTV filed"
     },
     "ORT|vacantLeasedList|346ac8e0-e373-4166-9df8-722eea51fd54": {
       "firstSeen": "2026-10-25",
@@ -93,5 +93,5 @@
       "lastMsg": "Past Move-Out Date"
     }
   },
-  "updated": "2026-10-25"
+  "updated": "2026-10-26"
 }
