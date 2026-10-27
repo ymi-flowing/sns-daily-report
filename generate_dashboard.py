@@ -2404,9 +2404,15 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
                     <button onclick="leasingAlerts.close()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-2xl leading-none">&times;</button>
                 </div>
                 <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/30 flex-shrink-0">
-                    <div class="flex flex-wrap gap-3 items-center">
-                        <label class="text-sm font-medium text-slate-600 dark:text-slate-300">Properties:</label>
-                        <div id="leasing-property-filter" class="relative"></div>
+                    <div class="flex flex-wrap gap-4 items-start">
+                        <div class="flex flex-col gap-1.5">
+                            <label class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Properties</label>
+                            <div id="leasing-property-filter" class="relative"></div>
+                        </div>
+                        <div class="flex flex-col gap-1.5">
+                            <label class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Category</label>
+                            <div id="leasing-category-filter" class="relative"></div>
+                        </div>
                     </div>
                 </div>
                 <div class="p-4 overflow-auto flex-1 min-h-0">
@@ -2910,13 +2916,15 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
         }}
 
         function createAlertsPopup(cfg) {{
-            // cfg: {{ keys, badgeId, modalId, theadId, tbodyId, countId, filterContainerId, dotColor, filterBtnColor }}
+            // cfg: {{ keys, badgeId, modalId, theadId, tbodyId, countId, filterContainerId, categoryFilterContainerId?, dotColor, filterBtnColor }}
             const state = {{
                 sortColumn: 'daysAgo',
                 sortAsc: false,
-                selected: new Set(),  // empty = all
+                selected: new Set(),  // empty = all properties
                 dropdownOpen: false,
-                filterRendered: false
+                filterRendered: false,
+                selectedCategories: new Set(),  // empty = all categories
+                categoryDropdownOpen: false
             }};
 
             function collect() {{
@@ -3015,6 +3023,65 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
                     + `</button>${{dropdownHtml}}`;
             }}
 
+            function allCategories() {{
+                return cfg.keys.map(k => ALERT_CATEGORY_LABELS[k]).filter(Boolean);
+            }}
+
+            function renderCategoryFilter() {{
+                if (!cfg.categoryFilterContainerId) return;
+                const container = document.getElementById(cfg.categoryFilterContainerId);
+                if (!container) return;
+                const cats = allCategories();
+                const selectedCount = state.selectedCategories.size;
+                const buttonLabel = selectedCount === 0
+                    ? 'All Categories'
+                    : (selectedCount === 1 ? Array.from(state.selectedCategories)[0] : `${{selectedCount}} selected`);
+                const chevron = state.categoryDropdownOpen ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7';
+
+                function checkboxCell(isChecked) {{
+                    const base = 'relative inline-flex items-center justify-center w-4 h-4 rounded border-2 transition-colors flex-shrink-0';
+                    const stateCls = isChecked
+                        ? 'border-cyan-500 bg-cyan-500/10 dark:bg-cyan-400/10'
+                        : 'border-slate-300 dark:border-slate-500 bg-transparent group-hover:border-slate-400 dark:group-hover:border-slate-400';
+                    const check = isChecked
+                        ? '<svg class="w-3 h-3 text-cyan-500" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>'
+                        : '';
+                    return `<span class="${{base}} ${{stateCls}}">${{check}}</span>`;
+                }}
+                function rowCls(isSelected) {{
+                    const base = 'group flex items-center gap-2.5 px-3 py-2 cursor-pointer text-sm whitespace-nowrap transition-colors';
+                    const bg = isSelected
+                        ? 'bg-cyan-50/60 dark:bg-cyan-900/15 hover:bg-cyan-50 dark:hover:bg-cyan-900/25 text-slate-800 dark:text-slate-100'
+                        : 'hover:bg-slate-50 dark:hover:bg-slate-700/40 text-slate-700 dark:text-slate-200';
+                    return `${{base}} ${{bg}}`;
+                }}
+
+                let dropdownHtml = '';
+                if (state.categoryDropdownOpen) {{
+                    const allSelected = state.selectedCategories.size === 0;
+                    dropdownHtml = `<div class="absolute z-20 mt-1 w-max min-w-[14rem] max-w-[90vw] rounded-xl border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 shadow-xl max-h-80 overflow-y-auto overflow-x-hidden">`
+                        + `<label class="${{rowCls(allSelected)}} font-medium border-b border-slate-200 dark:border-slate-600">`
+                        + checkboxCell(allSelected)
+                        + `<input type="checkbox" ${{allSelected ? 'checked' : ''}} onchange="${{cfg.varName}}.selectAllCategories()" class="sr-only">`
+                        + `<span>All Categories</span>`
+                        + `</label>`;
+                    cats.forEach(cat => {{
+                        const isSelected = state.selectedCategories.has(cat);
+                        const safeCat = cat.replace(/'/g, "\\\\'");
+                        dropdownHtml += `<label class="${{rowCls(isSelected)}}">`
+                            + checkboxCell(isSelected)
+                            + `<input type="checkbox" ${{isSelected ? 'checked' : ''}} onchange="${{cfg.varName}}.toggleCategory('${{safeCat}}')" class="sr-only">`
+                            + `<span class="font-medium">${{cat}}</span>`
+                            + `</label>`;
+                    }});
+                    dropdownHtml += `</div>`;
+                }}
+                container.innerHTML = `<button type="button" onclick="${{cfg.varName}}.toggleCategoryDropdown()" class="flex items-center justify-between w-64 h-10 rounded-xl border-2 border-slate-200 dark:border-slate-600 py-2 pl-4 pr-3 bg-white dark:bg-slate-700 text-slate-900 dark:text-white font-medium cursor-pointer text-sm hover:border-slate-300 dark:hover:border-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 transition-all">`
+                    + `<span class="truncate">${{buttonLabel}}</span>`
+                    + `<svg class="w-5 h-5 text-slate-400 ml-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${{chevron}}"></path></svg>`
+                    + `</button>${{dropdownHtml}}`;
+            }}
+
             function renderHeader() {{
                 const thead = document.getElementById(cfg.theadId);
                 if (!thead) return;
@@ -3040,13 +3107,14 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
             function renderTable() {{
                 renderHeader();
                 renderFilter();
+                renderCategoryFilter();
                 const tbody = document.getElementById(cfg.tbodyId);
                 const countChip = document.getElementById(cfg.countId);
                 if (!tbody) return;
                 const all = collect();
-                const filtered = (state.selected.size === 0
-                    ? all.slice()
-                    : all.filter(a => state.selected.has(a.abbr))
+                const filtered = all.filter(a =>
+                    (state.selected.size === 0 || state.selected.has(a.abbr)) &&
+                    (state.selectedCategories.size === 0 || state.selectedCategories.has(a.category))
                 );
                 filtered.sort((a, b) => {{
                     const cmp = compareAlertVals(a, b, state.sortColumn);
@@ -3109,6 +3177,19 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
                     state.selected.clear();
                     renderTable();
                 }},
+                toggleCategoryDropdown: function() {{
+                    state.categoryDropdownOpen = !state.categoryDropdownOpen;
+                    renderCategoryFilter();
+                }},
+                toggleCategory: function(cat) {{
+                    if (state.selectedCategories.has(cat)) state.selectedCategories.delete(cat);
+                    else state.selectedCategories.add(cat);
+                    renderTable();
+                }},
+                selectAllCategories: function() {{
+                    state.selectedCategories.clear();
+                    renderTable();
+                }},
                 show: function() {{
                     renderTable();
                     document.getElementById(cfg.modalId).classList.remove('hidden');
@@ -3116,6 +3197,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
                 }},
                 close: function() {{
                     state.dropdownOpen = false;
+                    state.categoryDropdownOpen = false;
                     document.getElementById(cfg.modalId).classList.add('hidden');
                     document.body.style.overflow = '';
                 }}
@@ -3143,6 +3225,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
             tbodyId: 'leasing-tbody',
             countId: 'leasing-modal-count',
             filterContainerId: 'leasing-property-filter',
+            categoryFilterContainerId: 'leasing-category-filter',
             dotColor: 'amber'
         }});
 
