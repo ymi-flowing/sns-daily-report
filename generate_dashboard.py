@@ -7,7 +7,7 @@ import json
 import os
 import csv
 from io import StringIO
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from collections import defaultdict
 import time
 
@@ -4562,7 +4562,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
     </script>
 </body>
 </html>'''
-    return html, new_alert_state
+    return html, new_alert_state, table_data, month_str
 
 def main():
     print("=" * 60)
@@ -4688,7 +4688,7 @@ def main():
 
     # Generate HTML
     print("\n[5] Generating HTML dashboard...")
-    html, new_alert_state = generate_html(
+    html, new_alert_state, table_data, month_str = generate_html(
         properties_data, traffic_data, leases_data, financial_data,
         prev_alert_state=prev_alert_state, alert_today=alert_today,
     )
@@ -4699,6 +4699,24 @@ def main():
         f.write(html)
 
     print(f"\n    Dashboard saved to: {output_path}")
+
+    # Save data.json — same payloads the HTML inlines, consumed by the
+    # ymi-flowing/sns-workspace Next.js app via GH raw URL + ISR.
+    try:
+        data_json_path = os.path.join(os.path.dirname(__file__), "data.json")
+        with open(data_json_path, "w", encoding="utf-8") as f:
+            json.dump({
+                "generatedAt": datetime.now(timezone.utc).isoformat(),
+                "monthStr": month_str,
+                "tableData": table_data,
+                "trafficData": traffic_data,
+                "leasesData": leases_data,
+                "financialData": financial_data,
+                "propertyGroups": PROPERTY_GROUPS,
+            }, f, separators=(",", ":"), default=str)
+        print(f"    data.json saved to: {data_json_path}")
+    except Exception as e:
+        print(f"    Warning: data.json export failed: {e}")
 
     # Persist alert state (keys dropped if alert cleared this run)
     if AUTO_PUSH_DRY_RUN:
