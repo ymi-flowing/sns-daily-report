@@ -48,14 +48,6 @@
       "firstSeen": "2026-10-27",
       "lastMsg": "Pending applicant in a real unit"
     },
-    "EAST|pendingInRealUnitList|ea5a2ac9-b8ed-4de5-9777-238da45d9172": {
-      "firstSeen": "2026-10-27",
-      "lastMsg": "Pending applicant in a real unit"
-    },
-    "EAST|vacantLeasedList|ea5a2ac9-b8ed-4de5-9777-238da45d9172": {
-      "firstSeen": "2026-10-27",
-      "lastMsg": "Past Move-In Date"
-    },
     "MUSO|insufficientNoticeList|201ad744-d3bc-4f22-adcf-47a1d70406b6": {
       "firstSeen": "2026-10-24",
       "lastMsg": "Lease ends in 56d \u2014 renewal not signed"
@@ -71,10 +63,6 @@
     "ORT|insufficientNoticeList|4aa32b6a-c6b5-4f84-9fea-4e7ed48dccba": {
       "firstSeen": "2026-10-20",
       "lastMsg": "Lease ends in 46d \u2014 renewal not signed"
-    },
-    "ORT|vacantNotReadyList|c5622fc2-fe43-4be1-8600-c6217b424ac4": {
-      "firstSeen": "2026-10-27",
-      "lastMsg": "Past Available Date"
     },
     "ROP|pendingInRealUnitList|6c36c604-b71b-49ca-9b8f-e5786d88e65d": {
       "firstSeen": "2026-10-27",
