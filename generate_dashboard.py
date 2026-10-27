@@ -2295,7 +2295,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
         <!-- Traffic (MTD) Table (shown only for ALL) -->
         <div id="traffic-mtd-section" class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
             <div class="p-4 border-b border-slate-200 dark:border-slate-700">
-                <h2 class="text-lg font-bold text-slate-800 dark:text-white">Traffic (MTD) <span class="text-sm font-normal text-slate-500 dark:text-slate-400" id="traffic-month"></span></h2>
+                <h2 class="text-lg font-bold text-slate-800 dark:text-white">Traffic Month-to-Date <span class="text-sm font-normal text-slate-500 dark:text-slate-400" id="traffic-month"></span></h2>
             </div>
             <div class="overflow-x-auto fancy-scroll">
                 <table class="min-w-full text-xs table-fixed" id="traffic-mtd-matrix-table">
@@ -2307,7 +2307,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
         <!-- Traffic (Snapshot) Table (shown only for ALL) -->
         <div id="traffic-snapshot-section" class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
             <div class="p-4 border-b border-slate-200 dark:border-slate-700">
-                <h2 class="text-lg font-bold text-slate-800 dark:text-white">Traffic (Snapshot)</h2>
+                <h2 class="text-lg font-bold text-slate-800 dark:text-white">Traffic Snapshot</h2>
             </div>
             <div class="overflow-x-auto fancy-scroll">
                 <table class="min-w-full text-xs table-fixed" id="traffic-snapshot-matrix-table">
@@ -2525,8 +2525,10 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
         let popupColumns = [];
         let popupActiveFilters = new Set();  // Active status filters
         let popupHasFilters = false;  // Whether this popup has filters
+        let popupAlertColumnKey = null;  // Which column shows the alert dot; null = last column
 
         function showPopup(category, abbr, monthKey) {{
+            popupAlertColumnKey = (category === 'applicants') ? 'status' : null;
             const modal = document.getElementById('popup-modal');
             const title = document.getElementById('popup-title');
             const p = propertyTableData[abbr];
@@ -2852,10 +2854,12 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
                     if (col.key === 'moDate' && row.isEarlyTermination) {{
                         val = `${{val}} <span class="inline-block w-[7px] h-[7px] rounded-full bg-red-500 ml-1 align-middle" title="Early Termination — move-out before lease end"></span>`;
                     }}
-                    // Alert/Transfer indicator for last column
-                    const isLastCol = colIdx === popupColumns.length - 1;
-                    const hasRowAlert = isLastCol && row.hasAlert;
-                    const isTransfer = isLastCol && row.isTransfer;
+                    // Alert/Transfer indicator — on configured column (or last column by default)
+                    const isAlertCol = popupAlertColumnKey
+                        ? col.key === popupAlertColumnKey
+                        : (colIdx === popupColumns.length - 1);
+                    const hasRowAlert = isAlertCol && row.hasAlert;
+                    const isTransfer = isAlertCol && row.isTransfer;
                     let indicatorHtml = '';
                     if (hasRowAlert) {{
                         const ageSuffix = (typeof row.daysAgo === 'number') ? ` (${{row.daysAgo}}d)` : '';
@@ -3541,8 +3545,13 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
             function renderSection(tableId, rows) {{
                 const table = document.getElementById(tableId);
                 if (!table) return;
+                const colCount = allProps.length + 2;
                 let bodyRows = '';
                 rows.forEach((row, idx) => {{
+                    if (row.isDivider) {{
+                        bodyRows += `<tr class="h-2 bg-slate-200 dark:bg-slate-600"><td colspan="${{colCount}}"></td></tr>`;
+                        return;
+                    }}
                     const isAlt = idx % 2 === 1;
                     const rowBg = isAlt ? 'bg-slate-50/50 dark:bg-slate-800/30' : '';
                     let tr = `<tr class="${{rowBg}} hover:bg-blue-50/50 dark:hover:bg-blue-900/20">`;
@@ -3551,10 +3560,16 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
                         propertyGroups[region].forEach(abbr => {{
                             const val = row.getValue(abbr);
                             const suffix = row.isPercent ? '%' : '';
+                            const alertInfo = row.getAlert ? row.getAlert(abbr) : null;
+                            const alertBg = alertInfo ? 'bg-red-100 dark:bg-blue-900/40' : '';
+                            const alertDot = alertInfo
+                                ? `<span class="alert-dot alert-tooltip" data-tooltip="${{alertInfo}}"></span>`
+                                : '';
+                            const posCls = alertInfo ? 'relative' : '';
                             if (row.clickable && val > 0) {{
-                                tr += `<td class="px-2 py-2 text-center ${{row.color}} cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/50" onclick="showPopup('applicants', '${{abbr}}')">${{val}}${{suffix}}</td>`;
+                                tr += `<td class="px-2 py-2 text-center ${{row.color}} ${{alertBg}} ${{posCls}} cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/50" onclick="showPopup('applicants', '${{abbr}}')">${{val}}${{suffix}}${{alertDot}}</td>`;
                             }} else {{
-                                tr += `<td class="px-2 py-2 text-center ${{row.color}}">${{val}}${{suffix}}</td>`;
+                                tr += `<td class="px-2 py-2 text-center ${{row.color}} ${{alertBg}} ${{posCls}}">${{val}}${{suffix}}${{alertDot}}</td>`;
                             }}
                         }});
                     }});
@@ -3584,6 +3599,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
                        return p === 0 ? '0.0' : ((s / p) * 100).toFixed(1);
                    }}, isPercent: true,
                    getTotal: () => (totals.total > 0 ? ((totals.signedLeasesMtd / totals.total) * 100).toFixed(1) : '0.0') + '%' }},
+                {{ isDivider: true }},
                 {{ label: 'Applicants MTD' + tip('Applications submitted this month (any outcome). Excludes Pending Transfer.'), color: 'text-indigo-600 dark:text-indigo-400 font-semibold',
                    getValue: abbr => (leasesData[abbr]?.applicants_mtd || 0), getTotal: () => totals.applicantsMtd }},
                 {{ label: 'Approved' + tip('Of MTD applications: currently approved or signed'), color: 'text-cyan-600 dark:text-cyan-400',
@@ -3596,10 +3612,23 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
                    getValue: abbr => (leasesData[abbr]?.applicants_mtd_active || 0), getTotal: () => totals.applicantsMtdActive }},
             ];
 
+            // Alert aggregator for Total Applicants cell: returns summary string (or null)
+            function applicantAlertSummary(abbr) {{
+                const l = leasesData[abbr] || {{}};
+                const alerts = [];
+                (l.pendingInRealUnitList || []).forEach(r => {{ if (r.hasAlert) alerts.push(r); }});
+                (l.approvedPaidInHoldingList || []).forEach(r => {{ if (r.hasAlert) alerts.push(r); }});
+                if (alerts.length === 0) return null;
+                if (alerts.length === 1) return alerts[0].alertMsg || 'Needs attention';
+                return `${{alerts.length}} applicant alerts`;
+            }}
+
             // Traffic (Snapshot) rows
             const snapshotRows = [
                 {{ label: 'Total Applicants' + tip('Currently active applicants'), color: 'text-indigo-600 dark:text-indigo-400 font-semibold',
-                   getValue: abbr => (leasesData[abbr]?.total_applicants || 0), clickable: true, getTotal: () => totals.totalApplicants }},
+                   getValue: abbr => (leasesData[abbr]?.total_applicants || 0), clickable: true,
+                   getAlert: applicantAlertSummary,
+                   getTotal: () => totals.totalApplicants }},
                 {{ label: 'Pending Approval', color: 'text-amber-600 dark:text-amber-400',
                    getValue: abbr => (leasesData[abbr]?.pending_approval || 0), getTotal: () => totals.pendingApproval }},
                 {{ label: 'Approved', color: 'text-cyan-600 dark:text-cyan-400',
@@ -3718,10 +3747,13 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
                                          parseFloat(propPct) >= 70 ? 'text-emerald-600 dark:text-emerald-400' :
                                          parseFloat(propPct) >= 50 ? 'text-amber-600 dark:text-amber-400' :
                                          'text-red-600 dark:text-red-400';
+                        const monthRows = leasesData[abbr]?.expiring?.expiringLists?.[monthKey] || [];
+                        const hasMonthAlert = monthRows.some(r => r.hasAlert);
+                        const alertBg = hasMonthAlert ? 'bg-red-100 dark:bg-blue-900/40' : '';
                         if (propTotal > 0) {{
-                            bodyRows += `<td class="px-2 py-2 text-center font-semibold ${{propColor}} cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/50" onclick="event.stopPropagation(); showPopup('expiring', '${{abbr}}', '${{monthKey}}')">${{propPct}}%</td>`;
+                            bodyRows += `<td class="px-2 py-2 text-center font-semibold ${{propColor}} ${{alertBg}} cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/50" onclick="event.stopPropagation(); showPopup('expiring', '${{abbr}}', '${{monthKey}}')">${{propPct}}%</td>`;
                         }} else {{
-                            bodyRows += `<td class="px-2 py-2 text-center font-semibold ${{propColor}}">-</td>`;
+                            bodyRows += `<td class="px-2 py-2 text-center font-semibold ${{propColor}} ${{alertBg}}">-</td>`;
                         }}
                     }});
                 }});

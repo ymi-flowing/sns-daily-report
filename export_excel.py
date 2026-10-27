@@ -260,7 +260,7 @@ def _write_traffic(ws, row, traffic_data, leases_data):
         signed = l(a, "signed_leases_mtd")
         return round((signed / prospects) * 100, 1) if prospects > 0 else 0.0
 
-    _write_section_header(ws, row, "Traffic (MTD)")
+    _write_section_header(ws, row, "Traffic Month-to-Date")
     row += 1
     mtd_rows = [
         ("Total Prospects (MTD)", [t(a, "total") for a in ALL_PROPS], None, None),
@@ -278,7 +278,7 @@ def _write_traffic(ws, row, traffic_data, leases_data):
         row += 1
     row += 1
 
-    _write_section_header(ws, row, "Traffic (Snapshot)")
+    _write_section_header(ws, row, "Traffic Snapshot")
     row += 1
     snapshot_rows = [
         ("Total Applicants", [l(a, "total_applicants") for a in ALL_PROPS], None, None),
