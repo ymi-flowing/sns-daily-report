@@ -243,9 +243,6 @@ def _write_unit_status(ws, row, properties_data):
 
 
 def _write_traffic(ws, row, traffic_data, leases_data):
-    _write_section_header(ws, row, "Traffic")
-    row += 1
-
     def t(a, key):
         return int((traffic_data.get(a) or {}).get(key, 0) or 0)
 
@@ -258,16 +255,38 @@ def _write_traffic(ws, row, traffic_data, leases_data):
     def l(a, key):
         return int((leases_data.get(a) or {}).get(key, 0) or 0)
 
-    rows = [
+    def conv_pct(a):
+        prospects = t(a, "total")
+        signed = l(a, "signed_leases_mtd")
+        return round((signed / prospects) * 100, 1) if prospects > 0 else 0.0
+
+    _write_section_header(ws, row, "Traffic (MTD)")
+    row += 1
+    mtd_rows = [
         ("Total Prospects (MTD)", [t(a, "total") for a in ALL_PROPS], None, None),
         ("Daily Avg Prospects", [round(tf(a, "daily_avg"), 1) for a in ALL_PROPS], "0.0", None),
+        ("New Signed Leases (MTD)", [l(a, "signed_leases_mtd") for a in ALL_PROPS], None, None),
+        ("Conversion Rate %", [conv_pct(a) for a in ALL_PROPS], "0.0", None),
+        ("Applicants MTD", [l(a, "applicants_mtd") for a in ALL_PROPS], None, None),
+        ("Approved (MTD)", [l(a, "applicants_mtd_approved") for a in ALL_PROPS], None, None),
+        ("Denied (MTD)", [l(a, "applicants_mtd_denied") for a in ALL_PROPS], None, None),
+        ("Cancelled (MTD)", [l(a, "applicants_mtd_cancelled") for a in ALL_PROPS], None, None),
+        ("Still Active (MTD)", [l(a, "applicants_mtd_active") for a in ALL_PROPS], None, None),
+    ]
+    for label, values, fmt, total in mtd_rows:
+        _write_row(ws, row, label, values, number_format=fmt, total_value=total)
+        row += 1
+    row += 1
+
+    _write_section_header(ws, row, "Traffic (Snapshot)")
+    row += 1
+    snapshot_rows = [
         ("Total Applicants", [l(a, "total_applicants") for a in ALL_PROPS], None, None),
         ("Pending Approval", [l(a, "pending_approval") for a in ALL_PROPS], None, None),
         ("Approved", [l(a, "approved") for a in ALL_PROPS], None, None),
         ("Signed Lease", [l(a, "signed_lease") for a in ALL_PROPS], None, None),
-        ("New Signed Leases (MTD)", [l(a, "signed_leases_mtd") for a in ALL_PROPS], None, None),
     ]
-    for label, values, fmt, total in rows:
+    for label, values, fmt, total in snapshot_rows:
         _write_row(ws, row, label, values, number_format=fmt, total_value=total)
         row += 1
     return row + 1
