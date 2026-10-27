@@ -60,6 +60,10 @@
       "firstSeen": "2026-10-20",
       "lastMsg": "Lease ends in 48d \u2014 renewal not signed"
     },
+    "MUSO|ntvList|0886103e-d7d6-47a0-965d-80e0f124386e": {
+      "firstSeen": "2026-10-27",
+      "lastMsg": "Only 12 days to get ready"
+    },
     "ORT|insufficientNoticeList|4aa32b6a-c6b5-4f84-9fea-4e7ed48dccba": {
       "firstSeen": "2026-10-20",
       "lastMsg": "Lease ends in 46d \u2014 renewal not signed"
@@ -68,9 +72,9 @@
       "firstSeen": "2026-10-26",
       "lastMsg": "Lease ends in 47d \u2014 renewal not signed"
     },
-    "TV|vacantNotReadyList|b5ee9383-8c75-4109-9963-45c320ba86ee": {
+    "TV|pendingInRealUnitList|debdb7ff-749c-49e3-80fd-e3ad0656c190": {
       "firstSeen": "2026-10-27",
-      "lastMsg": "Past Available Date"
+      "lastMsg": "Pending applicant in a real unit"
     }
   },
   "updated": "2026-10-27"
