@@ -48,6 +48,10 @@
       "firstSeen": "2026-10-20",
       "lastMsg": "Lease ends in 8d \u2014 no NTV filed"
     },
+    "EAST|ntvList|6e5566ed-5157-4466-b750-803d3cab1301": {
+      "firstSeen": "2026-10-27",
+      "lastMsg": "Only 8 days to get ready"
+    },
     "MUSO|insufficientNoticeList|201ad744-d3bc-4f22-adcf-47a1d70406b6": {
       "firstSeen": "2026-10-24",
       "lastMsg": "Lease ends in 56d \u2014 renewal not signed"
