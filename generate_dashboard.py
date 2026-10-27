@@ -2376,9 +2376,15 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
                     <button onclick="opsAlerts.close()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 text-2xl leading-none">&times;</button>
                 </div>
                 <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-700/30 flex-shrink-0">
-                    <div class="flex flex-wrap gap-3 items-center">
-                        <label class="text-sm font-medium text-slate-600 dark:text-slate-300">Properties:</label>
-                        <div id="alerts-property-filter" class="relative"></div>
+                    <div class="flex flex-wrap gap-4 items-start">
+                        <div class="flex flex-col gap-1.5">
+                            <label class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Properties</label>
+                            <div id="alerts-property-filter" class="relative"></div>
+                        </div>
+                        <div class="flex flex-col gap-1.5">
+                            <label class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Category</label>
+                            <div id="alerts-category-filter" class="relative"></div>
+                        </div>
                     </div>
                 </div>
                 <div class="p-4 overflow-auto flex-1 min-h-0">
@@ -3213,6 +3219,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
             tbodyId: 'alerts-tbody',
             countId: 'alerts-modal-count',
             filterContainerId: 'alerts-property-filter',
+            categoryFilterContainerId: 'alerts-category-filter',
             dotColor: 'red'
         }});
 
