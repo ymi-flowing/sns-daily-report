@@ -80,6 +80,14 @@
       "firstSeen": "2026-10-27",
       "lastMsg": "Past Available Date"
     },
+    "ROP|pendingInRealUnitList|6c36c604-b71b-49ca-9b8f-e5786d88e65d": {
+      "firstSeen": "2026-10-27",
+      "lastMsg": "Pending applicant in a real unit"
+    },
+    "ROP|vacantLeasedList|6c36c604-b71b-49ca-9b8f-e5786d88e65d": {
+      "firstSeen": "2026-10-27",
+      "lastMsg": "Past Move-In Date"
+    },
     "ROP|vacantNotReadyList|9a63fe77-9bd8-49ac-a35a-e1705b85da2b": {
       "firstSeen": "2026-10-27",
       "lastMsg": "Past Available Date"
