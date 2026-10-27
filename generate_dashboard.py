@@ -2039,6 +2039,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
             content: attr(data-tooltip);
             position: absolute;
             right: calc(100% + 6px);
+            left: auto;
             top: 50%;
             transform: translateY(-50%);
             padding: 6px 10px;
@@ -2063,6 +2064,10 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
         .alert-tooltip:hover::after {{
             opacity: 1;
             visibility: visible;
+        }}
+        .alert-tooltip.alert-tooltip-right::after {{
+            right: auto;
+            left: calc(100% + 6px);
         }}
         input[type="checkbox"] {{
             accent-color: #1e40af;
@@ -2861,12 +2866,14 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
                     const hasRowAlert = isAlertCol && row.hasAlert;
                     const isTransfer = isAlertCol && row.isTransfer;
                     let indicatorHtml = '';
+                    const flipRight = isAlertCol && colIdx < popupColumns.length - 1;
+                    const tooltipDirCls = flipRight ? ' alert-tooltip-right' : '';
                     if (hasRowAlert) {{
                         const ageSuffix = (typeof row.daysAgo === 'number') ? ` (${{row.daysAgo}}d)` : '';
                         const pushedSuffix = (row.autoPushed && row.autoPushed.applied) ? ` – Pushed to ${{formatDate(row.autoPushed.newAvDate)}}` : '';
-                        indicatorHtml = `<span class="alert-dot alert-tooltip" data-tooltip="${{(row.alertMsg || 'Needs attention') + ageSuffix + pushedSuffix}}"></span>`;
+                        indicatorHtml = `<span class="alert-dot alert-tooltip${{tooltipDirCls}}" data-tooltip="${{(row.alertMsg || 'Needs attention') + ageSuffix + pushedSuffix}}"></span>`;
                     }} else if (isTransfer) {{
-                        indicatorHtml = `<span class="transfer-dot alert-tooltip" data-tooltip="Transfer"></span>`;
+                        indicatorHtml = `<span class="transfer-dot alert-tooltip${{tooltipDirCls}}" data-tooltip="Transfer"></span>`;
                     }}
                     const posClass = (hasRowAlert || isTransfer) ? 'relative' : '';
 
@@ -3562,14 +3569,10 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
                             const suffix = row.isPercent ? '%' : '';
                             const alertInfo = row.getAlert ? row.getAlert(abbr) : null;
                             const alertBg = alertInfo ? 'bg-red-100 dark:bg-blue-900/40' : '';
-                            const alertDot = alertInfo
-                                ? `<span class="alert-dot alert-tooltip" data-tooltip="${{alertInfo}}"></span>`
-                                : '';
-                            const posCls = alertInfo ? 'relative' : '';
                             if (row.clickable && val > 0) {{
-                                tr += `<td class="px-2 py-2 text-center ${{row.color}} ${{alertBg}} ${{posCls}} cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/50" onclick="showPopup('applicants', '${{abbr}}')">${{val}}${{suffix}}${{alertDot}}</td>`;
+                                tr += `<td class="px-2 py-2 text-center ${{row.color}} ${{alertBg}} cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/50" onclick="showPopup('applicants', '${{abbr}}')">${{val}}${{suffix}}</td>`;
                             }} else {{
-                                tr += `<td class="px-2 py-2 text-center ${{row.color}} ${{alertBg}} ${{posCls}}">${{val}}${{suffix}}${{alertDot}}</td>`;
+                                tr += `<td class="px-2 py-2 text-center ${{row.color}} ${{alertBg}}">${{val}}${{suffix}}</td>`;
                             }}
                         }});
                     }});
