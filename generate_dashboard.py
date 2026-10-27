@@ -464,6 +464,7 @@ def get_pending_leases_data(property_id, leases=None, units_availability=None):
         applicants_mtd_denied = 0
         applicants_mtd_cancelled = 0
         applicants_mtd_active = 0
+        applicants_mtd_list = []
         for lease in leases:
             if lease.get("leaseStatus") == "Pending Transfer":
                 continue
@@ -473,12 +474,34 @@ def get_pending_leases_data(property_id, leases=None, units_availability=None):
             applicants_mtd += 1
             if lease.get("cancellationDate"):
                 applicants_mtd_cancelled += 1
+                status = "Cancelled"
             elif lease.get("denialDate"):
                 applicants_mtd_denied += 1
+                status = "Denied"
             elif lease.get("approvalDate") or lease.get("leaseSignedDate"):
                 applicants_mtd_approved += 1
+                status = "Approved"
             else:
                 applicants_mtd_active += 1
+                status = "Still Active"
+            people = lease.get("people", [])
+            name = ""
+            if people:
+                p = people[0]
+                name = f"{p.get('firstName', '')} {p.get('lastName', '')}".strip()
+            applicants_mtd_list.append({
+                "status": status,
+                "unit": lease.get("unitNumber", ""),
+                "unitId": lease.get("unitId", ""),
+                "type": lease.get("unitTypeName", ""),
+                "applicant": name,
+                "leaseId": lease.get("leaseId", ""),
+                "appDate": app_date,
+                "approvedDate": (lease.get("approvalDate") or "")[:10],
+                "denialDate": (lease.get("denialDate") or "")[:10],
+                "cancellationDate": (lease.get("cancellationDate") or "")[:10],
+                "signedDate": (lease.get("leaseSignedDate") or "")[:10],
+            })
 
         # Alert #2: Approved + deposit paid, still in a Holding Unit.
         # One DepositLedger call per candidate (billingAccountId isolates the applicant).
@@ -505,12 +528,13 @@ def get_pending_leases_data(property_id, leases=None, units_availability=None):
             "applicants_mtd_cancelled": applicants_mtd_cancelled,
             "applicants_mtd_active": applicants_mtd_active,
             "applicantsList": sorted(applicants_list, key=lambda x: x["unit"]),
+            "applicantsMtdList": sorted(applicants_mtd_list, key=lambda x: (x["appDate"], x["unit"]), reverse=True),
             "pendingInRealUnitList": sorted(pending_in_real_unit_list, key=lambda x: x["unit"]),
             "approvedPaidInHoldingList": sorted(approved_paid_in_holding_list, key=lambda x: x["unit"]),
         }
     except Exception as e:
         print(f"    Warning: Could not fetch lease data: {e}")
-        return {"total_applicants": 0, "pending_approval": 0, "approved": 0, "signed_lease": 0, "signed_leases_mtd": 0, "applicants_mtd": 0, "applicants_mtd_approved": 0, "applicants_mtd_denied": 0, "applicants_mtd_cancelled": 0, "applicants_mtd_active": 0, "applicantsList": [], "pendingInRealUnitList": [], "approvedPaidInHoldingList": []}
+        return {"total_applicants": 0, "pending_approval": 0, "approved": 0, "signed_lease": 0, "signed_leases_mtd": 0, "applicants_mtd": 0, "applicants_mtd_approved": 0, "applicants_mtd_denied": 0, "applicants_mtd_cancelled": 0, "applicants_mtd_active": 0, "applicantsList": [], "applicantsMtdList": [], "pendingInRealUnitList": [], "approvedPaidInHoldingList": []}
 
 def get_expiring_leases_data(property_id, leases=None, units_availability=None):
     """Get expiring leases data for current + next 3 months
@@ -2532,7 +2556,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
         let popupHasFilters = false;  // Whether this popup has filters
         let popupAlertColumnKey = null;  // Which column shows the alert dot; null = last column
 
-        function showPopup(category, abbr, monthKey) {{
+        function showPopup(category, abbr, monthKey, preFilter) {{
             popupAlertColumnKey = (category === 'applicants') ? 'status' : null;
             const modal = document.getElementById('popup-modal');
             const title = document.getElementById('popup-title');
@@ -2656,6 +2680,21 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
                     ];
                     titleText = `${{abbr}} - Applicants (${{data.length}})`;
                     break;
+                case 'applicantsMtd':
+                    data = l.applicantsMtdList || [];
+                    columns = [
+                        {{key: 'status', label: 'Status'}},
+                        {{key: 'unit', label: 'Unit'}},
+                        {{key: 'type', label: 'Type'}},
+                        {{key: 'applicant', label: 'Applicant'}},
+                        {{key: 'appDate', label: 'App Date'}},
+                        {{key: 'approvedDate', label: 'Approved'}},
+                        {{key: 'denialDate', label: 'Denied'}},
+                        {{key: 'cancellationDate', label: 'Cancelled'}},
+                        {{key: 'signedDate', label: 'Signed'}}
+                    ];
+                    titleText = `${{abbr}} - Applicants MTD (${{data.length}})`;
+                    break;
                 case 'expiring':
                     const expiring = l.expiring || {{}};
                     const lists = expiring.expiringLists || {{}};
@@ -2691,9 +2730,10 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
             // Set up filters for applicants and expiring
             const filtersContainer = document.getElementById('popup-filters');
 
-            if (category === 'applicants' || category === 'expiring') {{
+            if (category === 'applicants' || category === 'expiring' || category === 'applicantsMtd') {{
                 popupHasFilters = true;
                 popupActiveFilters = new Set();  // empty = all statuses (alerts convention)
+                if (preFilter) popupActiveFilters.add(preFilter);
                 popupStatusDropdownOpen = false;
                 renderPopupStatusFilter();
                 filtersContainer.classList.remove('hidden');
@@ -2720,7 +2760,10 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
             'NTV': 'text-orange-600 dark:text-orange-400',
             'Former': 'text-orange-600 dark:text-orange-400',
             'Evicted': 'text-red-600 dark:text-red-400',
-            'Under Eviction': 'text-red-600 dark:text-red-400'
+            'Under Eviction': 'text-red-600 dark:text-red-400',
+            'Denied': 'text-rose-600 dark:text-rose-400',
+            'Cancelled': 'text-slate-500 dark:text-slate-400',
+            'Still Active': 'text-amber-600 dark:text-amber-400'
         }};
 
         let popupStatusDropdownOpen = false;
@@ -2828,7 +2871,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
         }}
 
         // Date columns that need formatting
-        const dateColumns = ['avDate', 'ntvDate', 'moDate', 'lastMoDate', 'leaseEnd', 'moveIn', 'signed', 'appDate', 'approvedDate', 'signedDate', 'renewalSigned'];
+        const dateColumns = ['avDate', 'ntvDate', 'moDate', 'lastMoDate', 'leaseEnd', 'moveIn', 'signed', 'appDate', 'approvedDate', 'signedDate', 'renewalSigned', 'denialDate', 'cancellationDate'];
 
         function renderPopupTable() {{
             const thead = document.getElementById('popup-thead');
@@ -3569,8 +3612,10 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
                             const suffix = row.isPercent ? '%' : '';
                             const alertInfo = row.getAlert ? row.getAlert(abbr) : null;
                             const alertBg = alertInfo ? 'bg-red-100 dark:bg-blue-900/40' : '';
-                            if (row.clickable && val > 0) {{
-                                tr += `<td class="px-2 py-2 text-center ${{row.color}} ${{alertBg}} cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/50" onclick="showPopup('applicants', '${{abbr}}')">${{val}}${{suffix}}</td>`;
+                            const isClickable = row.popupCategory && val > 0;
+                            if (isClickable) {{
+                                const filterArg = row.popupFilter ? `, null, '${{row.popupFilter}}'` : '';
+                                tr += `<td class="px-2 py-2 text-center ${{row.color}} ${{alertBg}} cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/50" onclick="showPopup('${{row.popupCategory}}', '${{abbr}}'${{filterArg}})">${{val}}${{suffix}}</td>`;
                             }} else {{
                                 tr += `<td class="px-2 py-2 text-center ${{row.color}} ${{alertBg}}">${{val}}${{suffix}}</td>`;
                             }}
@@ -3604,15 +3649,15 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
                    getTotal: () => (totals.total > 0 ? ((totals.signedLeasesMtd / totals.total) * 100).toFixed(1) : '0.0') + '%' }},
                 {{ isDivider: true }},
                 {{ label: 'Applicants MTD' + tip('Applications submitted this month (any outcome). Excludes Pending Transfer.'), color: 'text-indigo-600 dark:text-indigo-400 font-semibold',
-                   getValue: abbr => (leasesData[abbr]?.applicants_mtd || 0), getTotal: () => totals.applicantsMtd }},
+                   getValue: abbr => (leasesData[abbr]?.applicants_mtd || 0), popupCategory: 'applicantsMtd', getTotal: () => totals.applicantsMtd }},
                 {{ label: 'Approved' + tip('Of MTD applications: currently approved or signed'), color: 'text-cyan-600 dark:text-cyan-400',
-                   getValue: abbr => (leasesData[abbr]?.applicants_mtd_approved || 0), getTotal: () => totals.applicantsMtdApproved }},
+                   getValue: abbr => (leasesData[abbr]?.applicants_mtd_approved || 0), popupCategory: 'applicantsMtd', popupFilter: 'Approved', getTotal: () => totals.applicantsMtdApproved }},
                 {{ label: 'Denied' + tip('Of MTD applications: currently denied'), color: 'text-rose-600 dark:text-rose-400',
-                   getValue: abbr => (leasesData[abbr]?.applicants_mtd_denied || 0), getTotal: () => totals.applicantsMtdDenied }},
+                   getValue: abbr => (leasesData[abbr]?.applicants_mtd_denied || 0), popupCategory: 'applicantsMtd', popupFilter: 'Denied', getTotal: () => totals.applicantsMtdDenied }},
                 {{ label: 'Cancelled' + tip('Of MTD applications: currently cancelled'), color: 'text-slate-500 dark:text-slate-400',
-                   getValue: abbr => (leasesData[abbr]?.applicants_mtd_cancelled || 0), getTotal: () => totals.applicantsMtdCancelled }},
+                   getValue: abbr => (leasesData[abbr]?.applicants_mtd_cancelled || 0), popupCategory: 'applicantsMtd', popupFilter: 'Cancelled', getTotal: () => totals.applicantsMtdCancelled }},
                 {{ label: 'Still Active' + tip('Of MTD applications: still pending (no outcome yet)'), color: 'text-amber-600 dark:text-amber-400',
-                   getValue: abbr => (leasesData[abbr]?.applicants_mtd_active || 0), getTotal: () => totals.applicantsMtdActive }},
+                   getValue: abbr => (leasesData[abbr]?.applicants_mtd_active || 0), popupCategory: 'applicantsMtd', popupFilter: 'Still Active', getTotal: () => totals.applicantsMtdActive }},
             ];
 
             // Alert aggregator for Total Applicants cell: returns summary string (or null)
@@ -3629,7 +3674,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
             // Traffic (Snapshot) rows
             const snapshotRows = [
                 {{ label: 'Total Applicants' + tip('Currently active applicants'), color: 'text-indigo-600 dark:text-indigo-400 font-semibold',
-                   getValue: abbr => (leasesData[abbr]?.total_applicants || 0), clickable: true,
+                   getValue: abbr => (leasesData[abbr]?.total_applicants || 0), popupCategory: 'applicants',
                    getAlert: applicantAlertSummary,
                    getTotal: () => totals.totalApplicants }},
                 {{ label: 'Pending Approval', color: 'text-amber-600 dark:text-amber-400',
