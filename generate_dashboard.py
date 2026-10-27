@@ -334,17 +334,39 @@ def fetch_units_availability(property_id):
     return result.get("units", []) if result else []
 
 
-def get_pending_leases_data(property_id, leases=None):
+def fetch_deposit_sum(property_id, billing_account_id):
+    """Return sum of depositTransactions.amount for an applicant's ledger.
+    Returns 0 on error so the alert conservatively does not fire."""
+    if not billing_account_id:
+        return 0
+    params = {"propertyId": property_id, "billingAccountId": billing_account_id}
+    result = make_partners_api_request("/Transactions/DepositLedger", params, "DepositLedger")
+    if not result:
+        return 0
+    return sum((t.get("amount") or 0) for t in result.get("depositTransactions", []))
+
+
+def get_pending_leases_data(property_id, leases=None, units_availability=None):
     """Get pending lease/applicant data for a property
 
     Args:
         property_id: Property ID (used if leases not provided)
         leases: Pre-fetched leases data (optional, to avoid duplicate API call)
+        units_availability: Pre-fetched Units/Availability list; used to flag
+            Holding Units via excludedFromOccupancy for the two leasing alerts.
     """
     try:
         # Use provided leases or fetch
         if leases is None:
             leases = fetch_leases(property_id)
+
+        # Build unit_id -> excludedFromOccupancy lookup for Holding-Unit detection
+        holding_by_unit_id = {}
+        if units_availability:
+            for u in units_availability:
+                uid = u.get("unitId")
+                if uid:
+                    holding_by_unit_id[uid] = bool(u.get("excludedFromOccupancy", False))
 
         # Filter for Pending status and Pending Transfer (for popup lists)
         # Pending Transfer is included for Vacant Leased/NTV Leased popups but NOT counted as applicants
@@ -357,6 +379,10 @@ def get_pending_leases_data(property_id, leases=None):
 
         # Build detailed applicants list for pop-up
         applicants_list = []
+        # Alert lists mutate the applicant row dicts in place so the Applicants
+        # popup also shows the alert dot (same pattern as insufficientNoticeList).
+        pending_in_real_unit_list = []
+        approved_paid_in_holding_candidates = []
 
         for lease in pending:
             approval_date = lease.get("approvalDate")
@@ -383,19 +409,33 @@ def get_pending_leases_data(property_id, leases=None):
                 p = people[0]
                 applicant_name = f"{p.get('firstName', '')} {p.get('lastName', '')}".strip()
 
-            applicants_list.append({
+            unit_id = lease.get("unitId", "")
+            row = {
                 "status": status,
                 "unit": lease.get("unitNumber", ""),
-                "unitId": lease.get("unitId", ""),
+                "unitId": unit_id,
                 "type": lease.get("unitTypeName", ""),
                 "applicant": applicant_name,
                 "leaseId": lease.get("leaseId", ""),
+                "billingAccountId": lease.get("billingAccountId", ""),
                 "appDate": (lease.get("applicationDate") or "")[:10],
                 "approvedDate": (approval_date or "")[:10] if approval_date else "",
                 "signedDate": (signed_date or "")[:10] if signed_date else "",
                 "moveIn": (lease.get("scheduledMoveInDate") or lease.get("leaseStartDate") or "")[:10],
                 "isTransfer": is_transfer
-            })
+            }
+            applicants_list.append(row)
+
+            # Alert #1: Pending applicant assigned to a non-Holding (real) unit
+            if status == "Pending" and unit_id in holding_by_unit_id and holding_by_unit_id[unit_id] is False:
+                row["hasAlert"] = True
+                row["alertMsg"] = "Pending applicant in a real unit"
+                pending_in_real_unit_list.append(row)
+
+            # Alert #2 candidate: Approved applicant still in a Holding Unit
+            # Deposit check happens below (one API call per candidate).
+            elif status == "Approved" and holding_by_unit_id.get(unit_id) is True:
+                approved_paid_in_holding_candidates.append(row)
 
         # Count new leases signed this month (MTD) - excludes renewals
         # New lease = exactly 1 history entry (the current lease itself)
@@ -416,6 +456,16 @@ def get_pending_leases_data(property_id, leases=None):
                 if len(history) == 1:  # New lease has exactly 1 history entry
                     signed_leases_mtd += 1
 
+        # Alert #2: Approved + deposit paid, still in a Holding Unit.
+        # One DepositLedger call per candidate (billingAccountId isolates the applicant).
+        approved_paid_in_holding_list = []
+        for row in approved_paid_in_holding_candidates:
+            deposit_sum = fetch_deposit_sum(property_id, row.get("billingAccountId"))
+            if deposit_sum > 0:
+                row["hasAlert"] = True
+                row["alertMsg"] = "Approved + deposit paid, still in Holding Unit"
+                approved_paid_in_holding_list.append(row)
+
         # Total applicants excludes transfers (they're only for Vacant/NTV Leased popups)
         total_applicants = pending_approval + approved_not_signed + signed_lease
 
@@ -425,11 +475,13 @@ def get_pending_leases_data(property_id, leases=None):
             "approved": approved_not_signed,
             "signed_lease": signed_lease,
             "signed_leases_mtd": signed_leases_mtd,
-            "applicantsList": sorted(applicants_list, key=lambda x: x["unit"])
+            "applicantsList": sorted(applicants_list, key=lambda x: x["unit"]),
+            "pendingInRealUnitList": sorted(pending_in_real_unit_list, key=lambda x: x["unit"]),
+            "approvedPaidInHoldingList": sorted(approved_paid_in_holding_list, key=lambda x: x["unit"]),
         }
     except Exception as e:
         print(f"    Warning: Could not fetch lease data: {e}")
-        return {"total_applicants": 0, "pending_approval": 0, "approved": 0, "signed_lease": 0, "signed_leases_mtd": 0, "applicantsList": []}
+        return {"total_applicants": 0, "pending_approval": 0, "approved": 0, "signed_lease": 0, "signed_leases_mtd": 0, "applicantsList": [], "pendingInRealUnitList": [], "approvedPaidInHoldingList": []}
 
 def get_expiring_leases_data(property_id, leases=None, units_availability=None):
     """Get expiring leases data for current + next 3 months
@@ -735,7 +787,10 @@ def get_expiring_leases_data(property_id, leases=None, units_availability=None):
                     continue
                 row["hasAlert"] = True
                 row["daysLeft"] = days_left
-                row["alertMsg"] = f"Lease ends in {days_left}d — no NTV filed"
+                if row.get("status") == "Pending Renewal":
+                    row["alertMsg"] = f"Lease ends in {days_left}d — renewal not signed"
+                else:
+                    row["alertMsg"] = f"Lease ends in {days_left}d — no NTV filed"
                 insufficient_notice_list.append(row)
 
         insufficient_notice_list.sort(key=lambda r: (r.get("daysLeft", 999), r.get("unit", "")))
@@ -1770,6 +1825,8 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
             "futureMIList": future_mi_list_sorted,
             "futureMOList": future_moves.get("futureMOList", []),
             "insufficientNoticeList": lease_info.get("expiring", {}).get("insufficientNoticeList", []),
+            "pendingInRealUnitList": lease_info.get("pendingInRealUnitList", []),
+            "approvedPaidInHoldingList": lease_info.get("approvedPaidInHoldingList", []),
         }
 
     # Age alerts: mutate table_data entries to carry firstSeen + daysAgo; return
@@ -2826,7 +2883,9 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
             vacantNotReadyList: 'Vacant – Not Ready',
             ntvList: 'NTV',
             vacantLeasedList: 'Vacant – Leased',
-            insufficientNoticeList: 'Insufficient Notice'
+            insufficientNoticeList: 'Insufficient Notice',
+            pendingInRealUnitList: 'Pending – Real Unit',
+            approvedPaidInHoldingList: 'Approved + Paid in Holding'
         }};
 
         const ALERTS_COLUMNS = [
@@ -3077,7 +3136,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
 
         const leasingAlerts = createAlertsPopup({{
             varName: 'leasingAlerts',
-            keys: ['insufficientNoticeList'],
+            keys: ['insufficientNoticeList', 'pendingInRealUnitList', 'approvedPaidInHoldingList'],
             badgeId: 'leasing-badge',
             modalId: 'leasing-modal',
             theadId: 'leasing-thead',
@@ -4323,8 +4382,8 @@ def main():
         properties_data[abbr] = data
         print(f"    Units: {data['total_units']}, Occupancy: {data['occupancy_rate']}%")
 
-        # Get pending lease data (using pre-fetched leases)
-        lease_data = get_pending_leases_data(property_id, leases=all_leases)
+        # Get pending lease data (using pre-fetched leases + units_availability for Holding-Unit detection)
+        lease_data = get_pending_leases_data(property_id, leases=all_leases, units_availability=units_availability)
         leases_data[abbr] = lease_data
         print(f"    Applicants: {lease_data['total_applicants']} (Pending: {lease_data['pending_approval']}, Approved: {lease_data['approved']}, Signed: {lease_data['signed_lease']}, MTD New: {lease_data['signed_leases_mtd']})")
 

@@ -23,7 +23,7 @@ import os
 from datetime import date, datetime
 
 
-ALERT_LIST_KEYS = ("vacantNotReadyList", "ntvList", "vacantLeasedList", "ntvLeasedList", "insufficientNoticeList")
+ALERT_LIST_KEYS = ("vacantNotReadyList", "ntvList", "vacantLeasedList", "ntvLeasedList", "insufficientNoticeList", "pendingInRealUnitList", "approvedPaidInHoldingList")
 
 
 def _parse_date(s):
