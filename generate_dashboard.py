@@ -3102,7 +3102,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
             insufficientNoticeList: 'Insufficient Notice',
             pendingInRealUnitList: 'Pending – Real Unit',
             approvedPaidInHoldingList: 'Approved + Paid in Holding',
-            holdingOverListedList: 'Holding – Over-Listed'
+            holdingOverListedList: 'Listed with Applicants'
         }};
 
         const ALERTS_COLUMNS = [
