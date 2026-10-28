@@ -26,6 +26,35 @@ def add_business_days(d, n):
     return cur
 
 
+def business_days_between(start, end):
+    """Mon–Fri days strictly between start and end (end-inclusive step count).
+    Negative when end < start."""
+    if end == start:
+        return 0
+    sign = 1 if end > start else -1
+    a, b = (start, end) if sign > 0 else (end, start)
+    days = 0
+    cur = a
+    while cur < b:
+        cur += timedelta(days=1)
+        if cur.weekday() < 5:
+            days += 1
+    return sign * days
+
+
+def _fmt_mdy(iso_or_date):
+    """Render a YYYY-MM-DD string or date as MM/DD/YYYY."""
+    if not iso_or_date:
+        return ""
+    if hasattr(iso_or_date, "strftime"):
+        return iso_or_date.strftime("%m/%d/%Y")
+    s = str(iso_or_date)[:10]
+    try:
+        return datetime.strptime(s, "%Y-%m-%d").strftime("%m/%d/%Y")
+    except ValueError:
+        return s
+
+
 _auto_push_log = []
 
 # API Credentials (from environment variables, fallback for local dev)
@@ -1270,12 +1299,15 @@ def _ntv_alert_and_push(property_id, unit_id, unit_num, unit_type, mo_date, av_d
                 max_ready = add_business_days(mo_dt, 20)
                 misaligned = av_dt < min_ready or av_dt > max_ready
                 if misaligned:
-                    days_gap = (av_dt - mo_dt).days
+                    bus_gap = business_days_between(mo_dt, av_dt)
+                    change_tail = f" — Change from {_fmt_mdy(av_date)} to {_fmt_mdy(min_ready)}"
                     if av_dt < min_ready:
-                        msg = (f"Available {abs(days_gap)} days BEFORE move-out"
-                               if days_gap < 0 else f"Only {days_gap} days to get ready")
+                        if bus_gap < 0:
+                            msg = f"Available {abs(bus_gap)} business days before move-out{change_tail}"
+                        else:
+                            msg = f"{bus_gap} business days to get ready{change_tail}"
                     else:
-                        msg = f"Available {days_gap} days AFTER move-out"
+                        msg = f"{bus_gap} business days after move-out{change_tail}"
                     has_alert = True
                     target = min_ready
                     if AUTO_PUSH_DRY_RUN:
@@ -1404,6 +1436,31 @@ def get_property_data(property_id, property_name, units_availability=None, lease
         unit_num = u.get("number", "")
         if unit_num:
             unit_data_map[unit_num] = u
+    # Also keyed by unitId so the "over-listed" alert looks up the exact real
+    # unit it decorates (unit numbers can collide between a Holding Unit and
+    # its real twin).
+    unit_data_by_id = {u.get("unitId"): u for u in units if u.get("unitId")}
+
+    # Count active applicants (Pending/Approved/Signed, excl. Pending Transfer)
+    # sitting on each Holding Unit, keyed by the Holding Unit's unit number.
+    # Used by the "over-listed" alert: a real unit still available for online
+    # marketing while 2+ applicants are already parked on its Holding twin.
+    holding_applicants_by_number = defaultdict(int)
+    holding_unit_ids_by_number = {}
+    for u in units:
+        if not u.get("excludedFromOccupancy"):
+            continue
+        huid = u.get("unitId")
+        hnum = u.get("number", "")
+        if hnum and huid:
+            holding_unit_ids_by_number[hnum] = huid
+    holding_id_to_number = {v: k for k, v in holding_unit_ids_by_number.items()}
+    for lease in leases:
+        if lease.get("leaseStatus") != "Pending":
+            continue
+        hnum = holding_id_to_number.get(lease.get("unitId"))
+        if hnum:
+            holding_applicants_by_number[hnum] += 1
 
     # Helper to format unit type (shorten if needed)
     def format_type(unit_type_name):
@@ -1674,6 +1731,24 @@ def get_property_data(property_id, property_name, units_availability=None, lease
         else:
             status_summary["Other"].append(unit_num)
 
+    # Over-listed alert: the real unit is still available for online marketing
+    # while its Holding-Unit twin already carries 2+ active applicants. Merged
+    # here (not inline) because the vacancy loop has four Vacant/NTV branches —
+    # one post-pass over the three detailed lists avoids duplicating logic.
+    for list_name in ("vacantReadyList", "vacantNotReadyList", "ntvList"):
+        for row in detailed_lists[list_name]:
+            unit_num = row.get("unit", "")
+            cnt = holding_applicants_by_number.get(unit_num, 0)
+            if cnt < 2:
+                continue
+            u = unit_data_by_id.get(row.get("unitId")) or {}
+            if not u.get("availableForOnlineMarketing", True):
+                continue
+            over_msg = f"Unit has {cnt} applicants but still listed online"
+            existing_msg = row.get("alertMsg", "") or ""
+            row["hasAlert"] = True
+            row["alertMsg"] = (existing_msg + " • " + over_msg) if existing_msg else over_msg
+
     # Total units excludes Down/Abated (they were skipped in the loop above)
     # Only count main categories, not subsets (Vacant Leased, NTV Leased are subsets)
     total_units = (
@@ -1843,6 +1918,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
         future_mi_list_sorted = sorted(future_mi_list, key=lambda x: x["unit"])
 
         # Calculate alert counts
+        vr_alerts = sum(1 for x in data.get("vacantReadyList", []) if x.get("hasAlert"))
         vnr_alerts = sum(1 for x in data.get("vacantNotReadyList", []) if x.get("hasAlert"))
         ntv_alerts = sum(1 for x in data.get("ntvList", []) if x.get("hasAlert"))
         vl_alerts = sum(1 for x in vacant_leased_list if x.get("hasAlert"))
@@ -1864,6 +1940,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
             "futureMO": future_moves.get("future_mo", 0),
             "futureMovesMonth": future_moves_month,
             # Alert counts
+            "vacantReadyAlerts": vr_alerts,
             "vacantNotReadyAlerts": vnr_alerts,
             "ntvAlerts": ntv_alerts,
             "vacantLeasedAlerts": vl_alerts,
@@ -2913,8 +2990,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
                     const tooltipDirCls = flipRight ? ' alert-tooltip-right' : '';
                     if (hasRowAlert) {{
                         const ageSuffix = (typeof row.daysAgo === 'number') ? ` (${{row.daysAgo}}d)` : '';
-                        const pushedSuffix = (row.autoPushed && row.autoPushed.applied) ? ` – Pushed to ${{formatDate(row.autoPushed.newAvDate)}}` : '';
-                        indicatorHtml = `<span class="alert-dot alert-tooltip${{tooltipDirCls}}" data-tooltip="${{(row.alertMsg || 'Needs attention') + ageSuffix + pushedSuffix}}"></span>`;
+                        indicatorHtml = `<span class="alert-dot alert-tooltip${{tooltipDirCls}}" data-tooltip="${{(row.alertMsg || 'Needs attention') + ageSuffix}}"></span>`;
                     }} else if (isTransfer) {{
                         indicatorHtml = `<span class="transfer-dot alert-tooltip${{tooltipDirCls}}" data-tooltip="Transfer"></span>`;
                     }}
@@ -2987,6 +3063,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
 
         // ============ Alerts popups (ops bell + leasing icon) ============
         const ALERT_CATEGORY_LABELS = {{
+            vacantReadyList: 'Vacant – Ready',
             vacantNotReadyList: 'Vacant – Not Ready',
             ntvList: 'NTV',
             vacantLeasedList: 'Vacant – Leased',
@@ -3240,15 +3317,12 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
                     const residentCell = (a.leaseId && a.resident)
                         ? `<a href="https://sns.myresman.com/#/Residents/Detail/${{a.leaseId}}" target="_blank" class="text-blue-600 dark:text-blue-400 hover:scale-105 inline-block transition-transform">${{a.resident}}</a>`
                         : (a.resident || '<span class="text-slate-400">—</span>');
-                    const pushedBadge = (a.autoPushed && a.autoPushed.applied)
-                        ? ` <span class="ml-1 inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200" title="Pushed to ${{formatDate(a.autoPushed.newAvDate)}}">Pushed to ${{formatDate(a.autoPushed.newAvDate)}}</span>`
-                        : '';
                     html += `<tr class="hover:bg-slate-50 dark:hover:bg-slate-700/40">`
                         + `<td class="px-3 py-2 whitespace-nowrap font-medium text-slate-700 dark:text-slate-200">${{a.abbr}} <span class="text-slate-400 dark:text-slate-500 text-xs">${{a.propertyName}}</span></td>`
                         + `<td class="px-3 py-2 whitespace-nowrap text-slate-700 dark:text-slate-300">${{a.category}}</td>`
                         + `<td class="px-3 py-2 whitespace-nowrap">${{unitCell}}</td>`
                         + `<td class="px-3 py-2 whitespace-nowrap">${{residentCell}}</td>`
-                        + `<td class="px-3 py-2 whitespace-nowrap"><span class="inline-flex items-center gap-1.5"><span class="inline-block w-[6px] h-[6px] rounded-full ${{alertColorClasses}}"></span><span class="${{alertTextClasses}} font-medium">${{a.alertMsg}}</span>${{pushedBadge}}</span></td>`
+                        + `<td class="px-3 py-2 whitespace-nowrap"><span class="inline-flex items-center gap-1.5"><span class="inline-block w-[6px] h-[6px] rounded-full ${{alertColorClasses}}"></span><span class="${{alertTextClasses}} font-medium">${{a.alertMsg}}</span></span></td>`
                         + `<td class="px-3 py-2 whitespace-nowrap">${{ageBadge(a)}}</td>`
                         + `</tr>`;
                 }});
@@ -3307,7 +3381,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
 
         const opsAlerts = createAlertsPopup({{
             varName: 'opsAlerts',
-            keys: ['vacantNotReadyList', 'ntvList', 'vacantLeasedList'],
+            keys: ['vacantReadyList', 'vacantNotReadyList', 'ntvList', 'vacantLeasedList'],
             badgeId: 'alerts-badge',
             modalId: 'alerts-modal',
             theadId: 'alerts-thead',
@@ -3475,7 +3549,9 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
 
                             // Check for alerts - use background color
                             let hasAlert = false;
-                            if (row.key === 'vacantNotReady' && p.vacantNotReadyAlerts > 0) {{
+                            if (row.key === 'vacantReady' && p.vacantReadyAlerts > 0) {{
+                                hasAlert = true;
+                            }} else if (row.key === 'vacantNotReady' && p.vacantNotReadyAlerts > 0) {{
                                 hasAlert = true;
                             }} else if (row.key === 'ntv' && p.ntvAlerts > 0) {{
                                 hasAlert = true;
