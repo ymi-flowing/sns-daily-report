@@ -1,9 +1,5 @@
 {
   "alerts": {
-    "49thStr|pendingInRealUnitList|04a2169f-7f6b-4b27-8eb2-211e5e498994": {
-      "firstSeen": "2026-10-28",
-      "lastMsg": "Pending applicant in a real unit"
-    },
     "AP|insufficientNoticeList|967b93fd-dc3c-4d9e-94e8-a848b3ec6f0c": {
       "firstSeen": "2026-10-20",
       "lastMsg": "Lease ends in 42d \u2014 renewal not signed"
@@ -24,13 +20,9 @@
       "firstSeen": "2026-10-20",
       "lastMsg": "Lease ends in 2d \u2014 renewal not signed"
     },
-    "EAST|ntvList|12f31430-3182-4139-ae4b-8b9e466f6682": {
+    "EAST|ntvList|fae77acb-2830-4cda-8a28-fba06f9aa4cc": {
       "firstSeen": "2026-10-28",
-      "lastMsg": "5 business days to get ready"
-    },
-    "EAST|pendingInRealUnitList|e3917a8b-8b69-4423-aab5-48fb9128f4c3": {
-      "firstSeen": "2026-10-28",
-      "lastMsg": "Pending applicant in a real unit"
+      "lastMsg": "7 business days to get ready"
     },
     "MUSO|insufficientNoticeList|201ad744-d3bc-4f22-adcf-47a1d70406b6": {
       "firstSeen": "2026-10-24",
@@ -43,10 +35,6 @@
     "ORT|insufficientNoticeList|4aa32b6a-c6b5-4f84-9fea-4e7ed48dccba": {
       "firstSeen": "2026-10-28",
       "lastMsg": "Lease ends in 45d \u2014 renewal not signed"
-    },
-    "ORT|ntvList|5ec1cd76-14a4-4c65-a631-06e2f7493426": {
-      "firstSeen": "2026-10-28",
-      "lastMsg": "4 business days to get ready"
     },
     "ORT|vacantNotReadyList|57c7c2e6-ab93-4db8-add4-d3c054ceb314": {
       "firstSeen": "2026-10-28",
