@@ -1,7 +1,7 @@
 {
   "month": "2026-10",
   "monthLabel": "October 2026",
-  "generatedAt": "2026-10-28T10:54:55-04:00",
+  "generatedAt": "2026-10-28T10:57:58-04:00",
   "properties": {
     "ROP": {
       "current": 0,
@@ -33,11 +33,11 @@
     "MUSO": {
       "current": 0,
       "pendingRenewal": 0,
-      "renewed": 12,
+      "renewed": 11,
       "ntvFormers": 6,
       "underEviction": 0,
-      "total": 18,
-      "renewalPct": 66.7
+      "total": 17,
+      "renewalPct": 64.7
     },
     "MOC": {
       "current": 0,
@@ -88,10 +88,10 @@
   "portfolio": {
     "current": 0,
     "pendingRenewal": 2,
-    "renewed": 106,
+    "renewed": 105,
     "ntvFormers": 59,
     "underEviction": 3,
-    "total": 170,
-    "renewalPct": 63.1
+    "total": 169,
+    "renewalPct": 62.9
   }
 }
