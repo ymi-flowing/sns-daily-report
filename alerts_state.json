@@ -1,13 +1,5 @@
 {
   "alerts": {
-    "49thStr|pendingInRealUnitList|383bcdfb-9c7c-4157-8187-0df26ed747c3": {
-      "firstSeen": "2026-10-27",
-      "lastMsg": "Pending applicant in a real unit"
-    },
-    "49thStr|vacantLeasedList|b57d395c-0c8b-4761-8b96-a2507b1c86c5": {
-      "firstSeen": "2026-10-27",
-      "lastMsg": "Past Move-In Date"
-    },
     "49thStr|vacantNotReadyList|32e6a44c-9c78-44bf-b957-aa5fd41461b1": {
       "firstSeen": "2026-10-28",
       "lastMsg": "Past Available Date"
