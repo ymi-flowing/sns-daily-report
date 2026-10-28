@@ -1300,20 +1300,20 @@ def _ntv_alert_and_push(property_id, unit_id, unit_num, unit_type, mo_date, av_d
                 misaligned = av_dt < min_ready or av_dt > max_ready
                 if misaligned:
                     bus_gap = business_days_between(mo_dt, av_dt)
-                    change_tail = f" — Change from {_fmt_mdy(av_date)} to {_fmt_mdy(min_ready)}"
                     if av_dt < min_ready:
                         if bus_gap < 0:
-                            msg = f"Available {abs(bus_gap)} business days before move-out{change_tail}"
+                            msg = f"Available {abs(bus_gap)} business days before move-out"
                         else:
-                            msg = f"{bus_gap} business days to get ready{change_tail}"
+                            msg = f"{bus_gap} business days to get ready"
                     else:
-                        msg = f"{bus_gap} business days after move-out{change_tail}"
+                        msg = f"{bus_gap} business days after move-out"
                     has_alert = True
                     target = min_ready
                     if AUTO_PUSH_DRY_RUN:
                         auto_pushed = {
                             "applied": False,
                             "dryRun": True,
+                            "oldAvDate": av_date,
                             "newAvDate": target.isoformat(),
                             "ts": datetime.utcnow().isoformat(timespec="seconds") + "Z",
                         }
@@ -1328,6 +1328,7 @@ def _ntv_alert_and_push(property_id, unit_id, unit_num, unit_type, mo_date, av_d
                         if ok:
                             auto_pushed = {
                                 "applied": True,
+                                "oldAvDate": av_date,
                                 "newAvDate": target.isoformat(),
                                 "ts": datetime.utcnow().isoformat(timespec="seconds") + "Z",
                             }
@@ -3016,7 +3017,12 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
                         const parts = [];
                         if (row.alertMsg) parts.push(row.alertMsg);
                         if (row.overListedMsg) parts.push(row.overListedMsg);
-                        const tooltip = (parts.join(' • ') || 'Needs attention') + ageSuffix;
+                        let changeTail = '';
+                        if (row.autoPushed && row.autoPushed.oldAvDate && row.autoPushed.newAvDate) {{
+                            const verb = row.autoPushed.applied ? 'Changed' : 'Change';
+                            changeTail = ` — ${{verb}} from ${{formatDate(row.autoPushed.oldAvDate)}} to ${{formatDate(row.autoPushed.newAvDate)}}`;
+                        }}
+                        const tooltip = (parts.join(' • ') || 'Needs attention') + changeTail + ageSuffix;
                         indicatorHtml = `<span class="alert-dot alert-tooltip${{tooltipDirCls}}" data-tooltip="${{tooltip}}"></span>`;
                     }} else if (isTransfer) {{
                         indicatorHtml = `<span class="transfer-dot alert-tooltip${{tooltipDirCls}}" data-tooltip="Transfer"></span>`;
@@ -3344,12 +3350,22 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
                     const residentCell = (a.leaseId && a.resident)
                         ? `<a href="https://sns.myresman.com/#/Residents/Detail/${{a.leaseId}}" target="_blank" class="text-blue-600 dark:text-blue-400 hover:scale-105 inline-block transition-transform">${{a.resident}}</a>`
                         : (a.resident || '<span class="text-slate-400">—</span>');
+                    let changeBadge = '';
+                    if (a.autoPushed && a.autoPushed.oldAvDate && a.autoPushed.newAvDate) {{
+                        const fromStr = formatDate(a.autoPushed.oldAvDate);
+                        const toStr = formatDate(a.autoPushed.newAvDate);
+                        if (a.autoPushed.applied) {{
+                            changeBadge = ` <span class="ml-1 inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200" title="Auto-pushed">Changed from ${{fromStr}} to ${{toStr}}</span>`;
+                        }} else {{
+                            changeBadge = ` <span class="ml-1 inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-700 dark:bg-slate-700/60 dark:text-slate-200" title="Recommended change">Change from ${{fromStr}} to ${{toStr}}</span>`;
+                        }}
+                    }}
                     html += `<tr class="hover:bg-slate-50 dark:hover:bg-slate-700/40">`
                         + `<td class="px-3 py-2 whitespace-nowrap font-medium text-slate-700 dark:text-slate-200">${{a.abbr}} <span class="text-slate-400 dark:text-slate-500 text-xs">${{a.propertyName}}</span></td>`
                         + `<td class="px-3 py-2 whitespace-nowrap text-slate-700 dark:text-slate-300">${{a.category}}</td>`
                         + `<td class="px-3 py-2 whitespace-nowrap">${{unitCell}}</td>`
                         + `<td class="px-3 py-2 whitespace-nowrap">${{residentCell}}</td>`
-                        + `<td class="px-3 py-2 whitespace-nowrap"><span class="inline-flex items-center gap-1.5"><span class="inline-block w-[6px] h-[6px] rounded-full ${{alertColorClasses}}"></span><span class="${{alertTextClasses}} font-medium">${{a.alertMsg}}</span></span></td>`
+                        + `<td class="px-3 py-2 whitespace-nowrap"><span class="inline-flex items-center gap-1.5"><span class="inline-block w-[6px] h-[6px] rounded-full ${{alertColorClasses}}"></span><span class="${{alertTextClasses}} font-medium">${{a.alertMsg}}</span>${{changeBadge}}</span></td>`
                         + `<td class="px-3 py-2 whitespace-nowrap">${{ageBadge(a)}}</td>`
                         + `</tr>`;
                 }});
