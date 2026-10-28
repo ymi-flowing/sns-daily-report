@@ -1731,11 +1731,18 @@ def get_property_data(property_id, property_name, units_availability=None, lease
         else:
             status_summary["Other"].append(unit_num)
 
-    # Over-listed alert: the real unit is still available for online marketing
-    # while its Holding-Unit twin already carries 2+ active applicants. Merged
-    # here (not inline) because the vacancy loop has four Vacant/NTV branches —
-    # one post-pass over the three detailed lists avoids duplicating logic.
-    for list_name in ("vacantReadyList", "vacantNotReadyList", "ntvList"):
+    # Over-listed alert: real unit still available for online marketing while
+    # its Holding twin carries 2+ active applicants. The alert belongs on the
+    # leasing bell, so we DON'T mutate hasAlert on the vacancy row (ops bell
+    # reads hasAlert and we don't want this leaking there). Instead:
+    #   - decorate the vacancy row with `overListedMsg` so the matrix cell
+    #     and per-category popup dot can light up independently;
+    #   - mirror a row into holdingOverListedList which feeds the leasing bell.
+    holding_over_listed_list = []
+    bucket_counts = {"vacantReady": 0, "vacantNotReady": 0, "ntv": 0}
+    for bucket, list_name in (("vacantReady", "vacantReadyList"),
+                              ("vacantNotReady", "vacantNotReadyList"),
+                              ("ntv", "ntvList")):
         for row in detailed_lists[list_name]:
             unit_num = row.get("unit", "")
             cnt = holding_applicants_by_number.get(unit_num, 0)
@@ -1744,10 +1751,19 @@ def get_property_data(property_id, property_name, units_availability=None, lease
             u = unit_data_by_id.get(row.get("unitId")) or {}
             if not u.get("availableForOnlineMarketing", True):
                 continue
-            over_msg = f"Unit has {cnt} applicants but still listed online"
-            existing_msg = row.get("alertMsg", "") or ""
-            row["hasAlert"] = True
-            row["alertMsg"] = (existing_msg + " • " + over_msg) if existing_msg else over_msg
+            msg = f"Unit has {cnt} applicants but still listed online"
+            row["overListedMsg"] = msg
+            row["overListedCount"] = cnt
+            bucket_counts[bucket] += 1
+            holding_over_listed_list.append({
+                "unit": unit_num,
+                "unitId": row.get("unitId"),
+                "type": row.get("type", ""),
+                "vacancyBucket": bucket,
+                "applicants": cnt,
+                "hasAlert": True,
+                "alertMsg": msg,
+            })
 
     # Total units excludes Down/Abated (they were skipped in the loop above)
     # Only count main categories, not subsets (Vacant Leased, NTV Leased are subsets)
@@ -1775,7 +1791,9 @@ def get_property_data(property_id, property_name, units_availability=None, lease
         "vacantNotReadyList": sorted(detailed_lists["vacantNotReadyList"], key=lambda x: x["unit"]),
         "ntvList": sorted(detailed_lists["ntvList"], key=lambda x: x["unit"]),
         "evictionList": sorted(detailed_lists["evictionList"], key=lambda x: x["unit"]),
-        "offMarketList": sorted(detailed_lists["offMarketList"], key=lambda x: x["unit"])
+        "offMarketList": sorted(detailed_lists["offMarketList"], key=lambda x: x["unit"]),
+        "holdingOverListedList": sorted(holding_over_listed_list, key=lambda x: x["unit"]),
+        "holdingOverListedCounts": bucket_counts,
     }
 
 def generate_html(properties_data, traffic_data, leases_data, financial_data,
@@ -1918,10 +1936,10 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
         future_mi_list_sorted = sorted(future_mi_list, key=lambda x: x["unit"])
 
         # Calculate alert counts
-        vr_alerts = sum(1 for x in data.get("vacantReadyList", []) if x.get("hasAlert"))
         vnr_alerts = sum(1 for x in data.get("vacantNotReadyList", []) if x.get("hasAlert"))
         ntv_alerts = sum(1 for x in data.get("ntvList", []) if x.get("hasAlert"))
         vl_alerts = sum(1 for x in vacant_leased_list if x.get("hasAlert"))
+        over_listed_counts = data.get("holdingOverListedCounts", {})
 
         table_data[abbr] = {
             "abbr": abbr,
@@ -1940,10 +1958,13 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
             "futureMO": future_moves.get("future_mo", 0),
             "futureMovesMonth": future_moves_month,
             # Alert counts
-            "vacantReadyAlerts": vr_alerts,
             "vacantNotReadyAlerts": vnr_alerts,
             "ntvAlerts": ntv_alerts,
             "vacantLeasedAlerts": vl_alerts,
+            # Over-listed Holding Unit alert, bucketed by the real unit's status
+            "vacantReadyOverListed": over_listed_counts.get("vacantReady", 0),
+            "vacantNotReadyOverListed": over_listed_counts.get("vacantNotReady", 0),
+            "ntvOverListed": over_listed_counts.get("ntv", 0),
             # Detailed lists for pop-ups
             "vacantReadyList": data.get("vacantReadyList", []),
             "vacantNotReadyList": data.get("vacantNotReadyList", []),
@@ -1957,6 +1978,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
             "insufficientNoticeList": lease_info.get("expiring", {}).get("insufficientNoticeList", []),
             "pendingInRealUnitList": lease_info.get("pendingInRealUnitList", []),
             "approvedPaidInHoldingList": lease_info.get("approvedPaidInHoldingList", []),
+            "holdingOverListedList": data.get("holdingOverListedList", []),
         }
 
     # Age alerts: mutate table_data entries to carry firstSeen + daysAgo; return
@@ -2967,7 +2989,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
             let bodyHtml = '';
             popupData.forEach((row, idx) => {{
                 const rowBg = idx % 2 === 0 ? '' : 'bg-slate-50/50 dark:bg-slate-800/30';
-                const boldClass = row.hasAlert ? 'font-semibold' : '';
+                const boldClass = (row.hasAlert || row.overListedMsg) ? 'font-semibold' : '';
                 bodyHtml += `<tr class="${{rowBg}} hover:bg-blue-50/50 dark:hover:bg-blue-900/20">`;
                 popupColumns.forEach((col, colIdx) => {{
                     let val = row[col.key] || '';
@@ -2984,17 +3006,22 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
                         ? col.key === popupAlertColumnKey
                         : (colIdx === popupColumns.length - 1);
                     const hasRowAlert = isAlertCol && row.hasAlert;
+                    const hasOverListed = isAlertCol && !!row.overListedMsg;
                     const isTransfer = isAlertCol && row.isTransfer;
                     let indicatorHtml = '';
                     const flipRight = isAlertCol && colIdx < popupColumns.length - 1;
                     const tooltipDirCls = flipRight ? ' alert-tooltip-right' : '';
-                    if (hasRowAlert) {{
+                    if (hasRowAlert || hasOverListed) {{
                         const ageSuffix = (typeof row.daysAgo === 'number') ? ` (${{row.daysAgo}}d)` : '';
-                        indicatorHtml = `<span class="alert-dot alert-tooltip${{tooltipDirCls}}" data-tooltip="${{(row.alertMsg || 'Needs attention') + ageSuffix}}"></span>`;
+                        const parts = [];
+                        if (row.alertMsg) parts.push(row.alertMsg);
+                        if (row.overListedMsg) parts.push(row.overListedMsg);
+                        const tooltip = (parts.join(' • ') || 'Needs attention') + ageSuffix;
+                        indicatorHtml = `<span class="alert-dot alert-tooltip${{tooltipDirCls}}" data-tooltip="${{tooltip}}"></span>`;
                     }} else if (isTransfer) {{
                         indicatorHtml = `<span class="transfer-dot alert-tooltip${{tooltipDirCls}}" data-tooltip="Transfer"></span>`;
                     }}
-                    const posClass = (hasRowAlert || isTransfer) ? 'relative' : '';
+                    const posClass = (hasRowAlert || hasOverListed || isTransfer) ? 'relative' : '';
 
                     // Make unit column a clickable link to ResMan if unitId exists
                     if (col.key === 'unit' && row.unitId) {{
@@ -3063,13 +3090,13 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
 
         // ============ Alerts popups (ops bell + leasing icon) ============
         const ALERT_CATEGORY_LABELS = {{
-            vacantReadyList: 'Vacant – Ready',
             vacantNotReadyList: 'Vacant – Not Ready',
             ntvList: 'NTV',
             vacantLeasedList: 'Vacant – Leased',
             insufficientNoticeList: 'Insufficient Notice',
             pendingInRealUnitList: 'Pending – Real Unit',
-            approvedPaidInHoldingList: 'Approved + Paid in Holding'
+            approvedPaidInHoldingList: 'Approved + Paid in Holding',
+            holdingOverListedList: 'Holding – Over-Listed'
         }};
 
         const ALERTS_COLUMNS = [
@@ -3381,7 +3408,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
 
         const opsAlerts = createAlertsPopup({{
             varName: 'opsAlerts',
-            keys: ['vacantReadyList', 'vacantNotReadyList', 'ntvList', 'vacantLeasedList'],
+            keys: ['vacantNotReadyList', 'ntvList', 'vacantLeasedList'],
             badgeId: 'alerts-badge',
             modalId: 'alerts-modal',
             theadId: 'alerts-thead',
@@ -3394,7 +3421,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
 
         const leasingAlerts = createAlertsPopup({{
             varName: 'leasingAlerts',
-            keys: ['insufficientNoticeList', 'pendingInRealUnitList', 'approvedPaidInHoldingList'],
+            keys: ['insufficientNoticeList', 'pendingInRealUnitList', 'approvedPaidInHoldingList', 'holdingOverListedList'],
             badgeId: 'leasing-badge',
             modalId: 'leasing-modal',
             theadId: 'leasing-thead',
@@ -3549,11 +3576,11 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
 
                             // Check for alerts - use background color
                             let hasAlert = false;
-                            if (row.key === 'vacantReady' && p.vacantReadyAlerts > 0) {{
+                            if (row.key === 'vacantReady' && (p.vacantReadyOverListed || 0) > 0) {{
                                 hasAlert = true;
-                            }} else if (row.key === 'vacantNotReady' && p.vacantNotReadyAlerts > 0) {{
+                            }} else if (row.key === 'vacantNotReady' && (p.vacantNotReadyAlerts > 0 || (p.vacantNotReadyOverListed || 0) > 0)) {{
                                 hasAlert = true;
-                            }} else if (row.key === 'ntv' && p.ntvAlerts > 0) {{
+                            }} else if (row.key === 'ntv' && (p.ntvAlerts > 0 || (p.ntvOverListed || 0) > 0)) {{
                                 hasAlert = true;
                             }} else if (row.key === 'vacantLeased' && p.vacantLeasedAlerts > 0) {{
                                 hasAlert = true;
