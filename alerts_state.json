@@ -12,6 +12,10 @@
       "firstSeen": "2026-10-20",
       "lastMsg": "Lease ends in 41d \u2014 renewal not signed"
     },
+    "AP|pendingInRealUnitList|21a55fa3-1f85-4185-ba4c-3f93fa0c0b0d": {
+      "firstSeen": "2026-10-29",
+      "lastMsg": "Pending applicant in a real unit"
+    },
     "EAST|insufficientNoticeList|0aac499b-070d-45b9-879c-867a2ee1b11e": {
       "firstSeen": "2026-10-20",
       "lastMsg": "Lease ends in 32d \u2014 renewal not signed"
