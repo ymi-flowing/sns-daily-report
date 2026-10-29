@@ -1,5 +1,9 @@
 {
   "alerts": {
+    "49thStr|ntvList|2c85436b-35a6-4de2-9cff-4d7ec7c5a666": {
+      "firstSeen": "2026-10-29",
+      "lastMsg": "6 business days to get ready"
+    },
     "AP|insufficientNoticeList|967b93fd-dc3c-4d9e-94e8-a848b3ec6f0c": {
       "firstSeen": "2026-10-20",
       "lastMsg": "Lease ends in 41d \u2014 renewal not signed"
@@ -20,17 +24,13 @@
       "firstSeen": "2026-10-20",
       "lastMsg": "Lease ends in 1d \u2014 renewal not signed"
     },
-    "EAST|ntvList|3bc342ec-f8be-41fb-9173-a3f60d2c308c": {
+    "EAST|ntvList|594cf26e-c995-46c4-b10a-4832708e8eb1": {
       "firstSeen": "2026-10-29",
-      "lastMsg": "Available 55 business days before move-out"
+      "lastMsg": "6 business days to get ready"
     },
-    "EAST|ntvList|f9addc0c-2a17-4c94-96d3-227d073a6fa1": {
+    "MOC|pendingInRealUnitList|a70ca60c-9043-46e8-93ed-433e4c41e1f6": {
       "firstSeen": "2026-10-29",
-      "lastMsg": "Available 34 business days before move-out"
-    },
-    "MOC|vacantNotReadyList|2fba46ec-67c5-49e0-88d9-b16334e38c97": {
-      "firstSeen": "2026-10-29",
-      "lastMsg": "Past Available Date"
+      "lastMsg": "Pending applicant in a real unit"
     },
     "MUSO|insufficientNoticeList|201ad744-d3bc-4f22-adcf-47a1d70406b6": {
       "firstSeen": "2026-10-24",
