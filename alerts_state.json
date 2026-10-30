@@ -16,25 +16,13 @@
       "firstSeen": "2026-10-28",
       "lastMsg": "Lease ends in 57d \u2014 renewal not signed"
     },
-    "EAST|insufficientNoticeList|de1b88e0-b477-4fd9-b8d9-07ed088edc53": {
-      "firstSeen": "2026-10-20",
-      "lastMsg": "Lease ends in 0d \u2014 renewal not signed"
-    },
     "EAST|insufficientNoticeList|f9addc0c-2a17-4c94-96d3-227d073a6fa1": {
       "firstSeen": "2026-10-30",
       "lastMsg": "Lease ends in 17d \u2014 renewal not signed"
     },
-    "EAST|vacantNotReadyList|d6334133-b4f3-4a37-aed3-71e2c214c3f1": {
-      "firstSeen": "2026-10-30",
-      "lastMsg": "Past Available Date"
-    },
     "MUSO|insufficientNoticeList|9254eefb-bafd-40a0-abe9-bac9d1434ef7": {
       "firstSeen": "2026-10-26",
       "lastMsg": "Lease ends in 45d \u2014 renewal not signed"
-    },
-    "TV|insufficientNoticeList|4efbddd1-b96f-49dd-a101-a39ba1f22905": {
-      "firstSeen": "2026-10-30",
-      "lastMsg": "Lease ends in 59d \u2014 renewal not signed"
     }
   },
   "updated": "2026-10-30"
