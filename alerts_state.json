@@ -1,5 +1,9 @@
 {
   "alerts": {
+    "49thStr|pendingInRealUnitList|5e6e158f-3f30-4509-b4f0-7f318bb4019f": {
+      "firstSeen": "2026-10-30",
+      "lastMsg": "Pending applicant in a real unit"
+    },
     "EAST|insufficientNoticeList|0aac499b-070d-45b9-879c-867a2ee1b11e": {
       "firstSeen": "2026-10-20",
       "lastMsg": "Lease ends in 31d \u2014 renewal not signed"
