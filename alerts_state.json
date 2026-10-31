@@ -1,33 +1,101 @@
 {
   "alerts": {
-    "49thStr|pendingInRealUnitList|5e6e158f-3f30-4509-b4f0-7f318bb4019f": {
-      "firstSeen": "2026-10-30",
-      "lastMsg": "Pending applicant in a real unit"
+    "49thStr|ntvList|07594c72-6157-44b0-9747-e748ddd61ada": {
+      "firstSeen": "2026-10-31",
+      "lastMsg": "Past Move-Out Date"
+    },
+    "49thStr|ntvList|e4a537c4-5506-4e5c-89f8-fa4bbdac91ff": {
+      "firstSeen": "2026-10-31",
+      "lastMsg": "Past Move-Out Date"
+    },
+    "AP|insufficientNoticeList|d8a7d113-a1f0-4c2e-a029-7395dadded6c": {
+      "firstSeen": "2026-10-31",
+      "lastMsg": "Lease ends in 59d \u2014 renewal not signed"
+    },
+    "AP|ntvList|dc4d0f3f-3d14-49b5-9182-9c970c5c2ba2": {
+      "firstSeen": "2026-10-31",
+      "lastMsg": "Past Move-Out Date"
+    },
+    "AP|vacantNotReadyList|21a55fa3-1f85-4185-ba4c-3f93fa0c0b0d": {
+      "firstSeen": "2026-10-31",
+      "lastMsg": "Past Available Date"
+    },
+    "AP|vacantNotReadyList|43334558-bca2-4690-b367-27db2199609a": {
+      "firstSeen": "2026-10-31",
+      "lastMsg": "Past Available Date"
+    },
+    "AP|vacantNotReadyList|5ca23e45-8aac-41ef-9a34-914b34a53c9d": {
+      "firstSeen": "2026-10-31",
+      "lastMsg": "Past Available Date"
     },
     "EAST|insufficientNoticeList|0aac499b-070d-45b9-879c-867a2ee1b11e": {
       "firstSeen": "2026-10-20",
-      "lastMsg": "Lease ends in 31d \u2014 renewal not signed"
+      "lastMsg": "Lease ends in 30d \u2014 renewal not signed"
     },
     "EAST|insufficientNoticeList|3bc342ec-f8be-41fb-9173-a3f60d2c308c": {
       "firstSeen": "2026-10-30",
-      "lastMsg": "Lease ends in 29d \u2014 no NTV filed"
+      "lastMsg": "Lease ends in 28d \u2014 no NTV filed"
     },
     "EAST|insufficientNoticeList|861c5238-549b-4524-b45e-af73f5053cca": {
       "firstSeen": "2026-10-20",
-      "lastMsg": "Lease ends in 24d \u2014 renewal not signed"
+      "lastMsg": "Lease ends in 23d \u2014 renewal not signed"
     },
     "EAST|insufficientNoticeList|bacd3b30-a74d-4e3c-b14c-231dd3932eb5": {
       "firstSeen": "2026-10-28",
-      "lastMsg": "Lease ends in 57d \u2014 renewal not signed"
+      "lastMsg": "Lease ends in 56d \u2014 renewal not signed"
     },
     "EAST|insufficientNoticeList|f9addc0c-2a17-4c94-96d3-227d073a6fa1": {
       "firstSeen": "2026-10-30",
-      "lastMsg": "Lease ends in 17d \u2014 renewal not signed"
+      "lastMsg": "Lease ends in 16d \u2014 renewal not signed"
+    },
+    "EAST|ntvList|768766c4-eb08-4651-8944-70ef8a421304": {
+      "firstSeen": "2026-10-31",
+      "lastMsg": "Past Move-Out Date"
+    },
+    "EAST|pendingInRealUnitList|3f74890f-700b-4015-8b26-82c92a551c25": {
+      "firstSeen": "2026-10-31",
+      "lastMsg": "Pending applicant in a real unit"
+    },
+    "EAST|vacantLeasedList|175a3db7-f881-4c4d-bd0c-d3b273a38d6f": {
+      "firstSeen": "2026-10-31",
+      "lastMsg": "Past Move-In Date"
+    },
+    "EAST|vacantLeasedList|b231d9bd-4d33-46c0-87c7-ffce4e79e5e3": {
+      "firstSeen": "2026-10-31",
+      "lastMsg": "Past Move-In Date"
+    },
+    "MOC|vacantNotReadyList|927f4159-dea7-4a11-af72-95cb39eea1c2": {
+      "firstSeen": "2026-10-31",
+      "lastMsg": "Past Available Date"
     },
     "MUSO|insufficientNoticeList|9254eefb-bafd-40a0-abe9-bac9d1434ef7": {
       "firstSeen": "2026-10-26",
-      "lastMsg": "Lease ends in 45d \u2014 renewal not signed"
+      "lastMsg": "Lease ends in 44d \u2014 renewal not signed"
+    },
+    "ORT|vacantNotReadyList|4925e0b8-1d10-45e2-a7e8-92605e597eb8": {
+      "firstSeen": "2026-10-31",
+      "lastMsg": "Past Available Date"
+    },
+    "SJ|ntvList|ddeaa601-a60e-4b85-81c4-42166cc13c98": {
+      "firstSeen": "2026-10-31",
+      "lastMsg": "Past Move-Out Date"
+    },
+    "SJ|pendingInRealUnitList|e158bd11-cc5a-4c13-9214-7fa836e681f0": {
+      "firstSeen": "2026-10-31",
+      "lastMsg": "Pending applicant in a real unit"
+    },
+    "SJ|vacantLeasedList|615a7d7e-5afa-407c-97b9-3cda28c8b70b": {
+      "firstSeen": "2026-10-31",
+      "lastMsg": "Past Move-In Date"
+    },
+    "SJ|vacantNotReadyList|8ee520c9-f652-4d69-b5cd-6db0e32f688e": {
+      "firstSeen": "2026-10-31",
+      "lastMsg": "Past Available Date"
+    },
+    "SJ|vacantNotReadyList|9807d5be-ee67-4c84-80ce-fe723537f233": {
+      "firstSeen": "2026-10-31",
+      "lastMsg": "Past Available Date"
     }
   },
-  "updated": "2026-10-30"
+  "updated": "2026-10-31"
 }
