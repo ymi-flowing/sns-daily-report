@@ -1,9 +1,5 @@
 {
   "alerts": {
-    "49thStr|ntvList|b6625a71-6bea-4473-a1d7-d9f538a09bca": {
-      "firstSeen": "2026-10-31",
-      "lastMsg": "Available 11 business days before move-out"
-    },
     "AP|insufficientNoticeList|d8a7d113-a1f0-4c2e-a029-7395dadded6c": {
       "firstSeen": "2026-10-31",
       "lastMsg": "Lease ends in 59d \u2014 renewal not signed"
@@ -35,6 +31,10 @@
     "EAST|insufficientNoticeList|f9addc0c-2a17-4c94-96d3-227d073a6fa1": {
       "firstSeen": "2026-10-30",
       "lastMsg": "Lease ends in 16d \u2014 renewal not signed"
+    },
+    "EAST|pendingInRealUnitList|d460363e-0a46-4168-9e9f-3b876818afd4": {
+      "firstSeen": "2026-10-31",
+      "lastMsg": "Pending applicant in a real unit"
     },
     "MUSO|insufficientNoticeList|9254eefb-bafd-40a0-abe9-bac9d1434ef7": {
       "firstSeen": "2026-10-26",
