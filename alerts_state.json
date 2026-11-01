@@ -95,6 +95,10 @@
     "TV|ntvList|c9ecaf17-edfc-4b32-9dd8-5229a5e0c7ec": {
       "firstSeen": "2026-11-01",
       "lastMsg": "Past Move-Out Date"
+    },
+    "TV|pendingInRealUnitList|87f3e3ae-2e3b-464b-a65f-3d8be368a369": {
+      "firstSeen": "2026-11-01",
+      "lastMsg": "Pending applicant in a real unit"
     }
   },
   "updated": "2026-11-01"
