@@ -4,6 +4,10 @@
       "firstSeen": "2026-11-01",
       "lastMsg": "Lease ends in 59d \u2014 no NTV filed"
     },
+    "49thStr|pendingInRealUnitList|41334cfc-0875-494f-b64f-1781c648caa2": {
+      "firstSeen": "2026-11-01",
+      "lastMsg": "Pending applicant in a real unit"
+    },
     "AP|insufficientNoticeList|d8a7d113-a1f0-4c2e-a029-7395dadded6c": {
       "firstSeen": "2026-10-31",
       "lastMsg": "Lease ends in 58d \u2014 renewal not signed"
@@ -52,6 +56,10 @@
       "firstSeen": "2026-10-31",
       "lastMsg": "Pending applicant in a real unit"
     },
+    "EAST|pendingInRealUnitList|e50fdcea-b640-4cd7-99b7-a38974b9f746": {
+      "firstSeen": "2026-11-01",
+      "lastMsg": "Pending applicant in a real unit"
+    },
     "EAST|vacantLeasedList|d460363e-0a46-4168-9e9f-3b876818afd4": {
       "firstSeen": "2026-11-01",
       "lastMsg": "Past Move-In Date"
@@ -67,30 +75,6 @@
     "ORT|insufficientNoticeList|c5417e19-3fc4-40ca-909c-fb9e944e65cc": {
       "firstSeen": "2026-11-01",
       "lastMsg": "Lease ends in 59d \u2014 no NTV filed"
-    },
-    "ORT|pendingInRealUnitList|3706eb0e-6609-4c4c-bec6-7e84ea4b8099": {
-      "firstSeen": "2026-10-31",
-      "lastMsg": "Pending applicant in a real unit"
-    },
-    "ORT|pendingInRealUnitList|c5622fc2-fe43-4be1-8600-c6217b424ac4": {
-      "firstSeen": "2026-11-01",
-      "lastMsg": "Pending applicant in a real unit"
-    },
-    "ORT|pendingInRealUnitList|c8368f7e-a57b-44c3-90c9-2ff4c114067a": {
-      "firstSeen": "2026-11-01",
-      "lastMsg": "Pending applicant in a real unit"
-    },
-    "ORT|vacantLeasedList|0d964514-c864-46ac-b1eb-d7095418ca0c": {
-      "firstSeen": "2026-11-01",
-      "lastMsg": "Past Move-In Date"
-    },
-    "ORT|vacantNotReadyList|0e9218b5-4400-4fa4-8ea2-1ca331e455bd": {
-      "firstSeen": "2026-11-01",
-      "lastMsg": "Past Available Date"
-    },
-    "ORT|vacantNotReadyList|4925e0b8-1d10-45e2-a7e8-92605e597eb8": {
-      "firstSeen": "2026-10-31",
-      "lastMsg": "Past Available Date"
     },
     "SJ|ntvList|ddeaa601-a60e-4b85-81c4-42166cc13c98": {
       "firstSeen": "2026-10-31",
