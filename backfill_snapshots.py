@@ -20,7 +20,7 @@ from pathlib import Path
 from openpyxl import load_workbook
 
 from export_excel import ALL_PROPS, PROPERTY_GROUPS
-from supabase_sync import TABLE, _bucket_label, upsert_snapshots
+from supabase_sync import TABLE, PROPERTY_NAMES, _bucket_label, upsert_snapshots
 
 REGION_BY_ABBR = {abbr: region for region, abbrs in PROPERTY_GROUPS for abbr in abbrs}
 
@@ -217,6 +217,7 @@ def parse_workbook(path, snapshot_date=None):
         abbr: {
             "snapshot_date": snapshot_date.isoformat(),
             "property_abbr": abbr,
+            "property_name": PROPERTY_NAMES.get(abbr),
             "region": REGION_BY_ABBR.get(abbr),
             "source": "backfill",
         }

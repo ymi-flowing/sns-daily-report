@@ -89,6 +89,7 @@ resets). This correctly distinguishes "zero activity today" from "fresh month".
 | `id` | bigserial | surrogate primary key |
 | `snapshot_date` | date | calendar date in ET for which this row represents |
 | `property_abbr` | text | one of the 9 abbreviations above |
+| `property_name` | text | authoritative full name, e.g. "The Village at San Jose" |
 | `region` | text | Tampa / Orlando / Jacksonville / Ft. Lauderdale |
 | `generated_at` | timestamptz | moment the source `data.json` was generated |
 | `source` | text | `live` (via n8n/Vercel) or `backfill` (historical xlsx import) |

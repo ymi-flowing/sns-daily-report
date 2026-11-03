@@ -26,6 +26,21 @@ TABLE = "property_snapshots"
 
 REGION_BY_ABBR = {abbr: region for region, abbrs in PROPERTY_GROUPS for abbr in abbrs}
 
+# Authoritative property name per abbr (sourced from data.json tableData[abbr].name).
+# Fallback when a backfill xlsx or older data.json omits it. If a property is
+# renamed, update this dict + re-sync.
+PROPERTY_NAMES = {
+    "49thStr": "49th St Apartments",
+    "AP":      "Arbor Place Apartments",
+    "EAST":    "The Village at Eastpointe Apartments",
+    "MOC":     "The Morgan At Ocala Apartments",
+    "MUSO":    "The Mustang at Ocala",
+    "ORT":     "The Villas at Ortega",
+    "ROP":     "Riverside at Orange Park",
+    "SJ":      "The Village at San Jose",
+    "TV":      "The Vista At Winter Park",
+}
+
 
 def _n(v):
     """Coerce to float; empty/None → 0.0."""
@@ -117,6 +132,7 @@ def property_snapshot_from_data_json(data, abbr, snapshot_date, source="live"):
     row = {
         "snapshot_date": snapshot_date.isoformat() if isinstance(snapshot_date, date) else str(snapshot_date),
         "property_abbr": abbr,
+        "property_name": table.get("name") or PROPERTY_NAMES.get(abbr),
         "region": REGION_BY_ABBR.get(abbr),
         "generated_at": data.get("generatedAt"),
         "source": source,
