@@ -22,8 +22,12 @@ where property_name is null;
 -- Recreate portfolio_snapshots unchanged (name doesn't belong on a
 -- cross-property view) -- no action needed here.
 
--- Recreate property_daily_deltas to include property_name for context.
-create or replace view public.property_daily_deltas as
+-- Recreate property_daily_deltas to include property_name. CREATE OR
+-- REPLACE won't let us add a column in the middle of the select list
+-- (Postgres treats it as a rename); drop + create instead.
+drop view if exists public.property_daily_deltas;
+
+create view public.property_daily_deltas as
 select
     s.id,
     s.snapshot_date,
