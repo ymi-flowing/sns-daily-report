@@ -34,3 +34,7 @@ archive/
 # Local email-builder previews / renders
 renewal_summary_preview.html
 renewal_summary_*.csv
+
+# Local experimentation / not deployed
+games/
+n8n/

@@ -4820,7 +4820,8 @@ def main():
     print(f"\n    Dashboard saved to: {output_path}")
 
     # Save data.json — same payloads the HTML inlines, consumed by the
-    # ymi-flowing/sns-workspace Next.js app via GH raw URL + ISR.
+    # ymi-flowing/sns-workspace Next.js app via GH raw URL + ISR, and by
+    # /api/record_snapshot for the daily Supabase snapshot.
     try:
         data_json_path = os.path.join(os.path.dirname(__file__), "data.json")
         with open(data_json_path, "w", encoding="utf-8") as f:
