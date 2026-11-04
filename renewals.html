@@ -2286,7 +2286,10 @@ function askPassword(expected, opts = {}) {
         };
         const onSubmit = (e) => {
             e.preventDefault();
-            if (input.value === expected) {
+            const match = Array.isArray(expected)
+                ? expected.includes(input.value)
+                : input.value === expected;
+            if (match) {
                 cleanup(true);
             } else {
                 err.style.display = '';
@@ -2304,7 +2307,9 @@ function askPassword(expected, opts = {}) {
 }
 
 async function openOffersModal() {
-    const ok = await askPassword(OFFERS_PASSWORD, {
+    // Either the view password OR the edit password unlocks viewing, so Tali
+    // only has to remember one.
+    const ok = await askPassword([OFFERS_PASSWORD, OFFERS_EDIT_PASSWORD], {
         title: 'Renewal Offers',
         subtitle: 'Enter the password to view Renewal Offers.',
         username: 'renewals-view',
