@@ -20,6 +20,7 @@ from datetime import datetime
 
 REPO = "ymi-flowing/sns-daily-report"
 WORKFLOW_FILE = "sync-renewals.yml"
+EDIT_PASSWORD = "Tali124$"
 
 
 class handler(BaseHTTPRequestHandler):
@@ -40,6 +41,14 @@ class handler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_POST(self):
+        length = int(self.headers.get("Content-Length") or 0)
+        try:
+            body = json.loads(self.rfile.read(length).decode("utf-8")) if length else {}
+        except Exception:
+            return self._send(400, {"success": False, "error": "invalid JSON body"})
+        if body.get("password") != EDIT_PASSWORD:
+            return self._send(403, {"success": False, "error": "incorrect password"})
+
         token = os.environ.get("GITHUB_TOKEN", "")
         if not token:
             self._send(500, {"success": False, "error": "GITHUB_TOKEN not configured"})

@@ -1157,6 +1157,15 @@ async function fetchData(source = '/renewals_data.json') {
 // refreshData: full pipeline — ResMan -> Sheet (via GH Actions) -> Dashboard.
 // Triggered by the Refresh button. Takes ~5-10 minutes.
 async function refreshData() {
+    // Gate the Refresh behind the edit password so only admins can burn the ~5-10 min
+    // ResMan sync. Password is also re-validated server-side in trigger_renewals_sync.
+    const ok = await askPassword(OFFERS_EDIT_PASSWORD, {
+        title: 'Refresh dashboard',
+        subtitle: 'Enter the edit password. This pulls fresh data from ResMan and takes ~5-10 min.',
+        username: 'renewals-edit',
+    });
+    if (!ok) return;
+
     const overlay = document.getElementById('refresh-overlay');
     const statusEl = document.getElementById('refresh-status');
     const progressEl = document.getElementById('refresh-progress');
@@ -1187,7 +1196,11 @@ async function refreshData() {
 
     try {
         // Step 1: dispatch the sync-renewals workflow.
-        const triggerResp = await fetch('/api/trigger_renewals_sync', { method: 'POST' });
+        const triggerResp = await fetch('/api/trigger_renewals_sync', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password: OFFERS_EDIT_PASSWORD }),
+        });
         const triggerData = await triggerResp.json();
         if (!triggerData.success) throw new Error(triggerData.error || 'Trigger failed');
 
