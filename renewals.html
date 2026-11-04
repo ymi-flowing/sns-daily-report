@@ -39,11 +39,14 @@
 
         #offers-table .col-frozen { position: sticky; z-index: 2; }
         #offers-table thead th.col-frozen { z-index: 3; }
+        /* Inter-frozen borders must be opaque — a semi-transparent border
+           between two sticky cells lets scrolled rows peek through. */
+        #offers-table tbody td.col-frozen { border-right-color: transparent; }
         #offers-table .col-frozen-last {
-            border-right: 1px solid rgba(100, 116, 139, 0.25);
+            border-right: 1px solid rgba(100, 116, 139, 0.25) !important;
         }
         .dark #offers-table .col-frozen-last {
-            border-right-color: rgba(100, 116, 139, 0.35);
+            border-right-color: rgba(100, 116, 139, 0.35) !important;
         }
         #offers-table tbody td { border-right: 1px solid rgba(100, 116, 139, 0.1); }
         #offers-table tbody td:last-child { border-right: 0; }
@@ -2405,7 +2408,6 @@ function applyStickyLefts() {
     const table = document.getElementById('offers-table');
     if (!table) return;
     const cols = effectiveColumns();
-    // Measure using the first body row (or thead if body is empty).
     const refRow = table.querySelector('tbody tr') || table.querySelector('thead tr');
     if (!refRow) return;
     const cells = refRow.children;
@@ -2413,11 +2415,12 @@ function applyStickyLefts() {
     let lastFrozenIdx = -1;
     for (let i = 0; i < cols.length; i++) {
         if (OFFERS_FROZEN.has(cols[i].key)) lastFrozenIdx = i;
-        else break; // frozen cols are always at the start in effectiveColumns()
+        else break;
     }
+    // Use integer offsetWidth to avoid sub-pixel gaps between adjacent
+    // frozen columns that would otherwise let scrolled content peek through.
     for (let i = 0; i <= lastFrozenIdx; i++) {
-        const w = cells[i] ? cells[i].getBoundingClientRect().width : 0;
-        // Apply left to every row's i-th cell (thead, tbody, tfoot).
+        const w = cells[i] ? cells[i].offsetWidth : 0;
         table.querySelectorAll(`tr > *:nth-child(${i + 1})`).forEach(cell => {
             cell.style.left = left + 'px';
         });
@@ -2786,8 +2789,9 @@ function renderOffersBody() {
         if (OFFERS_FROZEN.has(cols[i].key)) lastFrozenIdx = i;
         else break;
     }
-    const PIN_SVG = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2l4 4-3 1-1 3-5-5 3-1z"/><line x1="7" y1="7" x2="2" y2="14"/></svg>';
-    const EYE_OFF_SVG = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8s2.5-4 6-4 6 4 6 4"/><circle cx="8" cy="8" r="2"/><line x1="2" y1="14" x2="14" y2="2"/></svg>';
+    // Classic thumbtack silhouette: wide top, needle below.
+    const PIN_SVG = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5.2v6h1.6v-6H18v-2l-2-2z"/></svg>';
+    const EYE_OFF_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/></svg>';
 
     thead.innerHTML = `<tr>${cols.map((c, i) => {
         const frozen = OFFERS_FROZEN.has(c.key);
@@ -3902,6 +3906,32 @@ document.getElementById('offers-csv').addEventListener('click', () => {
     const a = document.createElement('a'); a.href = url; a.download = `renewal_offers_${stamp}.csv`; a.click();
     URL.revokeObjectURL(url);
 });
+
+// Side-scroll / Shift+wheel support on wide scroll containers.
+// Translates (a) horizontal wheel/tilt gestures into scrollLeft explicitly,
+// and (b) Shift+vertical-wheel into horizontal scroll. Defensive in case a
+// parent intercepts the native deltaX, and adds a common UX shortcut.
+function wireHorizontalScroll(el) {
+    if (!el) return;
+    el.addEventListener('wheel', (e) => {
+        if (el.scrollWidth <= el.clientWidth) return; // nothing to scroll
+        if (e.deltaX !== 0) {
+            el.scrollLeft += e.deltaX;
+            e.preventDefault();
+            return;
+        }
+        if (e.shiftKey && e.deltaY !== 0) {
+            el.scrollLeft += e.deltaY;
+            e.preventDefault();
+        }
+    }, { passive: false });
+}
+// Roster table scroll container is the parent of #roster-table.
+const rosterScroll = document.querySelector('#roster-table')?.parentElement;
+wireHorizontalScroll(rosterScroll);
+// Offers table scroll container is the parent of #offers-table (inside the modal).
+const offersScroll = document.querySelector('#offers-table')?.parentElement;
+wireHorizontalScroll(offersScroll);
 
 applyTheme();
 initMulti();
