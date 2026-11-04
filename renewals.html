@@ -822,6 +822,11 @@
         <div class="p-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
             <h3 id="offers-title" class="text-lg font-bold text-slate-800 dark:text-white">Renewal Offers</h3>
             <div class="flex items-center gap-2">
+                <button id="offers-filters-btn" onclick="toggleOffersFilterPanel(event)" data-hover-tip="Filter rows in this view (independent of the main dashboard filters)" class="h-8 px-3 rounded-lg bg-slate-100 dark:bg-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 flex items-center gap-1.5">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
+                    <span>Filters</span>
+                    <span id="offers-filters-count" class="hidden ml-1 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-cyan-600 text-white text-[10px] font-bold">0</span>
+                </button>
                 <button id="offers-print" data-hover-tip="Print all selected (or all visible if none selected)" class="h-8 px-3 rounded-lg bg-cyan-600 hover:bg-cyan-700 text-xs font-semibold text-white border border-cyan-700 flex items-center gap-1.5">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
                     <span id="offers-print-label">Print Letters</span>
@@ -843,6 +848,79 @@
             </div>
         </div>
         <div id="offers-hidden-popover" class="hidden"></div>
+        <!-- OFFERS-LOCAL FILTER PANEL (collapsible) -->
+        <div id="offers-filter-panel" class="hidden border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50">
+            <div class="flex flex-wrap items-center gap-3 p-3">
+                <span class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 pr-1">Offers Filters</span>
+                <div class="multi-wrap" id="offers-filter-property">
+                    <button class="multi-trigger" data-key="property">
+                        <span class="label">Property</span>
+                        <span class="count-badge hidden">0</span>
+                        <svg class="w-3 h-3 ml-auto" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg>
+                    </button>
+                    <div class="multi-panel hidden">
+                        <div class="multi-actions"><button data-action="all">All</button><button data-action="none">None</button></div>
+                        <div class="multi-list"></div>
+                    </div>
+                </div>
+                <div class="multi-wrap" id="offers-filter-status">
+                    <button class="multi-trigger" data-key="status">
+                        <span class="label">Status</span>
+                        <span class="count-badge hidden">0</span>
+                        <svg class="w-3 h-3 ml-auto" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg>
+                    </button>
+                    <div class="multi-panel hidden">
+                        <div class="multi-actions"><button data-action="all">All</button><button data-action="none">None</button></div>
+                        <div class="multi-list"></div>
+                    </div>
+                </div>
+                <div class="multi-wrap" id="offers-filter-month">
+                    <button class="multi-trigger" data-key="month">
+                        <span class="label">Expiring Month</span>
+                        <span class="count-badge hidden">0</span>
+                        <svg class="w-3 h-3 ml-auto" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg>
+                    </button>
+                    <div class="multi-panel hidden">
+                        <div class="multi-actions"><button data-action="all">All</button><button data-action="none">None</button></div>
+                        <div class="multi-list"></div>
+                    </div>
+                </div>
+                <div class="multi-wrap" id="offers-filter-unitType">
+                    <button class="multi-trigger" data-key="unitType">
+                        <span class="label">Unit Type</span>
+                        <span class="count-badge hidden">0</span>
+                        <svg class="w-3 h-3 ml-auto" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg>
+                    </button>
+                    <div class="multi-panel hidden">
+                        <div class="multi-actions"><button data-action="all">All</button><button data-action="none">None</button></div>
+                        <div class="multi-list"></div>
+                    </div>
+                </div>
+                <div class="multi-wrap" id="offers-filter-floorplan">
+                    <button class="multi-trigger" data-key="floorplan">
+                        <span class="label">Floorplan</span>
+                        <span class="count-badge hidden">0</span>
+                        <svg class="w-3 h-3 ml-auto" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg>
+                    </button>
+                    <div class="multi-panel hidden">
+                        <div class="multi-actions"><button data-action="all">All</button><button data-action="none">None</button></div>
+                        <div class="multi-list"></div>
+                    </div>
+                </div>
+                <div class="multi-wrap" id="offers-filter-renovated">
+                    <button class="multi-trigger" data-key="renovated">
+                        <span class="label">Renovated</span>
+                        <span class="count-badge hidden">0</span>
+                        <svg class="w-3 h-3 ml-auto" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg>
+                    </button>
+                    <div class="multi-panel hidden">
+                        <div class="multi-actions"><button data-action="all">All</button><button data-action="none">None</button></div>
+                        <div class="multi-list"></div>
+                    </div>
+                </div>
+                <button type="button" onclick="clearOffersFilters()" class="ml-auto text-xs text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-100 underline">Clear all</button>
+            </div>
+        </div>
         <div class="overflow-auto fancy-scroll flex-1 pb-0 px-0">
             <table class="min-w-full text-xs" id="offers-table">
                 <thead class="bg-slate-50 dark:bg-slate-900 sticky top-0 z-10"></thead>
@@ -2239,8 +2317,16 @@ const OFFER_COLUMNS = [
       fmt: (v, row) => `<input type="checkbox" class="offer-chk" data-offer-row="${row.__offerIdx}" ${OFFERS_SELECTED.has(row.__offerIdx) ? 'checked' : ''}>` },
     { key: 'property',       label: 'Property',   align: 'center', fmt: v => v || '' },
     { key: 'Unit',           label: 'Unit',       align: 'center', fmt: v => v ?? '' },
+    { key: 'statusKey',      label: 'Status',     align: 'center', fmt: v => statusPillHtml(v) },
+    { key: 'Unit Type',      label: 'Unit Type',  align: 'center', fmt: v => v || '' },
+    { key: 'Floorplan',      label: 'Floorplan',  align: 'center', fmt: v => v || '' },
+    { key: 'Renovated',      label: 'Renov',      align: 'center', fmt: v => v || '' },
+    { key: 'expMonthKey',    label: 'Exp Month',  align: 'center', fmt: v => v ? fmtMonthLabel(v) : '' },
     { key: 'Lease End Date', label: 'Lease End',  align: 'center',
       fmt: v => v ? fmtDateShort(parseAnyDate(v)) : '—' },
+    { key: 'MI Date',        label: 'MI Date',    align: 'center',
+      fmt: v => v ? fmtDateShort(parseAnyDate(v)) : '—' },
+    { key: 'monthsInProperty', label: 'Months',   align: 'center', fmt: v => v ?? '' },
     { key: 'Resident Name',  label: 'Resident',   align: 'center',
       fmt: (v, row) => {
           const name = (v ?? '').toString().trim();
@@ -2266,6 +2352,7 @@ const OFFER_COLUMNS = [
       } },
     { key: '__rentDelta',    label: 'Rent Δ',          align: 'center', fmt: v => signedMoney(v) },
     { key: 'deltaA',         label: 'Total Δ',         align: 'center', fmt: v => signedMoney(v) },
+    { key: 'deltaApct',      label: 'Total Δ %',       align: 'center', fmt: fmtPct },
     { key: 'Rent A',         label: 'Rent Offer',      align: 'center', fmt: moneyOrDash },
     { key: 'Utility',        label: 'Utility',         align: 'center', fmt: moneyOrDash },
     { key: 'Valet',          label: 'Valet',           align: 'center', fmt: moneyOrDash },
@@ -2290,6 +2377,17 @@ let OFFERS_SELECTED = new Set();  // __offerIdx values that are currently checke
 
 const OFFERS_PASSWORD = 'Renewals124$';
 const OFFERS_EDIT_PASSWORD = 'Tali124$';
+
+// Offers-local filter state. Independent from STATE.filters (which drives the
+// main dashboard). Set by the Filters button inside the Offers popup.
+const OFFERS_LOCAL_FILTERS = {
+    property:  new Set(),
+    status:    new Set(),
+    month:     new Set(),
+    unitType:  new Set(),
+    floorplan: new Set(),
+    renovated: new Set(),
+};
 let OFFERS_EDIT_MODE = false;
 let OFFERS_SAVING = false;
 // key = `${tab}|${unit}|${expMonth}`, value = { newAdj, origAdj, row }
@@ -2496,21 +2594,191 @@ async function openOffersModal() {
         username: 'renewals-view',
     });
     if (!ok) return;
-    // Always start outside edit mode -- Edit button re-asks for the second password.
     OFFERS_EDIT_MODE = false;
     updateEditToggleButton();
-    // Freeze a snapshot of currently filtered rows + attach derived fields.
-    // __origRef points back at the STATE.rows entry so saved edits flow through
-    // to the main dashboard (KPIs, charts, roster) without a full refetch.
-    OFFERS_SUBSET = filtered().map((r, i) => Object.assign({ __offerIdx: i, __origRef: r }, r, {
+    OFFERS_SORT = { col: 'property', dir: 'asc' };
+    OFFERS_SELECTED = new Set();
+    offersCascadeFilters();
+    rebuildOffersSubset();
+    document.getElementById('offers-modal').classList.remove('hidden');
+}
+
+// Offers-popup uses its own filter state (OFFERS_LOCAL_FILTERS), separate from
+// the main dashboard. This builds the filtered rowset from STATE.rows.
+function offersFiltered() {
+    const f = OFFERS_LOCAL_FILTERS;
+    return STATE.rows.filter(r => {
+        if (f.property.size   && !f.property.has(r.property)) return false;
+        if (f.status.size     && !f.status.has(r.statusKey)) return false;
+        if (f.month.size      && !f.month.has(r.expMonthKey)) return false;
+        if (f.unitType.size   && !f.unitType.has(r['Unit Type'])) return false;
+        if (f.floorplan.size  && !f.floorplan.has(r['Floorplan'])) return false;
+        if (f.renovated.size  && !f.renovated.has(r['Renovated'])) return false;
+        return true;
+    });
+}
+
+// Recompute OFFERS_SUBSET from offersFiltered() + attach derived fields.
+// __origRef points back at the STATE.rows entry so saved edits flow through
+// to the main dashboard (KPIs, charts, roster) without a full refetch.
+function rebuildOffersSubset() {
+    OFFERS_SUBSET = offersFiltered().map((r, i) => Object.assign({ __offerIdx: i, __origRef: r }, r, {
         __rentDelta: rentDelta(r),
         __totalUtil: sumUtilities(r) || null,
     }));
-    OFFERS_SORT = { col: 'property', dir: 'asc' };
-    OFFERS_SELECTED = new Set();   // reset selection on each open
+    OFFERS_SELECTED = new Set();
     updateOffersTitle();
+    updateOffersFiltersCount();
     renderOffersBody();
-    document.getElementById('offers-modal').classList.remove('hidden');
+}
+
+function updateOffersFiltersCount() {
+    const f = OFFERS_LOCAL_FILTERS;
+    const n = f.property.size + f.status.size + f.month.size + f.unitType.size + f.floorplan.size + f.renovated.size;
+    const el = document.getElementById('offers-filters-count');
+    if (!el) return;
+    if (n === 0) el.classList.add('hidden');
+    else { el.classList.remove('hidden'); el.textContent = n; }
+}
+
+function toggleOffersFilterPanel(e) {
+    if (e) e.stopPropagation();
+    document.getElementById('offers-filter-panel').classList.toggle('hidden');
+}
+
+function clearOffersFilters() {
+    for (const k of Object.keys(OFFERS_LOCAL_FILTERS)) OFFERS_LOCAL_FILTERS[k].clear();
+    offersCascadeFilters();
+    rebuildOffersSubset();
+}
+
+function offersRowFieldFor(r, key) {
+    switch (key) {
+        case 'property':  return r.property;
+        case 'status':    return r.statusKey;
+        case 'month':     return r.expMonthKey;
+        case 'unitType':  return r['Unit Type'];
+        case 'floorplan': return r['Floorplan'];
+        case 'renovated': return r['Renovated'];
+        default: return r[key];
+    }
+}
+
+// Rebuild each offers multi-select's option list from STATE.rows, respecting
+// the cascade (each dropdown narrows to the intersection of the OTHER active
+// offers filters). Mirrors updateFilterOptions() for the main dashboard.
+function offersCascadeFilters() {
+    const configs = [
+        { id: 'offers-filter-property',  key: 'property',   labelFn: v => `${v} — ${PROPERTY_NAMES[v]||v}` },
+        { id: 'offers-filter-status',    key: 'status',     labelFn: v => v },
+        { id: 'offers-filter-month',     key: 'month',      labelFn: v => fmtMonthLabel(v) },
+        { id: 'offers-filter-unitType',  key: 'unitType',   labelFn: v => v },
+        { id: 'offers-filter-floorplan', key: 'floorplan',  labelFn: v => v },
+        { id: 'offers-filter-renovated', key: 'renovated',  labelFn: v => v },
+    ];
+    const orderMap = {
+        property:  (STATE.allProperties  || []),
+        status:    (STATE.allStatuses    || STATUS_ORDER),
+        month:     (STATE.allMonths      || []),
+        unitType:  (STATE.allUnitTypes   || []),
+        floorplan: (STATE.allFloorplans  || []),
+        renovated: Array.from(new Set((STATE.rows||[]).map(r => r['Renovated']).filter(Boolean))).sort(),
+    };
+    for (const cfg of configs) {
+        const otherKeys = configs.filter(c => c.key !== cfg.key).map(c => c.key);
+        const inContext = STATE.rows.filter(r => {
+            for (const k of otherKeys) {
+                const sel = OFFERS_LOCAL_FILTERS[k];
+                if (sel.size === 0) continue;
+                if (!sel.has(offersRowFieldFor(r, k))) return false;
+            }
+            return true;
+        });
+        const presentSet = new Set(inContext.map(r => offersRowFieldFor(r, cfg.key)).filter(v => v !== null && v !== undefined && v !== ''));
+        const canonical = orderMap[cfg.key] || [];
+        const items = canonical
+            .filter(v => presentSet.has(v))
+            .map(v => ({ val: String(v), label: cfg.labelFn(v) }));
+        offersPopulateMulti(cfg.id, items);
+        for (const v of [...OFFERS_LOCAL_FILTERS[cfg.key]]) {
+            if (!presentSet.has(v)) OFFERS_LOCAL_FILTERS[cfg.key].delete(v);
+        }
+    }
+    updateOffersFiltersCount();
+}
+
+function offersPopulateMulti(wrapperId, items) {
+    const wrap = document.getElementById(wrapperId);
+    if (!wrap) return;
+    const list = wrap.querySelector('.multi-list');
+    const key = wrap.querySelector('.multi-trigger').dataset.key;
+    const selected = OFFERS_LOCAL_FILTERS[key];
+    list.innerHTML = items.map(it => `
+        <label class="multi-item">
+            <input type="checkbox" value="${escapeHtml(it.val)}" ${selected.has(it.val) ? 'checked' : ''}>
+            <span>${escapeHtml(it.label)}</span>
+        </label>
+    `).join('');
+    list.querySelectorAll('input').forEach(cb => {
+        cb.addEventListener('change', () => {
+            const val = cb.value;
+            if (cb.checked) OFFERS_LOCAL_FILTERS[key].add(val);
+            else OFFERS_LOCAL_FILTERS[key].delete(val);
+            offersUpdateTriggerBadge(wrap, key);
+            offersCascadeFilters();
+            rebuildOffersSubset();
+        });
+    });
+    offersUpdateTriggerBadge(wrap, key);
+}
+
+function offersUpdateTriggerBadge(wrap, key) {
+    const count = OFFERS_LOCAL_FILTERS[key].size;
+    const trig = wrap.querySelector('.multi-trigger');
+    const badge = trig.querySelector('.count-badge');
+    if (count > 0) {
+        trig.classList.add('active');
+        badge.classList.remove('hidden');
+        badge.textContent = count;
+    } else {
+        trig.classList.remove('active');
+        badge.classList.add('hidden');
+    }
+}
+
+function offersInitMulti() {
+    document.querySelectorAll('#offers-filter-panel .multi-wrap').forEach(wrap => {
+        const trig = wrap.querySelector('.multi-trigger');
+        const panel = wrap.querySelector('.multi-panel');
+        trig.addEventListener('click', e => {
+            e.stopPropagation();
+            document.querySelectorAll('#offers-filter-panel .multi-panel').forEach(p => { if (p !== panel) p.classList.add('hidden'); });
+            panel.classList.toggle('hidden');
+        });
+        panel.addEventListener('click', e => e.stopPropagation());
+        wrap.querySelectorAll('.multi-actions button').forEach(btn => {
+            btn.addEventListener('click', e => {
+                e.stopPropagation();
+                const action = btn.dataset.action;
+                const key = trig.dataset.key;
+                const cbs = wrap.querySelectorAll('.multi-list input');
+                if (action === 'all') {
+                    cbs.forEach(cb => { cb.checked = true; OFFERS_LOCAL_FILTERS[key].add(cb.value); });
+                } else {
+                    cbs.forEach(cb => cb.checked = false);
+                    OFFERS_LOCAL_FILTERS[key].clear();
+                }
+                offersUpdateTriggerBadge(wrap, key);
+                offersCascadeFilters();
+                rebuildOffersSubset();
+            });
+        });
+    });
+    // Click outside any offers multi-panel closes them.
+    document.addEventListener('click', (e) => {
+        if (e.target.closest('#offers-filter-panel .multi-wrap')) return;
+        document.querySelectorAll('#offers-filter-panel .multi-panel').forEach(p => p.classList.add('hidden'));
+    });
 }
 function closeOffersModal() {
     if (OFFERS_SAVING) return;  // don't close mid-save
@@ -3935,6 +4203,7 @@ wireHorizontalScroll(offersScroll);
 
 applyTheme();
 initMulti();
+offersInitMulti();
 fetchData();
 </script>
 </body>
