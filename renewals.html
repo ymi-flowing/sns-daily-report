@@ -24,7 +24,9 @@
         #roster-table tbody td:last-child { border-right: 0; }
         .dark #roster-table tbody td { border-right-color: rgba(148, 163, 184, 0.1); }
 
-        /* Renewal Offers table: nowrap + sticky-column pattern */
+        /* Renewal Offers table: nowrap + dynamic sticky-column pattern.
+           Freeze set is driven by OFFERS_FROZEN; left offsets are measured
+           at render time and applied inline on each frozen cell. */
         #offers-table th, #offers-table td { white-space: nowrap; }
         #offers-table thead th {
             background-color: #f8fafc;
@@ -35,31 +37,12 @@
         #offers-table tbody tr:hover td { background-color: #eff6ff; }
         .dark #offers-table tbody tr:hover td { background-color: #253551; }
 
-        /* Freeze first 4 columns: checkbox | Property | Unit | Lease End */
-        #offers-table thead th:nth-child(-n+4),
-        #offers-table tbody td:nth-child(-n+4),
-        #offers-table tfoot td:nth-child(-n+4) {
-            position: sticky; z-index: 2;
-        }
-        #offers-table thead th:nth-child(-n+4) { z-index: 3; }
-        #offers-table thead th:nth-child(1),
-        #offers-table tbody td:nth-child(1),
-        #offers-table tfoot td:nth-child(1) { left: 0;   min-width: 38px; width: 38px; }
-        #offers-table thead th:nth-child(2),
-        #offers-table tbody td:nth-child(2),
-        #offers-table tfoot td:nth-child(2) { left: 38px;  min-width: 90px; }
-        #offers-table thead th:nth-child(3),
-        #offers-table tbody td:nth-child(3),
-        #offers-table tfoot td:nth-child(3) { left: 128px; min-width: 70px; }
-        #offers-table thead th:nth-child(4),
-        #offers-table tbody td:nth-child(4),
-        #offers-table tfoot td:nth-child(4) {
-            left: 198px; min-width: 110px;
+        #offers-table .col-frozen { position: sticky; z-index: 2; }
+        #offers-table thead th.col-frozen { z-index: 3; }
+        #offers-table .col-frozen-last {
             border-right: 1px solid rgba(100, 116, 139, 0.25);
         }
-        .dark #offers-table thead th:nth-child(4),
-        .dark #offers-table tbody td:nth-child(4),
-        .dark #offers-table tfoot td:nth-child(4) {
+        .dark #offers-table .col-frozen-last {
             border-right-color: rgba(100, 116, 139, 0.35);
         }
         #offers-table tbody td { border-right: 1px solid rgba(100, 116, 139, 0.1); }
@@ -77,7 +60,64 @@
             background-color: #0f172a;
             border-top-color: rgba(148, 163, 184, 0.3);
         }
-        #offers-table tfoot td:nth-child(-n+4) { z-index: 3; }
+        #offers-table tfoot td.col-frozen { z-index: 3; }
+
+        /* Per-column pin + hide icons on each sortable header */
+        #offers-table thead .col-icon-row {
+            display: flex;
+            gap: 4px;
+            justify-content: center;
+            margin-bottom: 4px;
+            height: 14px;
+        }
+        #offers-table thead .col-icon {
+            width: 14px; height: 14px;
+            display: inline-flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            color: #cbd5e1;
+            transition: color 120ms;
+            padding: 0; border: none; background: transparent;
+        }
+        #offers-table thead .col-icon:hover { color: #475569; }
+        .dark #offers-table thead .col-icon { color: #475569; }
+        .dark #offers-table thead .col-icon:hover { color: #cbd5e1; }
+        #offers-table thead .col-icon.col-pin-active { color: #06b6d4; }
+        #offers-table thead .col-icon.col-pin-active:hover { color: #0891b2; }
+        .dark #offers-table thead .col-icon.col-pin-active { color: #22d3ee; }
+        .dark #offers-table thead .col-icon.col-pin-active:hover { color: #67e8f9; }
+        #offers-table thead .col-icon svg { width: 100%; height: 100%; }
+        #offers-table thead .col-label-row {
+            display: flex; align-items: center; justify-content: center;
+            gap: 4px; cursor: pointer;
+        }
+
+        /* Full-screen Renewal Offers modal: fill the viewport */
+        #offers-modal.modal-backdrop { padding: 0; }
+        #offers-modal .modal-box {
+            max-width: 100vw; max-height: 100vh;
+            width: 100vw; height: 100vh;
+            border-radius: 0;
+            position: relative; /* anchor for #offers-hidden-popover */
+        }
+
+        /* Hidden-columns popover anchored near the offers header */
+        #offers-hidden-popover {
+            position: absolute; right: 180px; top: 52px;
+            background: #ffffff; border: 1px solid #e2e8f0;
+            border-radius: 10px; box-shadow: 0 10px 30px rgba(15,23,42,0.15);
+            padding: 6px 0; min-width: 220px; z-index: 50;
+            max-height: 60vh; overflow-y: auto;
+        }
+        .dark #offers-hidden-popover { background: #0f172a; border-color: #334155; }
+        #offers-hidden-popover .hid-item {
+            padding: 6px 12px; font-size: 12px; cursor: pointer;
+            color: #334155; display: flex; justify-content: space-between; gap: 12px;
+            align-items: center;
+        }
+        .dark #offers-hidden-popover .hid-item { color: #cbd5e1; }
+        #offers-hidden-popover .hid-item:hover { background: #f1f5f9; }
+        .dark #offers-hidden-popover .hid-item:hover { background: #1e293b; }
+        #offers-hidden-popover .hid-item .hid-show { color: #06b6d4; font-weight: 600; font-size: 11px; }
 
         /* .offer-chk styling now shared with .multi-item input[type=checkbox] above */
 
@@ -791,10 +831,15 @@
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                     <span>Import Month</span>
                 </button>
+                <button id="offers-hidden-chip" onclick="toggleHiddenPopover(event)" data-hover-tip="Show hidden columns" class="hidden h-8 px-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 text-xs font-semibold text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/30 border border-amber-200 dark:border-amber-700/50 items-center gap-1.5">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-5 0-9.27-3.11-11-7.5a11.78 11.78 0 013.1-4.4m3.54-2.36A10.05 10.05 0 0112 5c5 0 9.27 3.11 11 7.5a11.78 11.78 0 01-4.11 4.9M1 1l22 22"/></svg>
+                    <span id="offers-hidden-count">0 hidden</span>
+                </button>
                 <button id="offers-csv" data-hover-tip="Export the Offers subset as CSV" class="h-8 px-3 rounded-lg bg-slate-100 dark:bg-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600">Export CSV</button>
                 <button onclick="closeOffersModal()" class="h-8 w-8 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 flex items-center justify-center">&times;</button>
             </div>
         </div>
+        <div id="offers-hidden-popover" class="hidden"></div>
         <div class="overflow-auto fancy-scroll flex-1 pb-0 px-0">
             <table class="min-w-full text-xs" id="offers-table">
                 <thead class="bg-slate-50 dark:bg-slate-900 sticky top-0 z-10"></thead>
@@ -2247,6 +2292,139 @@ let OFFERS_SAVING = false;
 // key = `${tab}|${unit}|${expMonth}`, value = { newAdj, origAdj, row }
 const OFFERS_PENDING_EDITS = new Map();
 
+// -----------------------------------------------------------------------------
+// Per-column freeze + hide state (user-configurable, persisted in localStorage).
+// OFFERS_FROZEN: set of column keys that stick to the left when scrolling.
+// OFFERS_HIDDEN: set of column keys that are hidden from the table.
+// __chk is always frozen + never hideable.
+// -----------------------------------------------------------------------------
+const OFFERS_DEFAULT_FROZEN = ['__chk', 'property', 'Unit', 'Lease End Date'];
+const OFFERS_UNHIDEABLE = new Set(['__chk']);
+let OFFERS_FROZEN = new Set(OFFERS_DEFAULT_FROZEN);
+let OFFERS_HIDDEN = new Set();
+try {
+    const f = JSON.parse(localStorage.getItem('offers_frozen') || 'null');
+    if (Array.isArray(f)) OFFERS_FROZEN = new Set(f);
+    const h = JSON.parse(localStorage.getItem('offers_hidden') || 'null');
+    if (Array.isArray(h)) OFFERS_HIDDEN = new Set(h);
+} catch (_) {}
+OFFERS_FROZEN.add('__chk'); // always frozen
+OFFERS_HIDDEN.delete('__chk'); // never hidden
+
+function saveFrozenHidden() {
+    try {
+        localStorage.setItem('offers_frozen', JSON.stringify([...OFFERS_FROZEN]));
+        localStorage.setItem('offers_hidden', JSON.stringify([...OFFERS_HIDDEN]));
+    } catch (_) {}
+}
+
+// Returns the columns to render, in display order:
+//   [all frozen in original OFFER_COLUMNS order, then all unfrozen in order],
+// with hidden columns removed.
+function effectiveColumns() {
+    const visible = OFFER_COLUMNS.filter(c => !OFFERS_HIDDEN.has(c.key));
+    const frozen = visible.filter(c => OFFERS_FROZEN.has(c.key));
+    const rest   = visible.filter(c => !OFFERS_FROZEN.has(c.key));
+    return [...frozen, ...rest];
+}
+
+function toggleColumnFrozen(key) {
+    if (OFFERS_FROZEN.has(key)) {
+        if (key === '__chk') return; // always frozen
+        OFFERS_FROZEN.delete(key);
+    } else {
+        OFFERS_FROZEN.add(key);
+    }
+    saveFrozenHidden();
+    renderOffersBody();
+}
+
+function toggleColumnHidden(key) {
+    if (OFFERS_UNHIDEABLE.has(key)) return;
+    if (OFFERS_HIDDEN.has(key)) OFFERS_HIDDEN.delete(key);
+    else OFFERS_HIDDEN.add(key);
+    saveFrozenHidden();
+    renderOffersBody();
+    updateHiddenChip();
+}
+
+function updateHiddenChip() {
+    const chip = document.getElementById('offers-hidden-chip');
+    const count = document.getElementById('offers-hidden-count');
+    if (!chip || !count) return;
+    const n = OFFERS_HIDDEN.size;
+    if (n === 0) {
+        chip.classList.add('hidden');
+        chip.classList.remove('flex');
+        // Also hide the popover if it was open
+        document.getElementById('offers-hidden-popover').classList.add('hidden');
+    } else {
+        chip.classList.remove('hidden');
+        chip.classList.add('flex');
+        count.textContent = `${n} hidden`;
+    }
+}
+
+function toggleHiddenPopover(e) {
+    if (e) e.stopPropagation();
+    const pop = document.getElementById('offers-hidden-popover');
+    if (pop.classList.contains('hidden')) {
+        // Build the list
+        const items = [...OFFERS_HIDDEN].map(key => {
+            const col = OFFER_COLUMNS.find(c => c.key === key);
+            const label = col ? (col.label || key) : key;
+            return `<div class="hid-item" data-key="${key}"><span>${escapeHtml(label)}</span><span class="hid-show">Show</span></div>`;
+        }).join('');
+        pop.innerHTML = items || '<div class="hid-item"><span>No hidden columns</span></div>';
+        pop.classList.remove('hidden');
+        pop.querySelectorAll('.hid-item[data-key]').forEach(el => {
+            el.addEventListener('click', () => {
+                toggleColumnHidden(el.dataset.key);
+                toggleHiddenPopover(); // refresh
+            });
+        });
+    } else {
+        pop.classList.add('hidden');
+    }
+}
+
+// Click-anywhere-else closes the hidden popover
+document.addEventListener('click', (e) => {
+    const pop = document.getElementById('offers-hidden-popover');
+    const chip = document.getElementById('offers-hidden-chip');
+    if (!pop || pop.classList.contains('hidden')) return;
+    if (pop.contains(e.target) || (chip && chip.contains(e.target))) return;
+    pop.classList.add('hidden');
+});
+
+// After each render, measure the widths of the frozen columns in the first
+// body row and apply the cumulative left offset inline on every frozen th/td.
+// This replaces the old hard-coded nth-child(-n+4) offsets that assumed fixed
+// column widths and broke when content was wider than expected.
+function applyStickyLefts() {
+    const table = document.getElementById('offers-table');
+    if (!table) return;
+    const cols = effectiveColumns();
+    // Measure using the first body row (or thead if body is empty).
+    const refRow = table.querySelector('tbody tr') || table.querySelector('thead tr');
+    if (!refRow) return;
+    const cells = refRow.children;
+    let left = 0;
+    let lastFrozenIdx = -1;
+    for (let i = 0; i < cols.length; i++) {
+        if (OFFERS_FROZEN.has(cols[i].key)) lastFrozenIdx = i;
+        else break; // frozen cols are always at the start in effectiveColumns()
+    }
+    for (let i = 0; i <= lastFrozenIdx; i++) {
+        const w = cells[i] ? cells[i].getBoundingClientRect().width : 0;
+        // Apply left to every row's i-th cell (thead, tbody, tfoot).
+        table.querySelectorAll(`tr > *:nth-child(${i + 1})`).forEach(cell => {
+            cell.style.left = left + 'px';
+        });
+        left += w;
+    }
+}
+
 function pendingKey(row) {
     return `${row.property}|${row['Unit']}|${row['Expiring Month']}`;
 }
@@ -2601,27 +2779,52 @@ function renderOffersBody() {
     const thead = document.querySelector('#offers-table thead');
     const tbody = document.querySelector('#offers-table tbody');
     const tfoot = document.querySelector('#offers-table tfoot');
-    thead.innerHTML = `<tr>${OFFER_COLUMNS.map(c => {
+    const cols = effectiveColumns();
+    // Index of the last frozen column (frozen ones are always first in `cols`).
+    let lastFrozenIdx = -1;
+    for (let i = 0; i < cols.length; i++) {
+        if (OFFERS_FROZEN.has(cols[i].key)) lastFrozenIdx = i;
+        else break;
+    }
+    const PIN_SVG = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2l4 4-3 1-1 3-5-5 3-1z"/><line x1="7" y1="7" x2="2" y2="14"/></svg>';
+    const EYE_OFF_SVG = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8s2.5-4 6-4 6 4 6 4"/><circle cx="8" cy="8" r="2"/><line x1="2" y1="14" x2="14" y2="2"/></svg>';
+
+    thead.innerHTML = `<tr>${cols.map((c, i) => {
+        const frozen = OFFERS_FROZEN.has(c.key);
+        const frozenCls = frozen ? ' col-frozen' : '';
+        const lastCls = i === lastFrozenIdx ? ' col-frozen-last' : '';
         if (c.isCheckbox) {
             const allOn = OFFERS_SUBSET.length > 0 && OFFERS_SELECTED.size === OFFERS_SUBSET.length;
             const some = OFFERS_SELECTED.size > 0 && !allOn;
-            return `<th class="px-2 py-2 text-center bg-slate-50 dark:bg-slate-900">
+            return `<th class="px-2 py-2 text-center bg-slate-50 dark:bg-slate-900${frozenCls}${lastCls}">
                         <input type="checkbox" id="offers-chk-all" class="offer-chk" ${allOn?'checked':''} ${some?'data-indeterminate="1"':''}>
                     </th>`;
         }
         const active = OFFERS_SORT.col === c.key;
         const arrow = active ? (OFFERS_SORT.dir === 'asc' ? '▲' : '▼') : '▲';
-        return `<th class="sortable px-3 py-2 text-${c.align} font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 text-[11px] ${active ? 'sort-active' : ''}" data-col="${c.key}">
-                    ${c.label}<span class="arrow">${arrow}</span>
+        const pinCls = frozen ? ' col-pin-active' : '';
+        return `<th class="px-3 py-2 text-${c.align} font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 text-[11px] ${active ? 'sort-active' : ''}${frozenCls}${lastCls}" data-col="${c.key}">
+                    <div class="col-icon-row">
+                        <button type="button" class="col-icon col-pin${pinCls}" data-col-pin="${c.key}" title="${frozen ? 'Unfreeze' : 'Freeze'} column">${PIN_SVG}</button>
+                        <button type="button" class="col-icon col-hide" data-col-hide="${c.key}" title="Hide column">${EYE_OFF_SVG}</button>
+                    </div>
+                    <div class="col-label-row" data-col-sort="${c.key}">${c.label}<span class="arrow">${arrow}</span></div>
                 </th>`;
     }).join('')}</tr>`;
-    thead.querySelectorAll('th.sortable').forEach(th => {
-        th.addEventListener('click', () => {
-            const col = th.dataset.col;
+    // Sort on label-row click (not on the icon buttons).
+    thead.querySelectorAll('.col-label-row').forEach(el => {
+        el.addEventListener('click', () => {
+            const col = el.dataset.colSort;
             if (OFFERS_SORT.col === col) OFFERS_SORT.dir = OFFERS_SORT.dir === 'asc' ? 'desc' : 'asc';
             else { OFFERS_SORT.col = col; OFFERS_SORT.dir = 'asc'; }
             renderOffersBody();
         });
+    });
+    thead.querySelectorAll('[data-col-pin]').forEach(el => {
+        el.addEventListener('click', (e) => { e.stopPropagation(); toggleColumnFrozen(el.dataset.colPin); });
+    });
+    thead.querySelectorAll('[data-col-hide]').forEach(el => {
+        el.addEventListener('click', (e) => { e.stopPropagation(); toggleColumnHidden(el.dataset.colHide); });
     });
     const chkAll = thead.querySelector('#offers-chk-all');
     if (chkAll) {
@@ -2637,15 +2840,20 @@ function renderOffersBody() {
     const sorted = sortRows(OFFERS_SUBSET, OFFERS_SORT);
     tbody.innerHTML = sorted.map(r => `
         <tr class="data-row border-b border-slate-200 dark:border-slate-700">
-            ${OFFER_COLUMNS.map(c => {
+            ${cols.map((c, i) => {
                 const extra = c.isAdjustment ? ` offer-adj-td${OFFERS_EDIT_MODE ? ' edit-mode' : ''}` : '';
-                return `<td class="px-${c.isCheckbox?'2':'3'} py-2 text-${c.align} text-slate-700 dark:text-slate-200${extra}">${c.fmt(r[c.key], r)}</td>`;
+                const frozenCls = OFFERS_FROZEN.has(c.key) ? ' col-frozen' : '';
+                const lastCls = i === lastFrozenIdx ? ' col-frozen-last' : '';
+                return `<td class="px-${c.isCheckbox?'2':'3'} py-2 text-${c.align} text-slate-700 dark:text-slate-200${extra}${frozenCls}${lastCls}">${c.fmt(r[c.key], r)}</td>`;
             }).join('')}
         </tr>
     `).join('');
 
     // Totals + Avg rows
-    tfoot.innerHTML = renderOffersFooter(sorted);
+    tfoot.innerHTML = renderOffersFooter(sorted, cols, lastFrozenIdx);
+    updateHiddenChip();
+    // Measure widths + apply inline sticky-left to every frozen cell.
+    requestAnimationFrame(applyStickyLefts);
 
     // Wire resident-name click -> open letter preview
     tbody.querySelectorAll('.offer-letter-link').forEach(el => {
@@ -2706,7 +2914,15 @@ function renderOffersBody() {
 // Totals footer. For every money column, sum across the sorted rows.
 // Rent Δ / Total Δ sums represent the aggregate monthly $ swing if
 // everyone renewed at the offer.
-function renderOffersFooter(rows) {
+function renderOffersFooter(rows, cols, lastFrozenIdx) {
+    cols = cols || effectiveColumns();
+    if (lastFrozenIdx === undefined) {
+        lastFrozenIdx = -1;
+        for (let i = 0; i < cols.length; i++) {
+            if (OFFERS_FROZEN.has(cols[i].key)) lastFrozenIdx = i;
+            else break;
+        }
+    }
     const sumKeys = new Set(['Base Rent','currentTotal','RnF Rent','Rent A','Utility','Valet','Pest','Amenity','Internet','__totalUtil','Pet','Parking','WD','Storage','Total Other','totalOfferA','Deposit','R Deposit']);
     const signedSumKeys = new Set(['Adjustment','__rentDelta','deltaA','Deposit D']);
     const sum = (key) => rows.reduce((acc, r) => acc + (numOrNull(r[key]) || 0), 0);
@@ -2720,9 +2936,11 @@ function renderOffersFooter(rows) {
         if (signedSumKeys.has(c.key)) return signedMoney(sum(c.key));
         return '';
     };
-    return `<tr>${OFFER_COLUMNS.map(c =>
-        `<td class="px-${c.isCheckbox?'2':'3'} py-2 text-${c.align} text-slate-800 dark:text-slate-100">${totalCell(c)}</td>`
-    ).join('')}</tr>`;
+    return `<tr>${cols.map((c, i) => {
+        const frozenCls = OFFERS_FROZEN.has(c.key) ? ' col-frozen' : '';
+        const lastCls = i === lastFrozenIdx ? ' col-frozen-last' : '';
+        return `<td class="px-${c.isCheckbox?'2':'3'} py-2 text-${c.align} text-slate-800 dark:text-slate-100${frozenCls}${lastCls}">${totalCell(c)}</td>`;
+    }).join('')}</tr>`;
 }
 
 // Recompute every value in the row that depends on Adjustment, mirroring the
