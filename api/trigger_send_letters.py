@@ -5,7 +5,7 @@ Endpoint: POST /api/trigger_send_letters
 
 Body:
   {
-    "password": "TaliRenewals123457$",
+    "password": "Tali124$",
     "dryRun":   true | false,
     "letters":  [
       {"property": "49THSTR", "month": "2026-12", "unit": "1015",
@@ -42,7 +42,7 @@ from datetime import datetime
 
 REPO = "ymi-flowing/sns-daily-report"
 EVENT_TYPE = "send-renewal-letters"
-EDIT_PASSWORD = "TaliRenewals123457$"
+EDIT_PASSWORD = "Tali124$"
 MAX_LETTERS = 500  # soft cap -- client_payload is 64KB total
 
 

@@ -1,0 +1,60 @@
+name: Import Expiring Month (ResMan -> Sheet -> renewals_data.json)
+
+# Triggered by the "Import Month" button on /renewals via /api/import_expiring_month.
+# 1. run_all.py <month> appends new expiring-lease rows for each property tab.
+# 2. write_renewals_json.py re-bakes renewals_data.json from the sheet.
+# 3. The JSON is committed + pushed so the dashboard loads it as a static file.
+
+on:
+  workflow_dispatch:
+    inputs:
+      month:
+        description: 'Expiring month (YYYY-MM, e.g. 2027-02)'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  import:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Import ${{ github.event.inputs.month }} rows into sheet
+        working-directory: renewals_sync
+        env:
+          RESMAN_API_KEY: ${{ secrets.RESMAN_API_KEY }}
+          RESMAN_PARTNER_ID: ${{ secrets.RESMAN_PARTNER_ID }}
+          RESMAN_ACCOUNT_ID: ${{ secrets.RESMAN_ACCOUNT_ID }}
+          SHEETS_WEBHOOK_URL: ${{ secrets.SHEETS_WEBHOOK_URL }}
+          SHARED_SECRET: ${{ secrets.SHARED_SECRET }}
+        run: python run_all.py "${{ github.event.inputs.month }}"
+
+      - name: Bake Sheet -> renewals_data.json
+        working-directory: renewals_sync
+        env:
+          SHEETS_WEBHOOK_URL: ${{ secrets.SHEETS_WEBHOOK_URL }}
+          SHARED_SECRET: ${{ secrets.SHARED_SECRET }}
+          RESMAN_API_KEY: ${{ secrets.RESMAN_API_KEY }}
+          RESMAN_PARTNER_ID: ${{ secrets.RESMAN_PARTNER_ID }}
+          RESMAN_ACCOUNT_ID: ${{ secrets.RESMAN_ACCOUNT_ID }}
+        run: python write_renewals_json.py
+
+      - name: Commit and push renewals_data.json
+        run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+          git add renewals_data.json
+          git diff --staged --quiet || git commit -m "Import ${{ github.event.inputs.month }} expiring leases [$(date -u '+%Y-%m-%d %H:%M UTC')]"
+          git push

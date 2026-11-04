@@ -15,7 +15,7 @@ Request:
     "unit":       "<unit label from column B>",
     "expMonth":   "<Expiring Month cell from column A, raw>",
     "adjustment": <number>,
-    "password":   "TaliRenewals123457$"
+    "password":   "Tali124$"
   }
 
 Response:
@@ -39,7 +39,7 @@ SHEETS_WEBHOOK_URL = (
 )
 SHARED_SECRET = os.environ.get("SHARED_SECRET", "")
 
-EDIT_PASSWORD = "TaliRenewals123457$"
+EDIT_PASSWORD = "Tali124$"
 RANGE_PER_TAB = "A1:AJ400"
 
 

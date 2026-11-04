@@ -15,7 +15,7 @@ Request:
   POST /api/update_adjustments_batch
   Content-Type: application/json
   Body: {
-    "password": "TaliRenewals123457$",
+    "password": "Tali124$",
     "edits": [
       {"tab":"49thStr","unit":"1015","expMonth":"2026-11","adjustment":-150},
       ...
@@ -43,7 +43,7 @@ SHEETS_WEBHOOK_URL = (
 )
 SHARED_SECRET = os.environ.get("SHARED_SECRET", "")
 
-EDIT_PASSWORD = "TaliRenewals123457$"
+EDIT_PASSWORD = "Tali124$"
 RANGE_PER_TAB = "A1:AJ400"
 
 

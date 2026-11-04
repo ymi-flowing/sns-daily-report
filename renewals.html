@@ -787,6 +787,10 @@
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
                     <span id="offers-edit-label">Edit</span>
                 </button>
+                <button id="offers-import-btn" onclick="openImportModal()" data-hover-tip="Import a new expiring month from ResMan into the dashboard" class="hidden h-8 px-3 rounded-lg bg-slate-100 dark:bg-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 items-center gap-1.5">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    <span>Import Month</span>
+                </button>
                 <button id="offers-csv" data-hover-tip="Export the Offers subset as CSV" class="h-8 px-3 rounded-lg bg-slate-100 dark:bg-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600">Export CSV</button>
                 <button onclick="closeOffersModal()" class="h-8 w-8 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 flex items-center justify-center">&times;</button>
             </div>
@@ -835,6 +839,22 @@
                 <button type="submit" id="pwd-submit" class="h-9 px-4 rounded-lg bg-cyan-600 hover:bg-cyan-700 text-sm font-semibold text-white border border-cyan-700">Unlock</button>
             </div>
         </form>
+    </div>
+</div>
+
+<!-- IMPORT EXPIRING MONTH MODAL -->
+<div id="import-modal" class="modal-backdrop hidden">
+    <div class="pwd-modal-box border border-slate-200 dark:border-slate-700">
+        <h4 class="text-base font-bold text-slate-800 dark:text-white mb-1">Import Expiring Month</h4>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">Pulls expiring leases for the chosen month from ResMan into the sheet, then rebakes the dashboard. Runs ~5-10 min.</p>
+        <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">Expiring month</label>
+        <select id="import-month-select" class="w-full h-9 px-3 rounded-lg bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 text-sm text-slate-800 dark:text-slate-200"></select>
+        <p id="import-status" class="text-xs text-slate-500 dark:text-slate-400 mt-3" style="display:none;"></p>
+        <p id="import-error" class="text-xs text-red-500 mt-2" style="display:none;"></p>
+        <div class="flex items-center justify-end gap-2 mt-4">
+            <button type="button" id="import-cancel" onclick="closeImportModal()" class="h-9 px-4 rounded-lg bg-slate-100 dark:bg-slate-700 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600">Cancel</button>
+            <button type="button" id="import-submit" onclick="submitImport()" class="h-9 px-4 rounded-lg bg-cyan-600 hover:bg-cyan-700 text-sm font-semibold text-white border border-cyan-700">Import</button>
+        </div>
     </div>
 </div>
 
@@ -2207,8 +2227,8 @@ let OFFERS_SUBSET = [];
 let OFFERS_SORT = { col: 'property', dir: 'asc' };
 let OFFERS_SELECTED = new Set();  // __offerIdx values that are currently checked
 
-const OFFERS_PASSWORD = 'SnsRenewals123457$';
-const OFFERS_EDIT_PASSWORD = 'TaliRenewals123457$';
+const OFFERS_PASSWORD = 'Renewals124$';
+const OFFERS_EDIT_PASSWORD = 'Tali124$';
 let OFFERS_EDIT_MODE = false;
 let OFFERS_SAVING = false;
 // key = `${tab}|${unit}|${expMonth}`, value = { newAdj, origAdj, row }
@@ -2363,6 +2383,131 @@ function updateEditToggleButton() {
         label.textContent = 'Edit';
         btn.setAttribute('data-hover-tip', 'Edit Adjustment values inline (password required)');
     }
+    // Import Month button is only visible in edit mode.
+    const importBtn = document.getElementById('offers-import-btn');
+    if (importBtn) {
+        if (OFFERS_EDIT_MODE) {
+            importBtn.classList.remove('hidden');
+            importBtn.classList.add('flex');
+        } else {
+            importBtn.classList.add('hidden');
+            importBtn.classList.remove('flex');
+        }
+    }
+}
+
+// =============================================================================
+// IMPORT EXPIRING MONTH (hidden until edit mode is on)
+// =============================================================================
+let IMPORT_POLL_TIMER = null;
+
+function nextUncoveredMonth() {
+    // Scan all rows for the max Expiring Month, then return the month AFTER it.
+    let maxYm = null;
+    for (const r of (STATE.rows || [])) {
+        const ym = r.expMonthKey; // 'YYYY-MM'
+        if (ym && /^\d{4}-\d{2}$/.test(ym) && (!maxYm || ym > maxYm)) maxYm = ym;
+    }
+    if (!maxYm) {
+        const d = new Date();
+        maxYm = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    }
+    const [y, m] = maxYm.split('-').map(Number);
+    const nextDate = new Date(y, m, 1); // m is next-month index because m is 1-based input, Date month is 0-based
+    return `${nextDate.getFullYear()}-${String(nextDate.getMonth() + 1).padStart(2, '0')}`;
+}
+
+function openImportModal() {
+    if (!OFFERS_EDIT_MODE) return;
+    const select = document.getElementById('import-month-select');
+    const nextYm = nextUncoveredMonth();
+    // Populate the next 12 months starting from nextYm for flexibility.
+    const [y0, m0] = nextYm.split('-').map(Number);
+    select.innerHTML = '';
+    for (let i = 0; i < 12; i++) {
+        const d = new Date(y0, m0 - 1 + i, 1);
+        const ym = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        const label = d.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+        const opt = document.createElement('option');
+        opt.value = ym;
+        opt.textContent = `${label} (${ym})`;
+        select.appendChild(opt);
+    }
+    select.value = nextYm;
+    document.getElementById('import-status').style.display = 'none';
+    document.getElementById('import-error').style.display = 'none';
+    document.getElementById('import-submit').disabled = false;
+    document.getElementById('import-cancel').disabled = false;
+    document.getElementById('import-modal').classList.remove('hidden');
+}
+
+function closeImportModal() {
+    if (IMPORT_POLL_TIMER) { clearTimeout(IMPORT_POLL_TIMER); IMPORT_POLL_TIMER = null; }
+    document.getElementById('import-modal').classList.add('hidden');
+}
+
+async function submitImport() {
+    const month = document.getElementById('import-month-select').value;
+    const err = document.getElementById('import-error');
+    const status = document.getElementById('import-status');
+    // Reload-after-completion would wipe unsaved Adjustment edits.
+    if (OFFERS_PENDING_EDITS && OFFERS_PENDING_EDITS.size > 0) {
+        err.textContent = `You have ${OFFERS_PENDING_EDITS.size} unsaved Adjustment edit${OFFERS_PENDING_EDITS.size > 1 ? 's' : ''}. Save or discard before importing.`;
+        err.style.display = 'block';
+        return;
+    }
+    err.style.display = 'none';
+    status.style.display = 'block';
+    status.textContent = 'Dispatching workflow…';
+    document.getElementById('import-submit').disabled = true;
+    document.getElementById('import-cancel').disabled = true;
+    try {
+        const resp = await fetch('/api/import_expiring_month', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ month, password: OFFERS_EDIT_PASSWORD }),
+        });
+        const body = await resp.json();
+        if (!resp.ok || !body.success) {
+            throw new Error(body.error || `HTTP ${resp.status}`);
+        }
+        status.textContent = `Importing ${month}… (this takes 5-10 min; you can close this and come back)`;
+        document.getElementById('import-cancel').disabled = false;
+        document.getElementById('import-cancel').textContent = 'Close';
+        pollImportStatus(month, Date.now());
+    } catch (e) {
+        err.textContent = `Failed: ${e.message || e}`;
+        err.style.display = 'block';
+        status.style.display = 'none';
+        document.getElementById('import-submit').disabled = false;
+        document.getElementById('import-cancel').disabled = false;
+    }
+}
+
+async function pollImportStatus(month, startedAt) {
+    try {
+        const resp = await fetch('/api/import_status');
+        const body = await resp.json();
+        const status = document.getElementById('import-status');
+        const elapsed = Math.round((Date.now() - startedAt) / 1000);
+        if (body.status === 'completed') {
+            if (body.conclusion === 'success') {
+                status.textContent = `✓ Import of ${month} complete (${elapsed}s). Reloading dashboard…`;
+                setTimeout(() => location.reload(), 2000);
+            } else {
+                const err = document.getElementById('import-error');
+                err.innerHTML = `Workflow finished with "${body.conclusion}". <a href="${body.htmlUrl}" target="_blank" class="underline">View run →</a>`;
+                err.style.display = 'block';
+                status.style.display = 'none';
+                document.getElementById('import-submit').disabled = false;
+            }
+            return;
+        }
+        status.textContent = `Importing ${month}… ${body.status || 'queued'} (${elapsed}s elapsed)`;
+    } catch (e) {
+        // Soft-fail polling; will retry on next tick.
+    }
+    IMPORT_POLL_TIMER = setTimeout(() => pollImportStatus(month, startedAt), 10000);
 }
 
 // Push every pending edit to the sheet in ONE batch request. Keeps rows that
