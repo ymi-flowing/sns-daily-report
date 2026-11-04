@@ -374,15 +374,135 @@ const rows = await resp.json();
 
 ## When answering a user, prefer these patterns
 
-- "How is the portfolio doing?" → `portfolio_snapshots`, latest date.
-- "Compare properties on X" → `property_snapshots`, filter to one date.
-- "Trend X over time" → `property_snapshots` or `portfolio_snapshots`, ordered.
-- "What changed yesterday for X?" → `property_daily_deltas` for the `delta_*` columns.
-- "Monthly MTD question" → always query the latest `snapshot_date` of that month;
-  don't try to sum daily rows — these are cumulative counters.
+- "How is the portfolio doing?" -> `portfolio_snapshots`, latest date.
+- "Compare properties on X" -> `property_snapshots`, filter to one date.
+- "Trend X over time" -> `property_snapshots` or `portfolio_snapshots`, ordered.
+- "What changed yesterday for X?" -> `property_daily_deltas` for the `delta_*` columns.
+- "Monthly MTD question" -> always query the latest `snapshot_date` of that month;
+  don't try to sum daily rows -- these are cumulative counters.
 
 Always surface the **date** of the data you're quoting ("as of 2026-11-03")
 so the user knows how fresh the answer is.
+
+---
+
+## Finding trends and valuable data points
+
+Your primary job is not to recite numbers -- it's to **identify what matters** and
+explain why. Use these four lenses on every answer, and the recipes below when a
+question lets you go hunting for signals.
+
+### The four lenses
+
+Every data point has four dimensions. A number without all four is just trivia.
+
+1. **Direction** -- up, down, or flat? Over what window? Accelerating or decelerating?
+2. **Magnitude** -- how big relative to the property's size? A 5-unit swing on
+   `ROP` (105 units) is huge; same swing on `ORT` (444 units) is noise.
+3. **Context** -- is this normal for this property, this month, this week of month?
+   Compare against: previous day, 7-day trailing avg, same-day-last-week,
+   month-start, portfolio median, and (when it exists) same month last year.
+4. **Actionability** -- can SNS do something about this in the next 7 days?
+   Rising vacancy with falling prospects -> marketing lever. Delinquency spike in
+   current residents -> collections lever. Expiring leases without renewals offered
+   3 months out -> renewal team lever. If no lever exists, say so and surface it
+   as "monitor, don't act".
+
+### Baselines worth comparing against
+
+For any point-in-time metric, build the comparison set before answering:
+
+| Baseline | Query shape |
+|---|---|
+| **Previous day** | `property_daily_deltas` -- already computed |
+| **7-day trailing avg** | pull 7 rows ending yesterday, average client-side |
+| **Same day last week** | `snapshot_date=eq.<today - 7 days>` |
+| **Start of month** | `snapshot_date=eq.<first-of-month>` |
+| **Month-to-date trajectory** | days elapsed vs days remaining, scale the MTD counter |
+| **Portfolio median (same date)** | pull all 9 properties for the date, take median |
+| **Property's own recent peak / trough** | `order=metric.desc&limit=1` with a date range |
+
+**The cumulative-vs-daily trap:** MTD columns (`prospects_mtd`, `signed_leases_mtd`,
+`applicants_mtd`, `income_total`, `credit_total`) are **running totals that reset
+on the 1st**. Never subtract two MTD values across a month boundary without first
+considering the reset. The `property_daily_deltas` view handles this correctly;
+hand-rolled queries must.
+
+### Rate-of-change over a window (trend slope)
+
+To answer "is X improving?" don't compare just two days -- fit a line (or at least
+compare first-week to latest-week means). For a 14-day window:
+
+```
+GET /rest/v1/property_snapshots
+    ?property_abbr=eq.AP
+    &snapshot_date=gte.<today - 13 days>
+    &select=snapshot_date,physical_occupancy_pct
+    &order=snapshot_date.asc
+```
+
+Then compare the mean of the first 7 rows vs the last 7. A positive gap >= 0.5 pts
+is a real uptrend; <= -0.5 is a real downtrend; between is noise.
+
+### Signals worth flagging (specific thresholds)
+
+When scanning the latest snapshot, these combinations are worth surfacing even
+if the user didn't ask for them. They usually indicate a problem the team
+should look at.
+
+| Signal | Threshold | Likely cause |
+|---|---|---|
+| Occupancy dropped > 1.5 pts week-over-week | `physical_occupancy_pct` | Move-outs outpacing move-ins |
+| Vacant Ready + Vacant Not Ready > 10% of total | `(vacant_ready + vacant_not_ready) / total_units > 0.10` | Backlog building, marketing/make-ready pressure |
+| `vacant_leased` < 50% of `vacant_ready` | ratio | Pre-leasing engine stalled |
+| `prospects_mtd` pace < last month's pace at same day-of-month | compute pace ratio | Lead-gen falling off |
+| `conversion_rate_pct` < 2% (post-2026-10-28) | threshold | Funnel leak between prospect and signed |
+| `applicants_mtd_cancelled` / `applicants_mtd` > 30% | ratio | Qualification/experience issue |
+| `delinquency_pct` jumped > 2 pts day-over-day | `property_daily_deltas` | Collections event or large charge posted |
+| `delinq_eviction_count` rising for 3+ consecutive days | trend | Eviction pipeline building |
+| `work_orders_new_24h` > 2x trailing 7-day avg | spike | Maintenance event (storm, system failure) |
+| `exp_mN_renewal_pct` < 40% for a bucket within 60 days | forward look | Renewal team needs to push |
+| `future_mo_count` > `future_mi_count` x 1.5 | ratio | Net move-out month, projected occupancy drop |
+| `off_market` > 5% of total | share | Listing coverage gap -- marketing side |
+| NTV share (`ntv / total`) rising week-over-week | trend | Pre-indicator of future vacancy wave |
+
+### Playbooks for common asks
+
+**"How's the week been?"** -- pull 7 days of `portfolio_snapshots`; cite the delta
+in `physical_occupancy_pct`, the delta in `signed_leases_mtd` (today vs 7 days ago
+only if same month -- else use last 7 days of daily deltas summed), and any
+property with a flag from the table above.
+
+**"Which property should we worry about?"** -- latest-date snapshot for all 9;
+compute each property's distance from portfolio median on 3 metrics (occupancy,
+delinquency_pct, exp_m1_renewal_pct). The property that's worst on 2+ is the
+answer.
+
+**"Where are we landing this month?"** -- for each MTD counter on the latest date,
+multiply by `days_in_month / days_elapsed_so_far` for a straight-line projection.
+Say "if the current pace holds" -- straight-line is a lower bound when the pace
+is accelerating, upper bound when decelerating.
+
+**"What changed overnight?"** -- `property_daily_deltas` for the latest date,
+filter for non-zero deltas, sort by absolute delta magnitude, surface the top 3.
+
+**"Is leasing healthy?"** -- cross-reference `prospects_mtd`, `applicants_mtd`,
+`signed_leases_mtd`, `conversion_rate_pct`. A healthy funnel has prospects ->
+applicants >= ~15%, applicants -> signed >= ~50%. Breakage at either stage is
+worth calling out.
+
+### How to frame an insight
+
+Bad answer: *"AP had 160 prospects in October."*
+Good answer: *"AP generated 160 prospects in October -- that's 23% above the
+portfolio's per-unit average (0.78 prospects per unit vs 0.63 portfolio-wide),
+suggesting marketing is pulling its weight. But only 7 of those converted to
+signed leases (4.4%), which is below the 6-8% healthy range. The gap is in the
+middle of the funnel -- `applicants_mtd` = 23 but `applicants_mtd_cancelled` = 8
+(35% cancellation), so applications are coming in and being abandoned before
+decision. Worth looking at what's happening between application and approval."*
+
+Lead with the number, follow with the comparison, end with the actionable gap.
 
 ---
 
