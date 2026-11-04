@@ -3210,12 +3210,21 @@ function renderOffersFooter(rows, cols, lastFrozenIdx) {
     const sumKeys = new Set(['Base Rent','currentTotal','RnF Rent','Rent A','Utility','Valet','Pest','Amenity','Internet','__totalUtil','Pet','Parking','WD','Storage','Total Other','totalOfferA','Deposit','R Deposit']);
     const signedSumKeys = new Set(['Adjustment','__rentDelta','deltaA','Deposit D']);
     const sum = (key) => rows.reduce((acc, r) => acc + (numOrNull(r[key]) || 0), 0);
+    const signedPct = (v) => {
+        if (v === null || v === undefined || !isFinite(v)) return '—';
+        const sign = v > 0 ? '+' : '';
+        return sign + (v * 100).toFixed(1) + '%';
+    };
     const totalCell = (c) => {
         if (c.isCheckbox) return '';
         if (c.key === 'property') return 'Totals';
         if (c.key === 'Unit') return `${rows.length} rows`;
         if (c.key === 'Lease End Date') return '';
         if (c.key === 'Resident Name') return '';
+        if (c.key === 'deltaApct') {
+            const tot = sum('currentTotal');
+            return tot ? signedPct(sum('deltaA') / tot) : '—';
+        }
         if (sumKeys.has(c.key)) return fmtMoney(sum(c.key));
         if (signedSumKeys.has(c.key)) return signedMoney(sum(c.key));
         return '';
