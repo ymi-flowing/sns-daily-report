@@ -1,7 +1,7 @@
 {
   "month": "2026-11",
   "monthLabel": "November 2026",
-  "generatedAt": "2026-11-03T14:46:48-05:00",
+  "generatedAt": "2026-11-03T19:27:19-05:00",
   "properties": {
     "ROP": {
       "current": 0,
@@ -49,13 +49,13 @@
       "renewalPct": 86.7
     },
     "EAST": {
-      "current": 1,
-      "pendingRenewal": 1,
+      "current": 0,
+      "pendingRenewal": 2,
       "renewed": 17,
-      "ntvFormers": 7,
-      "underEviction": 1,
+      "ntvFormers": 8,
+      "underEviction": 0,
       "total": 27,
-      "renewalPct": 65.4
+      "renewalPct": 68.0
     },
     "ORT": {
       "current": 0,
@@ -68,30 +68,30 @@
     },
     "49thStr": {
       "current": 0,
-      "pendingRenewal": 0,
+      "pendingRenewal": 1,
       "renewed": 10,
-      "ntvFormers": 7,
+      "ntvFormers": 6,
       "underEviction": 0,
       "total": 17,
-      "renewalPct": 58.8
+      "renewalPct": 62.5
     },
     "AP": {
       "current": 0,
       "pendingRenewal": 0,
-      "renewed": 11,
-      "ntvFormers": 9,
+      "renewed": 12,
+      "ntvFormers": 8,
       "underEviction": 0,
       "total": 20,
-      "renewalPct": 55.0
+      "renewalPct": 60.0
     }
   },
   "portfolio": {
-    "current": 1,
-    "pendingRenewal": 1,
-    "renewed": 91,
-    "ntvFormers": 49,
-    "underEviction": 3,
+    "current": 0,
+    "pendingRenewal": 3,
+    "renewed": 92,
+    "ntvFormers": 48,
+    "underEviction": 2,
     "total": 145,
-    "renewalPct": 63.2
+    "renewalPct": 64.8
   }
 }
