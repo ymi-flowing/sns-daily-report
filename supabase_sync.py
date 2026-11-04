@@ -126,8 +126,17 @@ def property_snapshot_from_data_json(data, abbr, snapshot_date, source="live"):
     receivable = _n(income.get("receivable_mtd"))
     net = charge - credit
 
-    prospects = _i(traffic.get("total"))
+    # Traffic can be missing (CRM sheet dark, pipeline hiccup). Emit NULL,
+    # not 0, so trend analysis can distinguish "unknown" from "no activity".
+    prospects_raw = traffic.get("total")
+    if prospects_raw is None:
+        prospects = None
+        daily_avg = None
+    else:
+        prospects = _i(prospects_raw)
+        daily_avg = _n(traffic.get("daily_avg"))
     signed_mtd = _i(leases.get("signed_leases_mtd"))
+    conv_pct = _conv_pct(prospects, signed_mtd) if prospects is not None else None
 
     row = {
         "snapshot_date": snapshot_date.isoformat() if isinstance(snapshot_date, date) else str(snapshot_date),
@@ -153,9 +162,9 @@ def property_snapshot_from_data_json(data, abbr, snapshot_date, source="live"):
 
         # Traffic MTD
         "prospects_mtd": prospects,
-        "daily_avg_prospects": _n(traffic.get("daily_avg")),
+        "daily_avg_prospects": daily_avg,
         "signed_leases_mtd": signed_mtd,
-        "conversion_rate_pct": _conv_pct(prospects, signed_mtd),
+        "conversion_rate_pct": conv_pct,
         "applicants_mtd": _i(leases.get("applicants_mtd")),
         "applicants_mtd_approved": _i(leases.get("applicants_mtd_approved")),
         "applicants_mtd_denied": _i(leases.get("applicants_mtd_denied")),

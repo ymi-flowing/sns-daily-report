@@ -123,7 +123,7 @@ resets). This correctly distinguishes "zero activity today" from "fresh month".
 | `applicants_mtd_approved` | int | approved MTD |
 | `applicants_mtd_denied` | int | denied MTD |
 | `applicants_mtd_cancelled` | int | cancelled MTD |
-| `applicants_mtd_active` | int | still-active applicants from MTD |
+| `applicants_mtd_active` | int | **not strictly cumulative** -- applicants from this month who are still in the "pending/approved/signed" state (undecided or mid-pipeline). This counter **goes DOWN** within a month as applicants get decided (approved/denied/cancelled move them out of "active"). A drop here is normal pipeline flow, not a data issue. |
 
 ⚠️ **Data gap:** rows with `snapshot_date` between `2026-10-01` and `2026-10-27`
 have NULL for `applicants_mtd`, `applicants_mtd_approved`, `applicants_mtd_denied`,
@@ -423,10 +423,24 @@ For any point-in-time metric, build the comparison set before answering:
 | **Property's own recent peak / trough** | `order=metric.desc&limit=1` with a date range |
 
 **The cumulative-vs-daily trap:** MTD columns (`prospects_mtd`, `signed_leases_mtd`,
-`applicants_mtd`, `income_total`, `credit_total`) are **running totals that reset
-on the 1st**. Never subtract two MTD values across a month boundary without first
-considering the reset. The `property_daily_deltas` view handles this correctly;
-hand-rolled queries must.
+`applicants_mtd`, `applicants_mtd_approved/denied/cancelled`, `income_total`,
+`credit_total`) are **running totals that reset on the 1st**. Never subtract two
+MTD values across a month boundary without first considering the reset. The
+`property_daily_deltas` view handles this correctly; hand-rolled queries must.
+
+**The `applicants_mtd_active` exception:** this one is *not* strictly cumulative --
+it's the count of this-month's applicants who are still undecided. It goes DOWN
+within a month as decisions happen. Don't treat a drop as a data gap.
+
+**The income mid-month blip:** small downticks in `income_total` or `credit_total`
+mid-month are usually real accounting adjustments in ResMan (credit postings,
+charge reversals, prorations). Not pipeline bugs. Only flag if the drop is
+large (> 2% of the running total) and persists.
+
+**The NULL semantics:** `prospects_mtd` / `daily_avg_prospects` are **NULL when
+the traffic source was unavailable** (CRM sheet dark, pipeline hiccup), not when
+there were zero prospects. If a value is 0 in these columns, zero leads really
+did come in. If it's NULL, we didn't capture the data. Always distinguish.
 
 ### Rate-of-change over a window (trend slope)
 
