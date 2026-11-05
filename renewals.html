@@ -858,6 +858,17 @@
         <div id="offers-filter-panel" class="hidden border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50">
             <div class="flex flex-wrap items-center gap-3 p-3">
                 <span class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 pr-1">Offers Filters</span>
+                <div class="multi-wrap" id="offers-filter-month">
+                    <button class="multi-trigger" data-key="month">
+                        <span class="label">Expiring Month</span>
+                        <span class="count-badge hidden">0</span>
+                        <svg class="w-3 h-3 ml-auto" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg>
+                    </button>
+                    <div class="multi-panel hidden">
+                        <div class="multi-actions"><button data-action="all">All</button><button data-action="none">None</button></div>
+                        <div class="multi-list"></div>
+                    </div>
+                </div>
                 <div class="multi-wrap" id="offers-filter-property">
                     <button class="multi-trigger" data-key="property">
                         <span class="label">Property</span>
@@ -872,17 +883,6 @@
                 <div class="multi-wrap" id="offers-filter-status">
                     <button class="multi-trigger" data-key="status">
                         <span class="label">Status</span>
-                        <span class="count-badge hidden">0</span>
-                        <svg class="w-3 h-3 ml-auto" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg>
-                    </button>
-                    <div class="multi-panel hidden">
-                        <div class="multi-actions"><button data-action="all">All</button><button data-action="none">None</button></div>
-                        <div class="multi-list"></div>
-                    </div>
-                </div>
-                <div class="multi-wrap" id="offers-filter-month">
-                    <button class="multi-trigger" data-key="month">
-                        <span class="label">Expiring Month</span>
                         <span class="count-badge hidden">0</span>
                         <svg class="w-3 h-3 ml-auto" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg>
                     </button>
