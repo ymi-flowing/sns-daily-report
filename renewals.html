@@ -88,6 +88,12 @@
         #offers-table thead .col-icon.col-pin-active:hover { color: #0891b2; }
         .dark #offers-table thead .col-icon.col-pin-active { color: #22d3ee; }
         .dark #offers-table thead .col-icon.col-pin-active:hover { color: #67e8f9; }
+        /* Drag-reorder affordances */
+        #offers-table thead .col-label-row { cursor: grab; }
+        #offers-table thead .col-label-row:active { cursor: grabbing; }
+        #offers-table thead th.col-drop-before { box-shadow: inset 3px 0 0 0 #06b6d4; }
+        #offers-table thead th.col-drop-after  { box-shadow: inset -3px 0 0 0 #06b6d4; }
+        #offers-table thead th.col-dragging { opacity: 0.5; }
         #offers-table thead .col-icon svg { width: 100%; height: 100%; }
         #offers-table thead .col-label-row {
             display: flex; align-items: center; justify-content: center;
@@ -2415,14 +2421,31 @@ const OFFERS_DEFAULT_FROZEN = ['__chk', 'property', 'Unit', 'Lease End Date'];
 const OFFERS_UNHIDEABLE = new Set(['__chk']);
 let OFFERS_FROZEN = new Set(OFFERS_DEFAULT_FROZEN);
 let OFFERS_HIDDEN = new Set();
+// User-controlled column order. Drag-and-drop on column headers updates this
+// array. __chk is pinned first and cannot be moved. New columns added to
+// OFFER_COLUMNS after the user has a saved order are appended to the end.
+let OFFERS_COLUMN_ORDER = OFFER_COLUMNS.map(c => c.key);
 try {
     const f = JSON.parse(localStorage.getItem('offers_frozen') || 'null');
     if (Array.isArray(f)) OFFERS_FROZEN = new Set(f);
     const h = JSON.parse(localStorage.getItem('offers_hidden') || 'null');
     if (Array.isArray(h)) OFFERS_HIDDEN = new Set(h);
+    const o = JSON.parse(localStorage.getItem('offers_column_order') || 'null');
+    if (Array.isArray(o) && o.length) {
+        const known = new Set(OFFER_COLUMNS.map(c => c.key));
+        const filtered = o.filter(k => known.has(k));
+        // Append any new columns not present in the stored order.
+        for (const k of OFFER_COLUMNS.map(c => c.key)) {
+            if (!filtered.includes(k)) filtered.push(k);
+        }
+        OFFERS_COLUMN_ORDER = filtered;
+    }
 } catch (_) {}
 OFFERS_FROZEN.add('__chk'); // always frozen
 OFFERS_HIDDEN.delete('__chk'); // never hidden
+// __chk must be first.
+OFFERS_COLUMN_ORDER = OFFERS_COLUMN_ORDER.filter(k => k !== '__chk');
+OFFERS_COLUMN_ORDER.unshift('__chk');
 
 function saveFrozenHidden() {
     try {
@@ -2431,14 +2454,45 @@ function saveFrozenHidden() {
     } catch (_) {}
 }
 
-// Returns the columns to render, in display order:
-//   [all frozen in original OFFER_COLUMNS order, then all unfrozen in order],
-// with hidden columns removed.
+function saveColumnOrder() {
+    try {
+        localStorage.setItem('offers_column_order', JSON.stringify(OFFERS_COLUMN_ORDER));
+    } catch (_) {}
+}
+
+// Returns the columns to render, in user-controlled display order with all
+// frozen columns pushed to the front (within the user's order) and hidden
+// columns removed.
 function effectiveColumns() {
-    const visible = OFFER_COLUMNS.filter(c => !OFFERS_HIDDEN.has(c.key));
+    const byKey = Object.fromEntries(OFFER_COLUMNS.map(c => [c.key, c]));
+    const ordered = OFFERS_COLUMN_ORDER.map(k => byKey[k]).filter(Boolean);
+    const visible = ordered.filter(c => !OFFERS_HIDDEN.has(c.key));
     const frozen = visible.filter(c => OFFERS_FROZEN.has(c.key));
     const rest   = visible.filter(c => !OFFERS_FROZEN.has(c.key));
     return [...frozen, ...rest];
+}
+
+// Drag-reorder: move `srcKey` to the slot of `dstKey` in OFFERS_COLUMN_ORDER.
+// If src and dst are in different groups (frozen vs unfrozen), src's frozen
+// state is toggled to match dst's so columns visually land where dropped.
+function reorderOfferColumn(srcKey, dstKey) {
+    if (!srcKey || !dstKey || srcKey === dstKey) return;
+    if (srcKey === '__chk' || dstKey === '__chk') return; // __chk pinned
+    const srcIdx = OFFERS_COLUMN_ORDER.indexOf(srcKey);
+    const dstIdx = OFFERS_COLUMN_ORDER.indexOf(dstKey);
+    if (srcIdx < 0 || dstIdx < 0) return;
+    const srcFrozen = OFFERS_FROZEN.has(srcKey);
+    const dstFrozen = OFFERS_FROZEN.has(dstKey);
+    if (srcFrozen !== dstFrozen) {
+        if (dstFrozen) OFFERS_FROZEN.add(srcKey);
+        else OFFERS_FROZEN.delete(srcKey);
+        saveFrozenHidden();
+    }
+    OFFERS_COLUMN_ORDER.splice(srcIdx, 1);
+    const newDstIdx = OFFERS_COLUMN_ORDER.indexOf(dstKey);
+    OFFERS_COLUMN_ORDER.splice(newDstIdx, 0, srcKey);
+    saveColumnOrder();
+    renderOffersBody();
 }
 
 function toggleColumnFrozen(key) {
@@ -3092,7 +3146,7 @@ function renderOffersBody() {
                         <button type="button" class="col-icon col-pin${pinCls}" data-col-pin="${c.key}" title="${frozen ? 'Unfreeze' : 'Freeze'} column">${PIN_SVG}</button>
                         <button type="button" class="col-icon col-hide" data-col-hide="${c.key}" title="Hide column">${EYE_OFF_SVG}</button>
                     </div>
-                    <div class="col-label-row" data-col-sort="${c.key}">${c.label}<span class="arrow">${arrow}</span></div>
+                    <div class="col-label-row" draggable="true" data-col-sort="${c.key}" title="Drag to reorder · click to sort">${c.label}<span class="arrow">${arrow}</span></div>
                 </th>`;
     }).join('')}</tr>`;
     // Sort on label-row click (not on the icon buttons).
@@ -3109,6 +3163,45 @@ function renderOffersBody() {
     });
     thead.querySelectorAll('[data-col-hide]').forEach(el => {
         el.addEventListener('click', (e) => { e.stopPropagation(); toggleColumnHidden(el.dataset.colHide); });
+    });
+    // Drag-reorder: label-row is the drag source, the <th> is the drop target.
+    // Drop position is before/after the target depending on which half of the
+    // th the pointer is in. __chk is pinned and participates in neither.
+    thead.querySelectorAll('.col-label-row').forEach(el => {
+        el.addEventListener('dragstart', (e) => {
+            const th = el.closest('th');
+            const key = th && th.dataset.col;
+            if (!key || key === '__chk') { e.preventDefault(); return; }
+            e.dataTransfer.setData('text/plain', key);
+            e.dataTransfer.effectAllowed = 'move';
+            th.classList.add('col-dragging');
+        });
+        el.addEventListener('dragend', () => {
+            thead.querySelectorAll('th').forEach(th => {
+                th.classList.remove('col-dragging', 'col-drop-before', 'col-drop-after');
+            });
+        });
+    });
+    thead.querySelectorAll('th[data-col]').forEach(th => {
+        if (th.dataset.col === '__chk') return;
+        th.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            const rect = th.getBoundingClientRect();
+            const before = (e.clientX - rect.left) < rect.width / 2;
+            th.classList.toggle('col-drop-before', before);
+            th.classList.toggle('col-drop-after', !before);
+        });
+        th.addEventListener('dragleave', () => {
+            th.classList.remove('col-drop-before', 'col-drop-after');
+        });
+        th.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const srcKey = e.dataTransfer.getData('text/plain');
+            const dstKey = th.dataset.col;
+            th.classList.remove('col-drop-before', 'col-drop-after');
+            reorderOfferColumn(srcKey, dstKey);
+        });
     });
     const chkAll = thead.querySelector('#offers-chk-all');
     if (chkAll) {
@@ -3241,12 +3334,15 @@ function renderOffersFooter(rows, cols, lastFrozenIdx) {
 // Updates both the modal-snapshot row AND its __origRef in STATE.rows so the
 // main dashboard reflects the edit immediately.
 function recomputeAfterAdjustment(subsetRow, newAdj) {
+    // newAdj may be null (cell cleared) — treat as 0 for math but preserve null
+    // on the Adjustment field so the cell renders as '—' not '$0'.
+    const adjForMath = newAdj === null ? 0 : newAdj;
     const rnf = numOrNull(subsetRow['RnF Rent']) || 0;
     const base = numOrNull(subsetRow['Base Rent']) || 0;
     const totalOther = numOrNull(subsetRow['Total Other']) || 0;
     const currentTotal = numOrNull(subsetRow['Current Total']) || 0;
 
-    const rentA = rnf + newAdj;
+    const rentA = rnf + adjForMath;
     const totalOfferA = rentA + totalOther;
     const deltaA = totalOfferA - currentTotal;
     const deltaApct = currentTotal ? (deltaA / currentTotal) : 0;
@@ -3316,16 +3412,18 @@ function beginAdjustmentEdit(cellEl, row, allCells) {
         if (settled) return;
         settled = true;
         const raw = inp.value.trim();
+        // Empty / "-" / "." == clear the cell (newAdj=null).
+        let newAdj;
         if (raw === '' || raw === '-' || raw === '.') {
-            renderOffersBody();
-            focusSibling(advance);
-            return;
-        }
-        const newAdj = Number(raw);
-        if (!Number.isFinite(newAdj)) {
-            renderOffersBody();
-            focusSibling(0);
-            return;
+            newAdj = null;
+        } else {
+            const n = Number(raw);
+            if (!Number.isFinite(n)) {
+                renderOffersBody();
+                focusSibling(0);
+                return;
+            }
+            newAdj = n;
         }
         const key = pendingKey(row);
         const existing = OFFERS_PENDING_EDITS.get(key);

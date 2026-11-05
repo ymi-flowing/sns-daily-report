@@ -107,15 +107,21 @@ class handler(BaseHTTPRequestHandler):
             return self._send_json(500, {"error": "SHEETS_WEBHOOK_URL or SHARED_SECRET missing"})
 
         # Normalise + validate input into index-preserving records.
+        # adjustment=None (JSON null) means "clear the cell"; any other
+        # non-numeric value is rejected. We distinguish the two via "invalid".
         normed = []
         for e in edits:
             tab = (e.get("tab") or "").strip()
             unit = str(e.get("unit") or "").strip()
             exp_month = _norm_month(e.get("expMonth"))
-            try:
-                adj = float(e.get("adjustment"))
-            except (TypeError, ValueError):
-                adj = None
+            raw_adj = e.get("adjustment")
+            if raw_adj is None:
+                adj = None  # explicit clear
+            else:
+                try:
+                    adj = float(raw_adj)
+                except (TypeError, ValueError):
+                    adj = "__invalid__"
             normed.append({
                 "tab": tab,
                 "unit": unit,
@@ -165,8 +171,8 @@ class handler(BaseHTTPRequestHandler):
             if not tab or not unit or not exp_month:
                 results.append({**base, "ok": False, "error": "missing tab/unit/expMonth"})
                 continue
-            if adj is None:
-                results.append({**base, "ok": False, "error": "adjustment must be a number"})
+            if adj == "__invalid__":
+                results.append({**base, "ok": False, "error": "adjustment must be a number or null"})
                 continue
             if tab in tab_errors:
                 results.append({**base, "ok": False, "error": tab_errors[tab]})
@@ -180,12 +186,13 @@ class handler(BaseHTTPRequestHandler):
                 continue
             sheet_row = matches[0]
             cell = f"N{sheet_row}"
+            cell_val = "" if adj is None else adj
             try:
                 _post_webhook({
                     "action": "set_range",
                     "tab": tab,
                     "range": cell,
-                    "values": [[adj]],
+                    "values": [[cell_val]],
                     "mode": "values",
                     "secret": SHARED_SECRET,
                 })
