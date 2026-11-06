@@ -44,6 +44,18 @@
       "firstSeen": "2026-10-30",
       "lastMsg": "Lease ends in 22d \u2014 renewal not signed"
     },
+    "EAST|pendingInRealUnitList|c11b50c2-beb7-4598-b9f6-f9ce6f55727a": {
+      "firstSeen": "2026-11-06",
+      "lastMsg": "Pending applicant in a real unit"
+    },
+    "EAST|pendingInRealUnitList|d9fae18e-1008-4924-8edc-a76d0811c3c3": {
+      "firstSeen": "2026-11-06",
+      "lastMsg": "Pending applicant in a real unit"
+    },
+    "EAST|vacantLeasedList|d9fae18e-1008-4924-8edc-a76d0811c3c3": {
+      "firstSeen": "2026-11-06",
+      "lastMsg": "Past Move-In Date"
+    },
     "MOC|vacantNotReadyList|7845826a-3e00-4318-b152-82072a8712ab": {
       "firstSeen": "2026-11-06",
       "lastMsg": "Past Available Date"
