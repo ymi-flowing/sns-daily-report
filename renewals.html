@@ -39,9 +39,11 @@
 
         #offers-table .col-frozen { position: sticky; z-index: 2; }
         #offers-table thead th.col-frozen { z-index: 3; }
-        /* Inter-frozen borders must be opaque — a semi-transparent border
-           between two sticky cells lets scrolled rows peek through. */
-        #offers-table tbody td.col-frozen { border-right-color: transparent; }
+        /* Eliminate the inter-frozen border entirely. A transparent border
+           still occupies 1px of layout space, which lets scrolled body rows
+           show through the gap between two adjacent frozen columns.
+           applyStickyLefts re-measures offsetWidth so cells still butt flush. */
+        #offers-table tbody td.col-frozen:not(.col-frozen-last) { border-right: 0; }
         #offers-table .col-frozen-last {
             border-right: 1px solid rgba(100, 116, 139, 0.25) !important;
         }
