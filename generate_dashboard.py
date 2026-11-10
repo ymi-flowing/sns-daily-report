@@ -2834,7 +2834,13 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
             if (category === 'applicants' || category === 'expiring' || category === 'applicantsMtd') {{
                 popupHasFilters = true;
                 popupActiveFilters = new Set();  // empty = all statuses (alerts convention)
-                if (preFilter) popupActiveFilters.add(preFilter);
+                if (preFilter) {{
+                    if (Array.isArray(preFilter)) {{
+                        preFilter.forEach(f => popupActiveFilters.add(f));
+                    }} else {{
+                        popupActiveFilters.add(preFilter);
+                    }}
+                }}
                 popupStatusDropdownOpen = false;
                 renderPopupStatusFilter();
                 filtersContainer.classList.remove('hidden');
@@ -3734,7 +3740,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
                             const alertBg = alertInfo ? 'bg-red-100 dark:bg-blue-900/40' : '';
                             const isClickable = row.popupCategory && val > 0;
                             if (isClickable) {{
-                                const filterArg = row.popupFilter ? `, null, '${{row.popupFilter}}'` : '';
+                                const filterArg = row.popupFilter ? `, null, ${{JSON.stringify(row.popupFilter)}}` : '';
                                 tr += `<td class="px-2 py-2 text-center ${{row.color}} ${{alertBg}} cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/50" onclick="showPopup('${{row.popupCategory}}', '${{abbr}}'${{filterArg}})">${{val}}${{suffix}}</td>`;
                             }} else {{
                                 tr += `<td class="px-2 py-2 text-center ${{row.color}} ${{alertBg}}">${{val}}${{suffix}}</td>`;
@@ -3798,11 +3804,11 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
                    getAlert: applicantAlertSummary,
                    getTotal: () => totals.totalApplicants }},
                 {{ label: 'Pending Approval', color: 'text-amber-600 dark:text-amber-400',
-                   getValue: abbr => (leasesData[abbr]?.pending_approval || 0), getTotal: () => totals.pendingApproval }},
+                   getValue: abbr => (leasesData[abbr]?.pending_approval || 0), popupCategory: 'applicants', popupFilter: 'Pending', getTotal: () => totals.pendingApproval }},
                 {{ label: 'Approved', color: 'text-cyan-600 dark:text-cyan-400',
-                   getValue: abbr => (leasesData[abbr]?.approved || 0), getTotal: () => totals.approved }},
+                   getValue: abbr => (leasesData[abbr]?.approved || 0), popupCategory: 'applicants', popupFilter: 'Approved', getTotal: () => totals.approved }},
                 {{ label: 'Signed Lease', color: 'text-emerald-600 dark:text-emerald-400',
-                   getValue: abbr => (leasesData[abbr]?.signed_lease || 0), getTotal: () => totals.signedLease }},
+                   getValue: abbr => (leasesData[abbr]?.signed_lease || 0), popupCategory: 'applicants', popupFilter: 'Signed', getTotal: () => totals.signedLease }},
             ];
 
             renderSection('traffic-mtd-matrix-table', mtdRows);
@@ -3864,12 +3870,14 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
             headerRow2 += '<th class="px-2 py-2 text-center font-bold bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-white w-[65px]">Portfolio</th></tr>';
 
             // Status definitions - matches Python logic
+            // popupFilter: data-side status string(s) used to pre-filter the popup when
+            // a cell is clicked. "NTV/Formers" is a UI aggregate over 3 raw statuses.
             const statuses = [
-                {{ key: 'Current', color: 'text-slate-600 dark:text-slate-400' }},
-                {{ key: 'Pending Renewal', color: 'text-amber-600 dark:text-amber-400' }},
-                {{ key: 'Renewed', color: 'text-emerald-600 dark:text-emerald-400' }},
-                {{ key: 'NTV/Formers', color: 'text-orange-600 dark:text-orange-400', tooltip: 'NTV + Evicted + Formers with move-out in past 3 months' }},
-                {{ key: 'Under Eviction', color: 'text-red-600 dark:text-red-400' }}
+                {{ key: 'Current', color: 'text-slate-600 dark:text-slate-400', popupFilter: 'Current' }},
+                {{ key: 'Pending Renewal', color: 'text-amber-600 dark:text-amber-400', popupFilter: 'Pending Renewal' }},
+                {{ key: 'Renewed', color: 'text-emerald-600 dark:text-emerald-400', popupFilter: 'Renewed' }},
+                {{ key: 'NTV/Formers', color: 'text-orange-600 dark:text-orange-400', tooltip: 'NTV + Evicted + Formers with move-out in past 3 months', popupFilter: ['NTV', 'Evicted', 'Former'] }},
+                {{ key: 'Under Eviction', color: 'text-red-600 dark:text-red-400', popupFilter: 'Under Eviction' }}
             ];
 
             // Build rows for each month (current + next 3 = 4 months)
@@ -3939,7 +3947,11 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
                         let propTotal = 0;
                         statuses.forEach(s => {{ propTotal += expData[s.key] || 0; }});
                         grandTotal += propTotal;
-                        tr += `<td class="px-2 py-2 text-center font-bold text-slate-700 dark:text-slate-200">${{propTotal}}</td>`;
+                        if (propTotal > 0) {{
+                            tr += `<td class="px-2 py-2 text-center font-bold text-slate-700 dark:text-slate-200 cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/50" onclick="showPopup('expiring', '${{abbr}}', '${{monthKey}}')">${{propTotal}}</td>`;
+                        }} else {{
+                            tr += `<td class="px-2 py-2 text-center font-bold text-slate-700 dark:text-slate-200">${{propTotal}}</td>`;
+                        }}
                     }});
                 }});
 
@@ -3961,7 +3973,12 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
                             const expData = leasesData[abbr]?.expiring?.[monthKey] || {{}};
                             const val = expData[status.key] || 0;
                             rowTotal += val;
-                            tr += `<td class="px-2 py-2 text-center ${{val > 0 ? status.color : 'text-slate-400 dark:text-slate-500'}}">${{val}}</td>`;
+                            if (val > 0 && status.popupFilter) {{
+                                const filterArg = JSON.stringify(status.popupFilter);
+                                tr += `<td class="px-2 py-2 text-center ${{status.color}} cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/50" onclick="showPopup('expiring', '${{abbr}}', '${{monthKey}}', ${{filterArg}})">${{val}}</td>`;
+                            }} else {{
+                                tr += `<td class="px-2 py-2 text-center ${{val > 0 ? status.color : 'text-slate-400 dark:text-slate-500'}}">${{val}}</td>`;
+                            }}
                         }});
                     }});
 
