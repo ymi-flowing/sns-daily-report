@@ -15,10 +15,10 @@ from openpyxl.utils import get_column_letter
 
 
 PROPERTY_GROUPS = [
+    ("Ft. Lauderdale", ["EAST"]),
     ("Tampa", ["49thStr"]),
     ("Orlando", ["TV", "MOC", "MUSO"]),
     ("Jacksonville", ["AP", "SJ", "ROP", "ORT"]),
-    ("Ft. Lauderdale", ["EAST"]),
 ]
 
 ALL_PROPS = [abbr for _, abbrs in PROPERTY_GROUPS for abbr in abbrs]
@@ -500,9 +500,8 @@ def export_dashboard_xlsx(properties_data, traffic_data, leases_data,
 
     ws.column_dimensions["A"].width = 32
     total_col = 2 + len(ALL_PROPS)
-    for i in range(2, total_col):
+    for i in range(2, total_col + 1):
         ws.column_dimensions[get_column_letter(i)].width = 11
-    ws.column_dimensions[get_column_letter(total_col)].width = 13
 
     ws.freeze_panes = "B4"
 
