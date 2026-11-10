@@ -1295,7 +1295,7 @@ async function refreshData() {
     // ResMan sync. Password is also re-validated server-side in trigger_renewals_sync.
     const ok = await askPassword(OFFERS_EDIT_PASSWORD, {
         title: 'Refresh dashboard',
-        subtitle: 'Enter the edit password. This pulls fresh data from ResMan and takes ~5-10 min.',
+        subtitle: 'Enter the edit password. This pulls fresh data from ResMan and takes ~3-5 min.',
         username: 'renewals-edit',
     });
     if (!ok) return;
