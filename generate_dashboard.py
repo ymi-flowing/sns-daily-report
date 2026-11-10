@@ -109,11 +109,12 @@ TARGET_PROPERTIES = ["ROP", "TV", "SJ", "MUSO", "MOC", "EAST", "ORT", "49thStr",
 RESMAN_TRAFFIC_PROPERTIES = []
 
 # Property grouping by region
+# Display order (left -> right): Ft. Lauderdale first per user request 2026-11-10
 PROPERTY_GROUPS = {
+    "Ft. Lauderdale": ["EAST"],
     "Tampa": ["49thStr"],
     "Orlando": ["TV", "MOC", "MUSO"],
     "Jacksonville": ["AP", "SJ", "ROP", "ORT"],
-    "Ft. Lauderdale": ["EAST"]
 }
 
 # API Configuration
@@ -3532,9 +3533,9 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
                 }}
             }});
 
-            // Total column
-            headerRow1 += '<th class="px-3 py-2 text-center font-bold bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-white w-[70px]">TOTAL</th></tr>';
-            headerRow2 += '<th class="px-3 py-2 text-center font-bold bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-white w-[70px]">Portfolio</th></tr>';
+            // Total column (width + padding matched to property columns)
+            headerRow1 += '<th class="px-2 py-2 text-center font-bold bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-white w-[65px]">TOTAL</th></tr>';
+            headerRow2 += '<th class="px-2 py-2 text-center font-bold bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-white w-[65px]">Portfolio</th></tr>';
 
             // Status rows - grouped logically
             // Top section: all units (leased included in ready/not ready counts)
@@ -3632,7 +3633,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
                 else if (row.key === 'projectedOcc') totalVal = ((totals.total - totals.vacantReady - totals.vacantNotReady + totals.futureMI - totals.futureMO) / totals.total * 100).toFixed(2) + '%';
 
                 const totalColor = row.isOccupancy ? 'text-slate-900 dark:text-white font-bold' : row.color + ' font-bold';
-                tr += `<td class="px-3 py-2 text-center bg-slate-100 dark:bg-slate-700/50 ${{totalColor}}">${{totalVal}}</td>`;
+                tr += `<td class="px-2 py-2 text-center bg-slate-100 dark:bg-slate-700/50 ${{totalColor}}">${{totalVal}}</td>`;
                 tr += '</tr>';
                 bodyRows += tr;
             }});
@@ -3706,8 +3707,8 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
                         }});
                     }}
                 }});
-                h1 += '<th class="px-3 py-2 text-center font-bold bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-white w-[70px]">TOTAL</th></tr>';
-                h2 += '<th class="px-3 py-2 text-center font-bold bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-white w-[70px]">Portfolio</th></tr>';
+                h1 += '<th class="px-2 py-2 text-center font-bold bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-white w-[65px]">TOTAL</th></tr>';
+                h2 += '<th class="px-2 py-2 text-center font-bold bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-white w-[65px]">Portfolio</th></tr>';
                 return h1 + h2;
             }}
 
@@ -3741,7 +3742,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
                         }});
                     }});
                     const totalVal = row.getTotal ? row.getTotal() : 0;
-                    tr += `<td class="px-3 py-2 text-center bg-slate-100 dark:bg-slate-700/50 ${{row.color}} font-bold">${{totalVal}}</td>`;
+                    tr += `<td class="px-2 py-2 text-center bg-slate-100 dark:bg-slate-700/50 ${{row.color}} font-bold">${{totalVal}}</td>`;
                     tr += '</tr>';
                     bodyRows += tr;
                 }});
@@ -3859,8 +3860,8 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
                 }}
             }});
 
-            headerRow1 += '<th class="px-3 py-2 text-center font-bold bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-white w-[70px]">TOTAL</th></tr>';
-            headerRow2 += '<th class="px-3 py-2 text-center font-bold bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-white w-[70px]">Portfolio</th></tr>';
+            headerRow1 += '<th class="px-2 py-2 text-center font-bold bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-white w-[65px]">TOTAL</th></tr>';
+            headerRow2 += '<th class="px-2 py-2 text-center font-bold bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-white w-[65px]">Portfolio</th></tr>';
 
             // Status definitions - matches Python logic
             const statuses = [
@@ -3964,7 +3965,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
                         }});
                     }});
 
-                    tr += `<td class="px-3 py-2 text-center bg-slate-100 dark:bg-slate-700/50 ${{status.color}} font-bold">${{rowTotal}}</td>`;
+                    tr += `<td class="px-2 py-2 text-center bg-slate-100 dark:bg-slate-700/50 ${{status.color}} font-bold">${{rowTotal}}</td>`;
                     tr += '</tr>';
                     bodyRows += tr;
                 }});
@@ -4012,7 +4013,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
                     headerRow1 += `<th colspan="${{colspan}}" class="px-2 py-2 text-center font-bold text-xs uppercase tracking-wide ${{regionColors[region] || 'bg-slate-100 dark:bg-slate-700'}}">${{region}}</th>`;
                 }}
             }});
-            headerRow1 += '<th class="px-3 py-2 text-center font-bold bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-white w-[70px]">TOTAL</th></tr>';
+            headerRow1 += '<th class="px-2 py-2 text-center font-bold bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-white w-[65px]">TOTAL</th></tr>';
 
             // Build header row 2 (properties) - matching Portfolio table
             let headerRow2 = '<tr class="border-b-2 border-slate-300 dark:border-slate-600"><th class="px-3 py-2 text-left font-semibold text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/50 sticky left-0 z-10 w-[140px]">Status</th>';
@@ -4025,7 +4026,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
                     }}
                 }});
             }});
-            headerRow2 += '<th class="px-3 py-2 text-center font-bold bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-white w-[70px]">Portfolio</th></tr>';
+            headerRow2 += '<th class="px-2 py-2 text-center font-bold bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-white w-[65px]">Portfolio</th></tr>';
 
             // Define renovation statuses with colors
             const statuses = [
@@ -4074,10 +4075,10 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
 
                 // Total column
                 if (status.isTotal) {{
-                    tr += `<td class="px-3 py-2 text-center bg-slate-100 dark:bg-slate-700/50 ${{status.color}}">${{rowTotal}}</td>`;
+                    tr += `<td class="px-2 py-2 text-center bg-slate-100 dark:bg-slate-700/50 ${{status.color}}">${{rowTotal}}</td>`;
                 }} else {{
                     const rowPct = grandTotal > 0 ? (rowTotal / grandTotal * 100).toFixed(1) : 0;
-                    tr += `<td class="px-3 py-2 text-center bg-slate-100 dark:bg-slate-700/50 ${{status.color}} font-bold">
+                    tr += `<td class="px-2 py-2 text-center bg-slate-100 dark:bg-slate-700/50 ${{status.color}} font-bold">
                         <span>${{rowTotal}}</span>
                         <span class="text-[10px] opacity-70 ml-0.5">(${{rowPct}}%)</span>
                     </td>`;
@@ -4115,7 +4116,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
                 }});
 
                 // Total column
-                tr += `<td class="px-3 py-2 text-center bg-slate-100 dark:bg-slate-700/50 ${{metric.color}} font-bold">${{rowTotal}}</td>`;
+                tr += `<td class="px-2 py-2 text-center bg-slate-100 dark:bg-slate-700/50 ${{metric.color}} font-bold">${{rowTotal}}</td>`;
                 tr += '</tr>';
                 bodyRows += tr;
             }});
@@ -4159,7 +4160,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
                 const colspan = propertyGroups[region].length;
                 headerRow1 += `<th colspan="${{colspan}}" class="px-2 py-2 text-center font-bold text-xs uppercase tracking-wide ${{regionColors[region]}}">${{region}}</th>`;
             }});
-            headerRow1 += '<th class="px-3 py-2 text-center font-bold bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-white w-[70px]">TOTAL</th></tr>';
+            headerRow1 += '<th class="px-2 py-2 text-center font-bold bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-white w-[65px]">TOTAL</th></tr>';
 
             // Build header row 2 (properties) - matching Portfolio table
             let headerRow2 = '<tr class="border-b-2 border-slate-300 dark:border-slate-600"><th class="px-3 py-2 text-left font-semibold text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/50 sticky left-0 z-10 w-[140px]">Status</th>';
@@ -4170,7 +4171,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
                         </th>`;
                 }});
             }});
-            headerRow2 += '<th class="px-3 py-2 text-center font-bold bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-white w-[70px]">Portfolio</th></tr>';
+            headerRow2 += '<th class="px-2 py-2 text-center font-bold bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-white w-[65px]">Portfolio</th></tr>';
 
             // Format currency - abbreviated for display, full for tooltip
             const fmtShort = (v) => v >= 1000000 ? '$' + (v/1000000).toFixed(1) + 'M' : v >= 1000 ? '$' + Math.round(v/1000) + 'K' : '$' + Math.round(v);
@@ -4208,7 +4209,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
                     }});
                 }});
                 const totalTooltip = `data-count="${{fmtFull(rowTotal)}}"`;
-                tr += `<td class="px-3 py-2 text-center bg-slate-100 dark:bg-slate-700/50 ${{row.color}} fin-cell" ${{totalTooltip}}>${{fmtShort(rowTotal)}}</td>`;
+                tr += `<td class="px-2 py-2 text-center bg-slate-100 dark:bg-slate-700/50 ${{row.color}} fin-cell" ${{totalTooltip}}>${{fmtShort(rowTotal)}}</td>`;
                 tr += '</tr>';
                 bodyRows += tr;
             }});
@@ -4230,7 +4231,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
             }});
             const dpPct = dpNet > 0 ? (dpRec / dpNet * 100) : 0;
             const dpc = dpPct > 10 ? 'text-red-600 dark:text-red-400' : dpPct > 5 ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400';
-            delPctRow += `<td class="px-3 py-2 text-center bg-slate-100 dark:bg-slate-700/50 font-bold ${{dpc}}">${{dpNet > 0 ? dpPct.toFixed(1) + '%' : '—'}}</td>`;
+            delPctRow += `<td class="px-2 py-2 text-center bg-slate-100 dark:bg-slate-700/50 font-bold ${{dpc}}">${{dpNet > 0 ? dpPct.toFixed(1) + '%' : '—'}}</td>`;
             delPctRow += '</tr>';
             bodyRows += delPctRow;
 
@@ -4272,7 +4273,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
                     }});
                 }});
                 const totalTooltip = `data-count="${{fmtFull(rowTotal)}}${{rowCount > 0 ? ' (' + rowCount + ')' : ''}}"`;
-                tr += `<td class="px-3 py-2 text-center bg-slate-100 dark:bg-slate-700/50 ${{row.color}} fin-cell" ${{totalTooltip}}>${{fmtShort(rowTotal)}}</td>`;
+                tr += `<td class="px-2 py-2 text-center bg-slate-100 dark:bg-slate-700/50 ${{row.color}} fin-cell" ${{totalTooltip}}>${{fmtShort(rowTotal)}}</td>`;
                 tr += '</tr>';
                 bodyRows += tr;
             }});
