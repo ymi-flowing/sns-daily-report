@@ -10,6 +10,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: refresh-dashboard
+  cancel-in-progress: false
+
 jobs:
   refresh:
     runs-on: ubuntu-latest
@@ -38,5 +42,19 @@ jobs:
           git config user.name "GitHub Actions Bot"
           git config user.email "actions@github.com"
           git add dashboard_live.html dashboard.xlsx renewal_summary.json alerts_state.json data.json
-          git diff --staged --quiet || git commit -m "Auto-refresh dashboard [$(date -u '+%Y-%m-%d %H:%M UTC')]"
-          git push
+          if git diff --staged --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+          git commit -m "Auto-refresh dashboard [$(date -u '+%Y-%m-%d %H:%M UTC')]"
+          for i in $(seq 1 30); do
+            if git push; then
+              echo "Pushed on attempt $i."
+              exit 0
+            fi
+            echo "Push attempt $i rejected; rebasing on origin/main and retrying..."
+            git pull --rebase origin main || { echo "Rebase failed."; exit 1; }
+            sleep $((RANDOM % 5 + 2))
+          done
+          echo "Giving up after 30 push attempts."
+          exit 1
