@@ -44,9 +44,9 @@
       "firstSeen": "2026-11-06",
       "lastMsg": "Lease ends in 26d \u2014 renewal not signed"
     },
-    "MUSO|insufficientNoticeList|97ed360d-0edd-4ac2-a0b8-b76bce358413": {
-      "firstSeen": "2026-11-10",
-      "lastMsg": "Lease ends in 58d \u2014 no NTV filed"
+    "MUSO|ntvList|97ed360d-0edd-4ac2-a0b8-b76bce358413": {
+      "firstSeen": "2026-11-11",
+      "lastMsg": "6 business days to get ready"
     },
     "ORT|insufficientNoticeList|c5417e19-3fc4-40ca-909c-fb9e944e65cc": {
       "firstSeen": "2026-11-11",
