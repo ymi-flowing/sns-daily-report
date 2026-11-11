@@ -2882,8 +2882,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
                         {{key: 'name', label: 'Prospect Name'}},
                         {{key: 'status', label: 'Status'}},
                         {{key: 'createDate', label: 'Create Date'}},
-                        {{key: 'daysActive', label: 'Days Active'}},
-                        {{key: 'lastCommunication', label: 'Last Communication'}}
+                        {{key: 'daysActive', label: 'Days Active'}}
                     ];
                     titleText = `${{abbr}} - Active Prospects (${{data.length}})`;
                     break;
@@ -3145,7 +3144,8 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
                         const resmanUrl = `https://sns.myresman.com/#/Residents/Detail/${{row.leaseId}}`;
                         bodyHtml += `<td class="px-3 py-2 whitespace-nowrap ${{posClass}} ${{boldClass}}"><a href="${{resmanUrl}}" target="_blank" class="text-blue-600 dark:text-blue-400 hover:scale-105 inline-block transition-transform ${{boldClass}}">${{val}}</a>${{indicatorHtml}}</td>`;
                     }} else {{
-                        bodyHtml += `<td class="px-3 py-2 text-slate-700 dark:text-slate-300 whitespace-nowrap ${{posClass}} ${{boldClass}}">${{val}}${{indicatorHtml}}</td>`;
+                        const alignCls = col.key === 'daysActive' ? 'text-center' : '';
+                        bodyHtml += `<td class="px-3 py-2 ${{alignCls}} text-slate-700 dark:text-slate-300 whitespace-nowrap ${{posClass}} ${{boldClass}}">${{val}}${{indicatorHtml}}</td>`;
                     }}
                 }});
                 bodyHtml += '</tr>';
