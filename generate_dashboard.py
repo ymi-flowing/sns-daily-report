@@ -239,10 +239,12 @@ def get_active_leads_data():
         rows = list(reader)
 
         today = datetime.now().date()
-        STATUS_KEYS = {
-            "Inquiry": "inquiry",
-            "Tour Scheduled": "tour_scheduled",
-            "Tour Done": "tour_done",
+        # Sheet status -> (SQL key, display label). "Tour Done" is renamed to
+        # "Tour Completed" for the dashboard; the DB column stays leads_tour_done.
+        STATUS_SPEC = {
+            "Inquiry":        ("inquiry",        "Inquiry"),
+            "Tour Scheduled": ("tour_scheduled", "Tour Scheduled"),
+            "Tour Done":      ("tour_done",      "Tour Completed"),
         }
 
         by_prop = defaultdict(lambda: {
@@ -255,9 +257,10 @@ def get_active_leads_data():
             abbr = PROPERTY_NAME_MAP.get(prop_name)
             if not abbr:
                 continue
-            status = (r.get("Status") or "").strip()
-            if status not in STATUS_KEYS:
+            raw_status = (r.get("Status") or "").strip()
+            if raw_status not in STATUS_SPEC:
                 continue
+            sql_key, display_status = STATUS_SPEC[raw_status]
 
             name = (r.get("Lead") or "").strip() or (r.get("Phone") or "").strip() or "Unknown"
             lead_id = (r.get("Lead ID") or "").strip()
@@ -275,12 +278,12 @@ def get_active_leads_data():
             # Last Communication shape matches Lead Create Date
             last_comm_iso = (r.get("Last Communication") or "").strip()[:10]
 
-            by_prop[abbr][STATUS_KEYS[status]] += 1
+            by_prop[abbr][sql_key] += 1
             by_prop[abbr]["total"] += 1
             by_prop[abbr]["leads"].append({
                 "leadId": lead_id,
                 "name": name,
-                "status": status,
+                "status": display_status,
                 "createDate": create_iso,
                 "daysActive": days_active,
                 "lastCommunication": last_comm_iso,
@@ -2880,10 +2883,9 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
                         {{key: 'status', label: 'Status'}},
                         {{key: 'createDate', label: 'Create Date'}},
                         {{key: 'daysActive', label: 'Days Active'}},
-                        {{key: 'lastCommunication', label: 'Last Communication'}},
-                        {{key: 'link', label: 'Link'}}
+                        {{key: 'lastCommunication', label: 'Last Communication'}}
                     ];
-                    titleText = `${{abbr}} - Active Leads (${{data.length}})`;
+                    titleText = `${{abbr}} - Active Prospects (${{data.length}})`;
                     break;
                 case 'expiring':
                     const expiring = l.expiring || {{}};
@@ -2941,7 +2943,10 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
             }}
 
             title.textContent = titleText;
-            renderPopupTable();
+            // Honor the pre-filter passed via the cell click: this routes through
+            // the same filter pipeline the dropdown uses, so the popup opens
+            // actually filtered (not just with the filter button visually set).
+            applyPopupFilters();
             modal.classList.remove('hidden');
             document.body.style.overflow = 'hidden';
         }}
@@ -2962,7 +2967,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
             'Still Active': 'text-amber-600 dark:text-amber-400',
             'Inquiry': 'text-sky-600 dark:text-sky-400',
             'Tour Scheduled': 'text-cyan-600 dark:text-cyan-400',
-            'Tour Done': 'text-teal-600 dark:text-teal-400'
+            'Tour Completed': 'text-teal-600 dark:text-teal-400'
         }};
 
         let popupStatusDropdownOpen = false;
@@ -3132,13 +3137,13 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
                     if (col.key === 'unit' && row.unitId) {{
                         const resmanUrl = `https://sns.myresman.com/#/Units/Detail/${{row.unitId}}`;
                         bodyHtml += `<td class="px-3 py-2 whitespace-nowrap ${{posClass}} ${{boldClass}}"><a href="${{resmanUrl}}" target="_blank" class="text-blue-600 dark:text-blue-400 hover:scale-105 inline-block transition-transform ${{boldClass}}">${{val}}</a>${{indicatorHtml}}</td>`;
+                    // Active-Prospect name column → open AnyoneHome lead page
+                    }} else if (col.key === 'name' && row.link && val) {{
+                        bodyHtml += `<td class="px-3 py-2 whitespace-nowrap ${{posClass}} ${{boldClass}}"><a href="${{row.link}}" target="_blank" rel="noopener" class="text-blue-600 dark:text-blue-400 hover:scale-105 inline-block transition-transform ${{boldClass}}">${{val}}</a>${{indicatorHtml}}</td>`;
                     // Make applicant/resident column a clickable link to ResMan if leaseId exists
                     }} else if ((col.key === 'applicant' || col.key === 'resident' || col.key === 'name') && row.leaseId && val) {{
                         const resmanUrl = `https://sns.myresman.com/#/Residents/Detail/${{row.leaseId}}`;
                         bodyHtml += `<td class="px-3 py-2 whitespace-nowrap ${{posClass}} ${{boldClass}}"><a href="${{resmanUrl}}" target="_blank" class="text-blue-600 dark:text-blue-400 hover:scale-105 inline-block transition-transform ${{boldClass}}">${{val}}</a>${{indicatorHtml}}</td>`;
-                    // Lead Link column — open AnyoneHome lead page in a new tab
-                    }} else if (col.key === 'link' && row.link) {{
-                        bodyHtml += `<td class="px-3 py-2 whitespace-nowrap"><a href="${{row.link}}" target="_blank" rel="noopener" class="text-blue-600 dark:text-blue-400 hover:underline">View</a></td>`;
                     }} else {{
                         bodyHtml += `<td class="px-3 py-2 text-slate-700 dark:text-slate-300 whitespace-nowrap ${{posClass}} ${{boldClass}}">${{val}}${{indicatorHtml}}</td>`;
                     }}
@@ -3899,15 +3904,15 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
 
             // Traffic (Snapshot) rows
             const snapshotRows = [
-                {{ label: 'Total Active Leads' + tip('Currently active leads (Inquiry + Tour Scheduled + Tour Done)'), color: 'text-blue-600 dark:text-blue-400 font-semibold',
+                {{ label: 'Total Active Prospects' + tip('Currently active prospects (Inquiry + Tour Scheduled + Tour Completed)'), color: 'text-blue-600 dark:text-blue-400 font-semibold',
                    getValue: abbr => (leasesData[abbr]?.active_leads_total || 0), popupCategory: 'leads',
                    getTotal: () => totals.activeLeadsTotal }},
                 {{ label: 'Inquiry', color: 'text-sky-600 dark:text-sky-400',
                    getValue: abbr => (leasesData[abbr]?.inquiry || 0), popupCategory: 'leads', popupFilter: 'Inquiry', getTotal: () => totals.inquiry }},
                 {{ label: 'Tour Scheduled', color: 'text-cyan-600 dark:text-cyan-400',
                    getValue: abbr => (leasesData[abbr]?.tour_scheduled || 0), popupCategory: 'leads', popupFilter: 'Tour Scheduled', getTotal: () => totals.tourScheduled }},
-                {{ label: 'Tour Done', color: 'text-teal-600 dark:text-teal-400',
-                   getValue: abbr => (leasesData[abbr]?.tour_done || 0), popupCategory: 'leads', popupFilter: 'Tour Done', getTotal: () => totals.tourDone }},
+                {{ label: 'Tour Completed', color: 'text-teal-600 dark:text-teal-400',
+                   getValue: abbr => (leasesData[abbr]?.tour_done || 0), popupCategory: 'leads', popupFilter: 'Tour Completed', getTotal: () => totals.tourDone }},
                 {{ isDivider: true }},
                 {{ label: 'Total Applicants' + tip('Currently active applicants'), color: 'text-indigo-600 dark:text-indigo-400 font-semibold',
                    getValue: abbr => (leasesData[abbr]?.total_applicants || 0), popupCategory: 'applicants',

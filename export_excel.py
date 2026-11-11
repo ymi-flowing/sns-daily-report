@@ -281,10 +281,10 @@ def _write_traffic(ws, row, traffic_data, leases_data):
     _write_section_header(ws, row, "Traffic Snapshot")
     row += 1
     snapshot_rows = [
-        ("Total Active Leads", [l(a, "active_leads_total") for a in ALL_PROPS], None, None),
+        ("Total Active Prospects", [l(a, "active_leads_total") for a in ALL_PROPS], None, None),
         ("Inquiry", [l(a, "inquiry") for a in ALL_PROPS], None, None),
         ("Tour Scheduled", [l(a, "tour_scheduled") for a in ALL_PROPS], None, None),
-        ("Tour Done", [l(a, "tour_done") for a in ALL_PROPS], None, None),
+        ("Tour Completed", [l(a, "tour_done") for a in ALL_PROPS], None, None),
         ("Total Applicants", [l(a, "total_applicants") for a in ALL_PROPS], None, None),
         ("Pending Approval", [l(a, "pending_approval") for a in ALL_PROPS], None, None),
         ("Approved", [l(a, "approved") for a in ALL_PROPS], None, None),
