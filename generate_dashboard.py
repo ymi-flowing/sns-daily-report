@@ -3630,7 +3630,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
                 const propsInRegion = propertyGroups[region].filter(a => propertyTableData[a]);
                 const colspan = propsInRegion.length;
                 if (colspan > 0) {{
-                    headerRow1 += `<th colspan="${{colspan}}" class="px-2 py-2 text-center font-bold text-xs uppercase tracking-wide ${{regionColors[region] || 'bg-slate-100 dark:bg-slate-700'}}">${{region}}</th>`;
+                    headerRow1 += `<th colspan="${{colspan}}" style="width: ${{colspan * 65}}px" class="px-2 py-2 text-center font-bold text-xs uppercase tracking-wide ${{regionColors[region] || 'bg-slate-100 dark:bg-slate-700'}}">${{region}}</th>`;
                     propsInRegion.forEach(abbr => {{
                         headerRow2 += `<th class="px-2 py-2 text-center w-[65px]">
                             <div class="font-bold text-slate-900 dark:text-white text-xs">${{abbr}}</div>
@@ -3812,7 +3812,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
                     const propsInRegion = propertyGroups[region];
                     const colspan = propsInRegion.length;
                     if (colspan > 0) {{
-                        h1 += `<th colspan="${{colspan}}" class="px-2 py-2 text-center font-bold text-xs uppercase tracking-wide ${{regionColors[region] || 'bg-slate-100 dark:bg-slate-700'}}">${{region}}</th>`;
+                        h1 += `<th colspan="${{colspan}}" style="width: ${{colspan * 65}}px" class="px-2 py-2 text-center font-bold text-xs uppercase tracking-wide ${{regionColors[region] || 'bg-slate-100 dark:bg-slate-700'}}">${{region}}</th>`;
                         propsInRegion.forEach(abbr => {{
                             h2 += `<th class="px-2 py-2 text-center w-[65px]"><div class="font-bold text-slate-900 dark:text-white text-xs">${{abbr}}</div></th>`;
                         }});
@@ -3976,7 +3976,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
                 const propsInRegion = propertyGroups[region];
                 const colspan = propsInRegion.length;
                 if (colspan > 0) {{
-                    headerRow1 += `<th colspan="${{colspan}}" class="px-2 py-2 text-center font-bold text-xs uppercase tracking-wide ${{regionColors[region] || 'bg-slate-100 dark:bg-slate-700'}}">${{region}}</th>`;
+                    headerRow1 += `<th colspan="${{colspan}}" style="width: ${{colspan * 65}}px" class="px-2 py-2 text-center font-bold text-xs uppercase tracking-wide ${{regionColors[region] || 'bg-slate-100 dark:bg-slate-700'}}">${{region}}</th>`;
                     propsInRegion.forEach(abbr => {{
                         headerRow2 += `<th class="px-2 py-2 text-center w-[65px]">
                             <div class="font-bold text-slate-900 dark:text-white text-xs">${{abbr}}</div>
@@ -4148,7 +4148,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
                 const propsInRegion = propertyGroups[region].filter(a => leasesData[a]?.renovation);
                 const colspan = propsInRegion.length;
                 if (colspan > 0) {{
-                    headerRow1 += `<th colspan="${{colspan}}" class="px-2 py-2 text-center font-bold text-xs uppercase tracking-wide ${{regionColors[region] || 'bg-slate-100 dark:bg-slate-700'}}">${{region}}</th>`;
+                    headerRow1 += `<th colspan="${{colspan}}" style="width: ${{colspan * 65}}px" class="px-2 py-2 text-center font-bold text-xs uppercase tracking-wide ${{regionColors[region] || 'bg-slate-100 dark:bg-slate-700'}}">${{region}}</th>`;
                 }}
             }});
             headerRow1 += '<th class="px-2 py-2 text-center font-bold bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-white w-[65px]">TOTAL</th></tr>';
@@ -4296,7 +4296,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
             let headerRow1 = '<tr class="border-b border-slate-200 dark:border-slate-700"><th class="px-3 py-2 text-left font-bold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-700/50 sticky left-0 z-10 w-[140px]"></th>';
             regions.forEach(region => {{
                 const colspan = propertyGroups[region].length;
-                headerRow1 += `<th colspan="${{colspan}}" class="px-2 py-2 text-center font-bold text-xs uppercase tracking-wide ${{regionColors[region]}}">${{region}}</th>`;
+                headerRow1 += `<th colspan="${{colspan}}" style="width: ${{colspan * 65}}px" class="px-2 py-2 text-center font-bold text-xs uppercase tracking-wide ${{regionColors[region]}}">${{region}}</th>`;
             }});
             headerRow1 += '<th class="px-2 py-2 text-center font-bold bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-white w-[65px]">TOTAL</th></tr>';
 
