@@ -3845,7 +3845,11 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
                             const alertBg = alertInfo ? 'bg-red-100 dark:bg-blue-900/40' : '';
                             const isClickable = row.popupCategory && val > 0;
                             if (isClickable) {{
-                                const filterArg = row.popupFilter ? `, null, ${{JSON.stringify(row.popupFilter)}}` : '';
+                                // JSON.stringify returns double-quoted JSON (e.g. "Inquiry"), which
+                                // collides with the onclick attribute's own double-quote delimiter
+                                // and truncates the handler at that first embedded ". HTML-encode so
+                                // the browser decodes &quot; back to " before invoking the handler.
+                                const filterArg = row.popupFilter ? `, null, ${{JSON.stringify(row.popupFilter).replace(/"/g, '&quot;')}}` : '';
                                 tr += `<td class="px-2 py-2 text-center ${{row.color}} ${{alertBg}} cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/50" onclick="showPopup('${{row.popupCategory}}', '${{abbr}}'${{filterArg}})">${{val}}${{suffix}}</td>`;
                             }} else {{
                                 tr += `<td class="px-2 py-2 text-center ${{row.color}} ${{alertBg}}">${{val}}${{suffix}}</td>`;
@@ -4089,7 +4093,9 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
                             const val = expData[status.key] || 0;
                             rowTotal += val;
                             if (val > 0 && status.popupFilter) {{
-                                const filterArg = JSON.stringify(status.popupFilter);
+                                // See renderSection: JSON double quotes collide with the onclick
+                                // attribute's delimiter, truncating the handler. HTML-encode.
+                                const filterArg = JSON.stringify(status.popupFilter).replace(/"/g, '&quot;');
                                 tr += `<td class="px-2 py-2 text-center ${{status.color}} cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900/50" onclick="showPopup('expiring', '${{abbr}}', '${{monthKey}}', ${{filterArg}})">${{val}}</td>`;
                             }} else {{
                                 tr += `<td class="px-2 py-2 text-center ${{val > 0 ? status.color : 'text-slate-400 dark:text-slate-500'}}">${{val}}</td>`;
