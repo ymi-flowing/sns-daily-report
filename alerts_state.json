@@ -16,9 +16,9 @@
       "firstSeen": "2026-10-31",
       "lastMsg": "Lease ends in 48d \u2014 renewal not signed"
     },
-    "AP|vacantNotReadyList|5ca23e45-8aac-41ef-9a34-914b34a53c9d": {
+    "AP|pendingInRealUnitList|d2651101-b797-40ef-a18a-0f5ba827d73e": {
       "firstSeen": "2026-11-11",
-      "lastMsg": "Past Available Date"
+      "lastMsg": "Pending applicant in a real unit"
     },
     "EAST|insufficientNoticeList|3bc342ec-f8be-41fb-9173-a3f60d2c308c": {
       "firstSeen": "2026-10-30",
@@ -56,29 +56,13 @@
       "firstSeen": "2026-11-10",
       "lastMsg": "Lease ends in 58d \u2014 no NTV filed"
     },
-    "ORT|insufficientNoticeList|4c4fdbb9-4b37-4a64-96ad-ebe4acaf327c": {
-      "firstSeen": "2026-11-03",
-      "lastMsg": "Lease ends in 51d \u2014 renewal not signed"
-    },
-    "ORT|insufficientNoticeList|ccbb5ba1-ee2c-4ae7-b340-7ec72b62daa3": {
+    "ORT|insufficientNoticeList|c5417e19-3fc4-40ca-909c-fb9e944e65cc": {
       "firstSeen": "2026-11-11",
-      "lastMsg": "Lease ends in 59d \u2014 no NTV filed"
-    },
-    "ORT|insufficientNoticeList|d0dae8b5-f8f7-4a95-86dc-5838c2dfcdfe": {
-      "firstSeen": "2026-11-10",
-      "lastMsg": "Lease ends in 58d \u2014 no NTV filed"
-    },
-    "ORT|ntvList|418b7cb2-2ab6-4779-9f21-155ba935cb8b": {
-      "firstSeen": "2026-11-11",
-      "lastMsg": "Past Move-Out Date"
+      "lastMsg": "Lease ends in 49d \u2014 no NTV filed"
     },
     "ORT|ntvList|441debff-bc6f-4a7e-9c7a-deb3fd4c90d7": {
       "firstSeen": "2026-11-10",
       "lastMsg": "Past Move-Out Date"
-    },
-    "ORT|pendingInRealUnitList|57c7c2e6-ab93-4db8-add4-d3c054ceb314": {
-      "firstSeen": "2026-11-11",
-      "lastMsg": "Pending applicant in a real unit"
     }
   },
   "updated": "2026-11-11"
