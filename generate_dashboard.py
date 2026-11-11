@@ -67,6 +67,10 @@ PARTNERS_API_URL = "https://partners-api.myresman.com"
 # Google Sheets - Traffic Data
 TRAFFIC_SHEET_URL = "https://docs.google.com/spreadsheets/d/1D8eBjdcClYf9L4DNQg2cKDE1Wuwkc5AOSQcRCPmz18A/export?format=csv&gid=343109953"
 
+# Google Sheets - Active Leads (same Marketing Funnel sheet, different tab)
+ACTIVE_LEADS_SHEET_URL = "https://docs.google.com/spreadsheets/d/1D8eBjdcClYf9L4DNQg2cKDE1Wuwkc5AOSQcRCPmz18A/gviz/tq?tqx=out:csv&sheet=Active%20Leads"
+ANYONE_HOME_LEAD_URL = "https://app.anyonehome.com/leads/view_lead/{}"
+
 # Google Sheets - Financial Data (from n8n automation)
 FINANCIAL_INCOME_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQs0vDSTQyN1O3L7uUdHi9c5FHNWZ5lktmKltsiUQmFJ5CWXuiMgirKqz2MXnS2jY2OSNijGppqdb1B/pub?output=csv"
 FINANCIAL_DEL_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQs0vDSTQyN1O3L7uUdHi9c5FHNWZ5lktmKltsiUQmFJ5CWXuiMgirKqz2MXnS2jY2OSNijGppqdb1B/pub?output=csv&gid=763378106"
@@ -217,6 +221,79 @@ def get_traffic_data():
         return result
     except Exception as e:
         print(f"    Warning: Could not fetch traffic data: {e}")
+        return {}
+
+
+def get_active_leads_data():
+    """Fetch currently-active leads per property from the Marketing Funnel sheet's
+    Active Leads tab. Returns {abbr: {inquiry, tour_scheduled, tour_done, total, leads}}.
+
+    `leads` is a list of per-lead dicts used by the dashboard popup. On fetch failure
+    returns {} so the mapper will emit NULL (distinguishing dark-sheet from no-activity).
+    """
+    try:
+        response = requests.get(ACTIVE_LEADS_SHEET_URL, timeout=30)
+        response.raise_for_status()
+
+        reader = csv.DictReader(StringIO(response.text))
+        rows = list(reader)
+
+        today = datetime.now().date()
+        STATUS_KEYS = {
+            "Inquiry": "inquiry",
+            "Tour Scheduled": "tour_scheduled",
+            "Tour Done": "tour_done",
+        }
+
+        by_prop = defaultdict(lambda: {
+            "inquiry": 0, "tour_scheduled": 0, "tour_done": 0,
+            "total": 0, "leads": []
+        })
+
+        for r in rows:
+            prop_name = (r.get("Property") or "").strip()
+            abbr = PROPERTY_NAME_MAP.get(prop_name)
+            if not abbr:
+                continue
+            status = (r.get("Status") or "").strip()
+            if status not in STATUS_KEYS:
+                continue
+
+            name = (r.get("Lead") or "").strip() or (r.get("Phone") or "").strip() or "Unknown"
+            lead_id = (r.get("Lead ID") or "").strip()
+
+            # Create Date shape: "2026-10-13 08:05:25-04:00" -> keep YYYY-MM-DD prefix
+            create_iso = (r.get("Lead Create Date") or "").strip()[:10]
+            days_active = ""
+            if create_iso:
+                try:
+                    cd = datetime.strptime(create_iso, "%Y-%m-%d").date()
+                    days_active = (today - cd).days
+                except ValueError:
+                    pass
+
+            # Last Communication shape matches Lead Create Date
+            last_comm_iso = (r.get("Last Communication") or "").strip()[:10]
+
+            by_prop[abbr][STATUS_KEYS[status]] += 1
+            by_prop[abbr]["total"] += 1
+            by_prop[abbr]["leads"].append({
+                "leadId": lead_id,
+                "name": name,
+                "status": status,
+                "createDate": create_iso,
+                "daysActive": days_active,
+                "lastCommunication": last_comm_iso,
+                "link": ANYONE_HOME_LEAD_URL.format(lead_id) if lead_id else "",
+            })
+
+        # Sort each property's leads by most-recently-created first
+        for abbr in by_prop:
+            by_prop[abbr]["leads"].sort(key=lambda x: x.get("createDate") or "", reverse=True)
+
+        return dict(by_prop)
+    except Exception as e:
+        print(f"    Warning: Could not fetch active leads: {e}")
         return {}
 
 
@@ -2796,6 +2873,18 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
                     ];
                     titleText = `${{abbr}} - Applicants MTD (${{data.length}})`;
                     break;
+                case 'leads':
+                    data = l.activeLeadsList || [];
+                    columns = [
+                        {{key: 'name', label: 'Prospect Name'}},
+                        {{key: 'status', label: 'Status'}},
+                        {{key: 'createDate', label: 'Create Date'}},
+                        {{key: 'daysActive', label: 'Days Active'}},
+                        {{key: 'lastCommunication', label: 'Last Communication'}},
+                        {{key: 'link', label: 'Link'}}
+                    ];
+                    titleText = `${{abbr}} - Active Leads (${{data.length}})`;
+                    break;
                 case 'expiring':
                     const expiring = l.expiring || {{}};
                     const lists = expiring.expiringLists || {{}};
@@ -2831,7 +2920,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
             // Set up filters for applicants and expiring
             const filtersContainer = document.getElementById('popup-filters');
 
-            if (category === 'applicants' || category === 'expiring' || category === 'applicantsMtd') {{
+            if (category === 'applicants' || category === 'expiring' || category === 'applicantsMtd' || category === 'leads') {{
                 popupHasFilters = true;
                 popupActiveFilters = new Set();  // empty = all statuses (alerts convention)
                 if (preFilter) {{
@@ -2870,7 +2959,10 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
             'Under Eviction': 'text-red-600 dark:text-red-400',
             'Denied': 'text-rose-600 dark:text-rose-400',
             'Cancelled': 'text-slate-500 dark:text-slate-400',
-            'Still Active': 'text-amber-600 dark:text-amber-400'
+            'Still Active': 'text-amber-600 dark:text-amber-400',
+            'Inquiry': 'text-sky-600 dark:text-sky-400',
+            'Tour Scheduled': 'text-cyan-600 dark:text-cyan-400',
+            'Tour Done': 'text-teal-600 dark:text-teal-400'
         }};
 
         let popupStatusDropdownOpen = false;
@@ -2978,7 +3070,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
         }}
 
         // Date columns that need formatting
-        const dateColumns = ['avDate', 'ntvDate', 'moDate', 'lastMoDate', 'leaseEnd', 'moveIn', 'signed', 'appDate', 'approvedDate', 'signedDate', 'renewalSigned', 'denialDate', 'cancellationDate'];
+        const dateColumns = ['avDate', 'ntvDate', 'moDate', 'lastMoDate', 'leaseEnd', 'moveIn', 'signed', 'appDate', 'approvedDate', 'signedDate', 'renewalSigned', 'denialDate', 'cancellationDate', 'createDate', 'lastCommunication'];
 
         function renderPopupTable() {{
             const thead = document.getElementById('popup-thead');
@@ -3044,6 +3136,9 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
                     }} else if ((col.key === 'applicant' || col.key === 'resident' || col.key === 'name') && row.leaseId && val) {{
                         const resmanUrl = `https://sns.myresman.com/#/Residents/Detail/${{row.leaseId}}`;
                         bodyHtml += `<td class="px-3 py-2 whitespace-nowrap ${{posClass}} ${{boldClass}}"><a href="${{resmanUrl}}" target="_blank" class="text-blue-600 dark:text-blue-400 hover:scale-105 inline-block transition-transform ${{boldClass}}">${{val}}</a>${{indicatorHtml}}</td>`;
+                    // Lead Link column — open AnyoneHome lead page in a new tab
+                    }} else if (col.key === 'link' && row.link) {{
+                        bodyHtml += `<td class="px-3 py-2 whitespace-nowrap"><a href="${{row.link}}" target="_blank" rel="noopener" class="text-blue-600 dark:text-blue-400 hover:underline">View</a></td>`;
                     }} else {{
                         bodyHtml += `<td class="px-3 py-2 text-slate-700 dark:text-slate-300 whitespace-nowrap ${{posClass}} ${{boldClass}}">${{val}}${{indicatorHtml}}</td>`;
                     }}
@@ -3672,6 +3767,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
                 total: 0, dailyAvg: 0,
                 signedLeasesMtd: 0,
                 applicantsMtd: 0, applicantsMtdApproved: 0, applicantsMtdDenied: 0, applicantsMtdCancelled: 0, applicantsMtdActive: 0,
+                activeLeadsTotal: 0, inquiry: 0, tourScheduled: 0, tourDone: 0,
                 totalApplicants: 0, pendingApproval: 0, approved: 0, signedLease: 0
             }};
             allProps.forEach(p => {{
@@ -3685,6 +3781,10 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
                 totals.applicantsMtdDenied += l.applicants_mtd_denied || 0;
                 totals.applicantsMtdCancelled += l.applicants_mtd_cancelled || 0;
                 totals.applicantsMtdActive += l.applicants_mtd_active || 0;
+                totals.activeLeadsTotal += l.active_leads_total || 0;
+                totals.inquiry += l.inquiry || 0;
+                totals.tourScheduled += l.tour_scheduled || 0;
+                totals.tourDone += l.tour_done || 0;
                 totals.totalApplicants += l.total_applicants || 0;
                 totals.pendingApproval += l.pending_approval || 0;
                 totals.approved += l.approved || 0;
@@ -3799,6 +3899,16 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
 
             // Traffic (Snapshot) rows
             const snapshotRows = [
+                {{ label: 'Total Active Leads' + tip('Currently active leads (Inquiry + Tour Scheduled + Tour Done)'), color: 'text-blue-600 dark:text-blue-400 font-semibold',
+                   getValue: abbr => (leasesData[abbr]?.active_leads_total || 0), popupCategory: 'leads',
+                   getTotal: () => totals.activeLeadsTotal }},
+                {{ label: 'Inquiry', color: 'text-sky-600 dark:text-sky-400',
+                   getValue: abbr => (leasesData[abbr]?.inquiry || 0), popupCategory: 'leads', popupFilter: 'Inquiry', getTotal: () => totals.inquiry }},
+                {{ label: 'Tour Scheduled', color: 'text-cyan-600 dark:text-cyan-400',
+                   getValue: abbr => (leasesData[abbr]?.tour_scheduled || 0), popupCategory: 'leads', popupFilter: 'Tour Scheduled', getTotal: () => totals.tourScheduled }},
+                {{ label: 'Tour Done', color: 'text-teal-600 dark:text-teal-400',
+                   getValue: abbr => (leasesData[abbr]?.tour_done || 0), popupCategory: 'leads', popupFilter: 'Tour Done', getTotal: () => totals.tourDone }},
+                {{ isDivider: true }},
                 {{ label: 'Total Applicants' + tip('Currently active applicants'), color: 'text-indigo-600 dark:text-indigo-400 font-semibold',
                    getValue: abbr => (leasesData[abbr]?.total_applicants || 0), popupCategory: 'applicants',
                    getAlert: applicantAlertSummary,
@@ -4791,6 +4901,31 @@ def main():
         if pid:
             traffic_data[abbr] = get_resman_traffic_for_property(pid)
             print(f"    ResMan traffic for {abbr}: {traffic_data[abbr]}")
+
+    # Fetch active leads (Marketing Funnel → Active Leads tab) and merge into leases_data
+    print("\n[3b] Fetching active leads...")
+    active_leads_data = get_active_leads_data()
+    if active_leads_data:
+        total_leads = sum(d.get("total", 0) for d in active_leads_data.values())
+        print(f"    Active leads loaded for {len(active_leads_data)} properties ({total_leads} total)")
+        for abbr in TARGET_PROPERTIES:
+            al = active_leads_data.get(abbr, {"inquiry": 0, "tour_scheduled": 0, "tour_done": 0, "total": 0, "leads": []})
+            ld = leases_data.setdefault(abbr, {})
+            ld["inquiry"] = al["inquiry"]
+            ld["tour_scheduled"] = al["tour_scheduled"]
+            ld["tour_done"] = al["tour_done"]
+            ld["active_leads_total"] = al["total"]
+            ld["activeLeadsList"] = al["leads"]
+    else:
+        # Sheet dark — emit NULL so trend analysis distinguishes unknown from zero
+        print("    Warning: No active leads data — leaving fields NULL")
+        for abbr in TARGET_PROPERTIES:
+            ld = leases_data.setdefault(abbr, {})
+            ld["inquiry"] = None
+            ld["tour_scheduled"] = None
+            ld["tour_done"] = None
+            ld["active_leads_total"] = None
+            ld["activeLeadsList"] = []
 
     # Fetch financial data
     print("\n[4] Fetching financial data...")

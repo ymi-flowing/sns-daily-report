@@ -38,3 +38,5 @@ renewal_summary_*.csv
 # Local experimentation / not deployed
 games/
 n8n/
+.vercel
+.env*

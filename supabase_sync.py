@@ -58,6 +58,16 @@ def _i(v):
         return 0
 
 
+def _i_nullable(v):
+    """Coerce to int, preserving None (so 'source dark' stays distinct from 0)."""
+    if v is None:
+        return None
+    try:
+        return int(float(v))
+    except (TypeError, ValueError):
+        return None
+
+
 def _rentable(p):
     return (_i(p.get("vacantReady")) + _i(p.get("vacantNotReady"))
             + _i(p.get("ntv")) - _i(p.get("vacantLeased"))
@@ -176,6 +186,12 @@ def property_snapshot_from_data_json(data, abbr, snapshot_date, source="live"):
         "pending_approval": _i(leases.get("pending_approval")),
         "approved": _i(leases.get("approved")),
         "signed_lease": _i(leases.get("signed_lease")),
+
+        # Active Leads (Marketing Funnel). NULL = tab dark; 0 = no leads.
+        "leads_inquiry": _i_nullable(leases.get("inquiry")),
+        "leads_tour_scheduled": _i_nullable(leases.get("tour_scheduled")),
+        "leads_tour_done": _i_nullable(leases.get("tour_done")),
+        "active_leads_total": _i_nullable(leases.get("active_leads_total")),
 
         # Renovation
         "renovated": _i(renovation.get("renovated")),
