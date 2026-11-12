@@ -36,14 +36,6 @@
       "firstSeen": "2026-11-11",
       "lastMsg": "Lease ends in 58d \u2014 no NTV filed"
     },
-    "MOC|vacantNotReadyList|7845826a-3e00-4318-b152-82072a8712ab": {
-      "firstSeen": "2026-11-10",
-      "lastMsg": "Past Available Date"
-    },
-    "MUSO|insufficientNoticeList|07dd31b4-50c8-4736-9f99-566952d84c5b": {
-      "firstSeen": "2026-11-06",
-      "lastMsg": "Lease ends in 25d \u2014 renewal not signed"
-    },
     "ORT|vacantNotReadyList|be1ccb7b-de47-4958-8d35-7df5d6877494": {
       "firstSeen": "2026-11-12",
       "lastMsg": "Past Available Date"
