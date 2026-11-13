@@ -773,6 +773,53 @@
         /* Make the roster-table currentTotal + totalOfferA cells visually grouped */
         #roster-table td .offer-cell-inline { white-space: nowrap; }
 
+        /* ==== Chart card header + expand-to-popup button ==== */
+        .chart-card { position: relative; }
+        .chart-card-head {
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 8px; margin-bottom: 12px;
+        }
+        .chart-card-head h3 { margin: 0; flex: 1 1 auto; min-width: 0; }
+        .chart-expand-btn {
+            flex-shrink: 0;
+            width: 28px; height: 28px;
+            display: inline-flex; align-items: center; justify-content: center;
+            border-radius: 8px;
+            background: transparent;
+            color: #94a3b8;
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: color 120ms, background 120ms, border-color 120ms;
+        }
+        .chart-expand-btn:hover,
+        .chart-expand-btn:focus {
+            color: #0891b2;
+            background: rgba(6, 182, 212, 0.08);
+            border-color: rgba(6, 182, 212, 0.35);
+            outline: none;
+        }
+        .dark .chart-expand-btn { color: #64748b; }
+        .dark .chart-expand-btn:hover,
+        .dark .chart-expand-btn:focus {
+            color: #67e8f9;
+            background: rgba(34, 211, 238, 0.12);
+            border-color: rgba(34, 211, 238, 0.45);
+        }
+        .chart-expand-btn svg { width: 15px; height: 15px; }
+
+        /* The expand modal keeps full width of the viewport (96vw × 94vh). */
+        #chart-expand-modal .modal-box {
+            display: flex; flex-direction: column;
+            border-radius: 16px;
+        }
+        @media (max-width: 640px) {
+            #chart-expand-modal .modal-box {
+                width: 100vw !important; height: 100vh !important;
+                max-width: 100vw !important; max-height: 100vh !important;
+                border-radius: 0 !important;
+            }
+        }
+
         /* ==== Shared App Tabs (Daily KPIs ↔ Renewals) ====
            Pill-nav above the page header on both tools so they feel like one app. */
         .app-tabs { display: flex; justify-content: center; }
@@ -1148,38 +1195,73 @@
 
     <!-- CHARTS -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
-            <h3 class="text-sm font-semibold text-slate-800 dark:text-white mb-3">
-                Status breakdown by expiring month
-                <span class="tip" data-tip="Count per status, stacked per expiring month">?</span>
-            </h3>
+        <div class="chart-card bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700" data-chart-key="monthStatus" data-chart-title="Status breakdown by expiring month">
+            <div class="chart-card-head">
+                <h3 class="text-sm font-semibold text-slate-800 dark:text-white">
+                    Status breakdown by expiring month
+                    <span class="tip" data-tip="Count per status, stacked per expiring month">?</span>
+                </h3>
+                <button type="button" class="chart-expand-btn" data-chart-key="monthStatus" aria-label="Expand chart" data-hover-tip="Expand chart">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4h4M20 8V4h-4M4 16v4h4M20 16v4h-4"/></svg>
+                </button>
+            </div>
             <div class="relative h-72"><canvas id="chart-month-status"></canvas></div>
         </div>
-        <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
-            <h3 class="text-sm font-semibold text-slate-800 dark:text-white mb-3">
-                Renewal rate by expiring month
-                <span class="text-xs text-slate-500">(% of total expiring)</span>
-                <span class="tip" data-tip="Bar height = (Renewed + Lower Offer) / Total expiring">?</span>
-            </h3>
+        <div class="chart-card bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700" data-chart-key="month" data-chart-title="Renewal rate by expiring month">
+            <div class="chart-card-head">
+                <h3 class="text-sm font-semibold text-slate-800 dark:text-white">
+                    Renewal rate by expiring month
+                    <span class="text-xs text-slate-500">(% of total expiring)</span>
+                    <span class="tip" data-tip="Bar height = (Renewed + Lower Offer) / Total expiring">?</span>
+                </h3>
+                <button type="button" class="chart-expand-btn" data-chart-key="month" aria-label="Expand chart" data-hover-tip="Expand chart">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4h4M20 8V4h-4M4 16v4h4M20 16v4h-4"/></svg>
+                </button>
+            </div>
             <div class="relative h-72"><canvas id="chart-month"></canvas></div>
         </div>
-        <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
-            <h3 class="text-sm font-semibold text-slate-800 dark:text-white mb-3">
-                Renewed (actual) Delta % distribution
-                <span class="tip" data-tip="Count of signed renewals per Actual Δ % bin">?</span>
-            </h3>
+        <div class="chart-card bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700" data-chart-key="delta" data-chart-title="Renewed (actual) Delta % distribution">
+            <div class="chart-card-head">
+                <h3 class="text-sm font-semibold text-slate-800 dark:text-white">
+                    Renewed (actual) Delta % distribution
+                    <span class="tip" data-tip="Count of signed renewals per Actual Δ % bin">?</span>
+                </h3>
+                <button type="button" class="chart-expand-btn" data-chart-key="delta" aria-label="Expand chart" data-hover-tip="Expand chart">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4h4M20 8V4h-4M4 16v4h4M20 16v4h-4"/></svg>
+                </button>
+            </div>
             <div class="relative h-72"><canvas id="chart-delta"></canvas></div>
         </div>
-        <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
-            <h3 class="text-sm font-semibold text-slate-800 dark:text-white mb-3">
-                Avg renewed total by expiring month
-                <span class="text-xs text-slate-500">(trend)</span>
-                <span class="tip" data-tip="Mean of Actual Renewal per expiring month">?</span>
-            </h3>
+        <div class="chart-card bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700" data-chart-key="avgRenewed" data-chart-title="Avg renewed total by expiring month">
+            <div class="chart-card-head">
+                <h3 class="text-sm font-semibold text-slate-800 dark:text-white">
+                    Avg renewed total by expiring month
+                    <span class="text-xs text-slate-500">(per property + mean)</span>
+                    <span class="tip" data-tip="Dashed line = per-property mean of Actual Renewal; solid line = overall mean. Hover a legend item to highlight that line.">?</span>
+                </h3>
+                <button type="button" class="chart-expand-btn" data-chart-key="avgRenewed" aria-label="Expand chart" data-hover-tip="Expand chart">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4h4M20 8V4h-4M4 16v4h4M20 16v4h-4"/></svg>
+                </button>
+            </div>
             <div class="relative h-72"><canvas id="chart-avg-renewed"></canvas></div>
         </div>
     </div>
 
+</div>
+
+<!-- CHART EXPAND MODAL -->
+<div id="chart-expand-modal" class="modal-backdrop hidden" onclick="if(event.target===this) closeChartExpand()">
+    <div class="modal-box border border-slate-200 dark:border-slate-700" style="max-width: 96vw; width: 96vw; height: 94vh; max-height: 94vh;">
+        <div class="p-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+            <h3 id="chart-expand-title" class="text-lg font-bold text-slate-800 dark:text-white">Chart</h3>
+            <button type="button" onclick="closeChartExpand()" class="h-8 w-8 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 flex items-center justify-center">&times;</button>
+        </div>
+        <div class="flex-1 p-4 overflow-hidden" style="min-height: 0;">
+            <div style="position: relative; width: 100%; height: 100%;">
+                <canvas id="chart-expand-canvas"></canvas>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- RENEWAL OFFERS MODAL -->
@@ -2322,24 +2404,42 @@ function themeColors() {
         text: isDark ? '#cbd5e1' : '#475569',
     };
 }
+// Distinct line color per property for the Avg Renewed chart.
+const PROPERTY_LINE_COLORS = {
+    '49thStr': '#7c3aed',
+    'AP':      '#10b981',
+    'EAST':    '#ef4444',
+    'MOC':     '#3b82f6',
+    'MUSO':    '#0ea5e9',
+    'ORT':     '#f59e0b',
+    'ROP':     '#8b5cf6',
+    'SJ':      '#ec4899',
+    'TV':      '#84cc16',
+    'TRA-AN3': '#64748b',
+};
+
 function renderCharts() {
     destroyCharts();
     const rows = filtered();
     const tc = themeColors();
+    const isDark = document.documentElement.classList.contains('dark');
+    STATE.chartFactories = {};
 
-    // 1. Stacked bar: status breakdown by expiring month
+    // ----- 1. Stacked bar: status breakdown by expiring month -----
     const monthsForBreakdown = [...new Set(rows.map(r => r.expMonthKey).filter(Boolean))].sort();
     const statusesPresent = STATE.allStatuses;
-    const datasetsByMonth = statusesPresent.map(status => ({
-        label: status,
-        data: monthsForBreakdown.map(m => rows.filter(r => r.expMonthKey === m && r.statusKey === status).length),
-        backgroundColor: STATUS_COLORS[status]?.bg || '#94a3b8',
-        borderWidth: 0,
-        borderRadius: 4,
-    }));
-    STATE.charts.monthStatus = new Chart(document.getElementById('chart-month-status'), {
+    const buildMonthStatus = () => ({
         type: 'bar',
-        data: { labels: monthsForBreakdown.map(fmtMonthLabel), datasets: datasetsByMonth },
+        data: {
+            labels: monthsForBreakdown.map(fmtMonthLabel),
+            datasets: statusesPresent.map(status => ({
+                label: status,
+                data: monthsForBreakdown.map(m => rows.filter(r => r.expMonthKey === m && r.statusKey === status).length),
+                backgroundColor: STATUS_COLORS[status]?.bg || '#94a3b8',
+                borderWidth: 0,
+                borderRadius: 4,
+            })),
+        },
         options: {
             responsive: true, maintainAspectRatio: false,
             scales: {
@@ -2349,8 +2449,7 @@ function renderCharts() {
             plugins: {
                 legend: { position: 'bottom', labels: { color: tc.text, boxWidth: 10, font: { size: 10 } } },
                 tooltip: {
-                    mode: 'index',
-                    intersect: false,
+                    mode: 'index', intersect: false,
                     filter: ctx => ctx.parsed.y > 0,
                     itemSort: (a, b) => b.parsed.y - a.parsed.y,
                     callbacks: {
@@ -2374,11 +2473,10 @@ function renderCharts() {
             }),
         },
     });
+    STATE.chartFactories.monthStatus = buildMonthStatus;
+    STATE.charts.monthStatus = new Chart(document.getElementById('chart-month-status'), buildMonthStatus());
 
-    // 2. Stacked bar: Renewal Rate per month = (Renewed + Lower Offer) / Total expiring,
-    //    split into Renewed vs Lower Offer segments. Bar height = renewal rate %.
-    //    Hover also surfaces pending (Current) count and the ceiling if all
-    //    pending leases ended up renewing -- the actionable "room to grow".
+    // ----- 2. Stacked bar: Renewal rate per month -----
     const monthsPresent = [...new Set(rows.map(r => r.expMonthKey).filter(Boolean))].sort();
     const monthStats = monthsPresent.map(m => {
         const r = rows.filter(x => x.expMonthKey === m);
@@ -2391,14 +2489,12 @@ function renderCharts() {
         const pending = current + pendingRen;
         return {
             renewed, lower, pendingRen, current, pending, total, signed,
-            renewedPct:    total ? 100 * renewed    / total : 0,
-            lowerPct:      total ? 100 * lower      / total : 0,
-            pendingRenPct: total ? 100 * pendingRen / total : 0,
-            ratePct:       total ? 100 * signed     / total : 0,
-            potentialRate: total ? 100 * (signed + pending) / total : 0,
+            renewedPct: total ? 100 * renewed / total : 0,
+            lowerPct:   total ? 100 * lower   / total : 0,
+            ratePct:    total ? 100 * signed  / total : 0,
         };
     });
-    STATE.charts.month = new Chart(document.getElementById('chart-month'), {
+    const buildMonth = () => ({
         type: 'bar',
         data: {
             labels: monthsPresent.map(fmtMonthLabel),
@@ -2407,7 +2503,7 @@ function renderCharts() {
                   backgroundColor: '#10b981', borderWidth: 0, borderRadius: 4, stack: 'rate' },
                 { label: 'Lower Offer', data: monthStats.map(d => d.lowerPct),
                   backgroundColor: '#f59e0b', borderWidth: 0, borderRadius: 4, stack: 'rate' },
-            ]
+            ],
         },
         options: {
             responsive: true, maintainAspectRatio: false,
@@ -2418,8 +2514,7 @@ function renderCharts() {
             plugins: {
                 legend: { position: 'bottom', labels: { color: tc.text, boxWidth: 10, font: { size: 10 } } },
                 tooltip: {
-                    mode: 'index',
-                    intersect: false,
+                    mode: 'index', intersect: false,
                     callbacks: {
                         title: ctx => ctx[0].label,
                         label: ctx => {
@@ -2441,7 +2536,7 @@ function renderCharts() {
                                 `Renewal rate: ${d.ratePct.toFixed(1)}%`,
                             ];
                         },
-                    }
+                    },
                 },
             },
             onHover: chartHoverCursor,
@@ -2455,14 +2550,16 @@ function renderCharts() {
             }),
         },
     });
+    STATE.chartFactories.month = buildMonth;
+    STATE.charts.month = new Chart(document.getElementById('chart-month'), buildMonth());
 
-    // 3. Histogram: actual (signed renewal) delta % distribution
+    // ----- 3. Histogram: actual delta % distribution -----
     const signedRows = rows.filter(r => r.statusKey === 'Renewed' || r.statusKey === 'Lower Offer');
-    const deltas = signedRows.map(r => r.actualDeltaPct).filter(v => v !== null);
+    const sDeltas = signedRows.map(r => r.actualDeltaPct).filter(v => v !== null);
     const bins = [-Infinity, -0.05, 0, 0.03, 0.05, 0.08, 0.12, Infinity];
     const binLabels = ['<-5%','-5–0%','0–3%','3–5%','5–8%','8–12%','>12%'];
-    const binCounts = bins.slice(0,-1).map((lo, i) => deltas.filter(d => d >= lo && d < bins[i+1]).length);
-    STATE.charts.delta = new Chart(document.getElementById('chart-delta'), {
+    const binCounts = bins.slice(0,-1).map((lo, i) => sDeltas.filter(d => d >= lo && d < bins[i+1]).length);
+    const buildDelta = () => ({
         type: 'bar',
         data: {
             labels: binLabels,
@@ -2491,8 +2588,13 @@ function renderCharts() {
             }),
         },
     });
+    STATE.chartFactories.delta = buildDelta;
+    STATE.charts.delta = new Chart(document.getElementById('chart-delta'), buildDelta());
 
-    // 4. Line: avg renewed total by expiring month (trend over time)
+    // ----- 4. Line: avg renewed total by expiring month --------------------
+    //         • One dashed line per property
+    //         • One solid thick line = overall mean (across all properties)
+    //         • Legend hover thickens the hovered series, mutes the others
     const monthsForAvg = [...new Set(rows.map(r => r.expMonthKey).filter(Boolean))].sort();
     const monthMeans = monthsForAvg.map(m => {
         const signedInMonth = rows.filter(r => r.expMonthKey === m && r.actualRenewal);
@@ -2504,53 +2606,149 @@ function renderCharts() {
         const avgDeltaPct = deltaPcts.length ? deltaPcts.reduce((a,b)=>a+b,0) / deltaPcts.length : null;
         return { avg, avgDelta, avgDeltaPct, n: signedInMonth.length };
     });
-    const avgRenewalByMonth = monthMeans.map(d => d.avg);
-    STATE.charts.avgRenewed = new Chart(document.getElementById('chart-avg-renewed'), {
+    const meanSeries = monthMeans.map(d => d.avg);
+
+    // Properties that actually have at least one signed renewal in the filtered set.
+    const propsPresent = PROPERTY_ORDER.filter(p => rows.some(r => r.property === p && r.actualRenewal));
+    const perPropertyData = propsPresent.map(p => {
+        const series = monthsForAvg.map(m => {
+            const sub = rows.filter(r => r.property === p && r.expMonthKey === m && r.actualRenewal);
+            if (!sub.length) return null;
+            return sub.reduce((s, r) => s + r.actualRenewal, 0) / sub.length;
+        });
+        const nByMonth = monthsForAvg.map(m =>
+            rows.filter(r => r.property === p && r.expMonthKey === m && r.actualRenewal).length);
+        return { property: p, color: PROPERTY_LINE_COLORS[p] || '#64748b', series, nByMonth };
+    });
+
+    // Auto-scale y-axis around the data, with floor at $500 so trends aren't crushed.
+    const allValues = [...meanSeries, ...perPropertyData.flatMap(p => p.series)].filter(v => v !== null && Number.isFinite(v));
+    const dataMin = allValues.length ? Math.min(...allValues) : 1000;
+    const dataMax = allValues.length ? Math.max(...allValues) : 2200;
+    const pad = Math.max(50, (dataMax - dataMin) * 0.15);
+    const yMin = Math.max(0, Math.floor((dataMin - pad) / 100) * 100);
+    const yMax = Math.ceil((dataMax + pad) / 100) * 100;
+
+    const MEAN_COLOR_LIGHT = '#0f172a';
+    const MEAN_COLOR_DARK  = '#f8fafc';
+    const meanBorder = isDark ? MEAN_COLOR_DARK : MEAN_COLOR_LIGHT;
+    const meanFill   = isDark ? 'rgba(248,250,252,0.06)' : 'rgba(15,23,42,0.06)';
+
+    const buildAvgRenewed = () => ({
         type: 'line',
         data: {
             labels: monthsForAvg.map(fmtMonthLabel),
-            datasets: [{
-                label: 'Avg Renewed Total',
-                data: avgRenewalByMonth,
-                borderColor: '#06b6d4',
-                backgroundColor: 'rgba(6,182,212,0.18)',
-                tension: 0.3,
-                fill: true,
-                spanGaps: true,
-                pointRadius: 4,
-                pointBackgroundColor: '#06b6d4',
-            }],
+            datasets: [
+                // Per-property dashed lines
+                ...perPropertyData.map(p => ({
+                    label: p.property,
+                    data: p.series.slice(),
+                    borderColor: p.color,
+                    backgroundColor: 'transparent',
+                    borderDash: [6, 4],
+                    borderWidth: 1.75,
+                    tension: 0.3,
+                    fill: false,
+                    spanGaps: true,
+                    pointRadius: 2.5,
+                    pointHoverRadius: 5,
+                    pointBackgroundColor: p.color,
+                    _isMean: false,
+                })),
+                // Overall mean — solid, thick, drawn last so it sits on top
+                {
+                    label: 'Overall Mean',
+                    data: meanSeries.slice(),
+                    borderColor: meanBorder,
+                    backgroundColor: meanFill,
+                    borderDash: [],
+                    borderWidth: 3,
+                    tension: 0.3,
+                    fill: true,
+                    spanGaps: true,
+                    pointRadius: 4.5,
+                    pointHoverRadius: 7,
+                    pointBackgroundColor: meanBorder,
+                    _isMean: true,
+                    order: -1,
+                },
+            ],
         },
         options: {
             responsive: true, maintainAspectRatio: false,
+            interaction: { mode: 'nearest', intersect: false, axis: 'x' },
             scales: {
                 x: { ticks: { color: tc.text }, grid: { color: tc.grid } },
                 y: {
                     ticks: { color: tc.text, callback: v => '$' + Math.round(v).toLocaleString() },
                     grid: { color: tc.grid },
-                    min: 1000,
-                    max: 2200,
+                    min: yMin, max: yMax,
                 },
             },
             plugins: {
-                legend: { display: false },
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        color: tc.text,
+                        boxWidth: 18, boxHeight: 2,
+                        font: { size: 11 },
+                        usePointStyle: false,
+                    },
+                    onHover: (evt, legendItem, legend) => {
+                        const chart = legend.chart;
+                        const activeIdx = legendItem.datasetIndex;
+                        chart.data.datasets.forEach((ds, i) => {
+                            if (ds._origBorderWidth === undefined) ds._origBorderWidth = ds.borderWidth;
+                            if (ds._origPointRadius === undefined) ds._origPointRadius = ds.pointRadius;
+                            if (i === activeIdx) {
+                                ds.borderWidth = ds._isMean ? 5 : 4;
+                                ds.pointRadius = ds._isMean ? 6 : 4.5;
+                            } else {
+                                ds.borderWidth = 1;
+                                ds.pointRadius = 1.5;
+                            }
+                        });
+                        evt.native?.target && (evt.native.target.style.cursor = 'pointer');
+                        chart.update('none');
+                    },
+                    onLeave: (evt, legendItem, legend) => {
+                        const chart = legend.chart;
+                        chart.data.datasets.forEach(ds => {
+                            if (ds._origBorderWidth !== undefined) {
+                                ds.borderWidth = ds._origBorderWidth;
+                                delete ds._origBorderWidth;
+                            }
+                            if (ds._origPointRadius !== undefined) {
+                                ds.pointRadius = ds._origPointRadius;
+                                delete ds._origPointRadius;
+                            }
+                        });
+                        evt.native?.target && (evt.native.target.style.cursor = 'default');
+                        chart.update('none');
+                    },
+                },
                 tooltip: {
+                    mode: 'nearest', intersect: false,
                     callbacks: {
+                        title: ctx => ctx[0].label,
                         label: ctx => {
-                            const d = monthMeans[ctx.dataIndex];
-                            if (d.avg === null) return 'No signed renewals';
-                            const lines = [`Avg Renewed: $${Math.round(d.avg).toLocaleString()}`];
-                            if (d.avgDelta !== null) {
-                                const sign = d.avgDelta >= 0 ? '+' : '-';
-                                lines.push(`Avg Δ $: ${sign}$${Math.abs(Math.round(d.avgDelta)).toLocaleString()}`);
+                            const v = ctx.parsed.y;
+                            if (v === null || v === undefined || Number.isNaN(v)) return `${ctx.dataset.label}: —`;
+                            if (ctx.dataset._isMean) {
+                                const d = monthMeans[ctx.dataIndex];
+                                const lines = [`Overall Mean: $${Math.round(v).toLocaleString()}`];
+                                if (d?.avgDeltaPct !== null && d?.avgDeltaPct !== undefined) {
+                                    lines.push(`Avg Δ %: ${(d.avgDeltaPct * 100).toFixed(1)}%`);
+                                }
+                                if (d?.n) lines.push(`Across ${d.n} signed`);
+                                return lines;
                             }
-                            if (d.avgDeltaPct !== null) {
-                                lines.push(`Avg Δ %: ${(d.avgDeltaPct * 100).toFixed(1)}%`);
-                            }
-                            lines.push(`Across ${d.n} signed`);
-                            return lines;
-                        }
-                    }
+                            // per-property line: show $ + n
+                            const propIdx = perPropertyData.findIndex(p => p.property === ctx.dataset.label);
+                            const n = propIdx >= 0 ? perPropertyData[propIdx].nByMonth[ctx.dataIndex] : 0;
+                            return `${ctx.dataset.label}: $${Math.round(v).toLocaleString()} (${n} signed)`;
+                        },
+                    },
                 },
             },
             onHover: chartHoverCursor,
@@ -2561,6 +2759,38 @@ function renderCharts() {
                 openModal('Signed renewals ' + fmtMonthLabel(m), subset);
             }),
         },
+    });
+    STATE.chartFactories.avgRenewed = buildAvgRenewed;
+    STATE.charts.avgRenewed = new Chart(document.getElementById('chart-avg-renewed'), buildAvgRenewed());
+}
+
+// Chart expand-to-popup — rebuilds the hovered chart on a big canvas inside a modal.
+let CHART_EXPAND_INSTANCE = null;
+function openChartExpand(key) {
+    const factory = STATE.chartFactories && STATE.chartFactories[key];
+    if (!factory) return;
+    closeChartExpand();  // tear down any prior expanded chart
+    const title = document.querySelector(`.chart-card[data-chart-key="${key}"]`)?.dataset.chartTitle || 'Chart';
+    document.getElementById('chart-expand-title').textContent = title;
+    document.getElementById('chart-expand-modal').classList.remove('hidden');
+    requestAnimationFrame(() => {
+        const canvas = document.getElementById('chart-expand-canvas');
+        CHART_EXPAND_INSTANCE = new Chart(canvas, factory());
+    });
+}
+function closeChartExpand() {
+    if (CHART_EXPAND_INSTANCE) { CHART_EXPAND_INSTANCE.destroy(); CHART_EXPAND_INSTANCE = null; }
+    document.getElementById('chart-expand-modal')?.classList.add('hidden');
+}
+function initChartExpand() {
+    document.querySelectorAll('.chart-expand-btn').forEach(btn => {
+        btn.addEventListener('click', e => {
+            e.stopPropagation();
+            openChartExpand(btn.dataset.chartKey);
+        });
+    });
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') closeChartExpand();
     });
 }
 
@@ -4952,6 +5182,7 @@ initMulti();
 offersInitMulti();
 initRosterResize();
 initOfferBreakdown();
+initChartExpand();
 fetchData();
 </script>
 </body>
