@@ -2691,7 +2691,9 @@ function renderCharts() {
         },
         options: {
             responsive: true, maintainAspectRatio: false,
-            interaction: { mode: 'nearest', intersect: false, axis: 'x' },
+            // Per-point hover: tooltip shows only the specific point under the
+            // cursor, not every dataset at that x-position.
+            interaction: { mode: 'nearest', intersect: true },
             scales: {
                 x: { ticks: { color: tc.text }, grid: { color: tc.grid } },
                 y: {
@@ -2705,67 +2707,53 @@ function renderCharts() {
                     position: 'bottom',
                     labels: {
                         color: tc.text,
-                        boxWidth: 22, boxHeight: 2,
-                        padding: 10,
+                        boxWidth: 10, boxHeight: 10,
+                        padding: 12,
                         font: { size: 11 },
-                        usePointStyle: false,
-                        // Legend swatches always show each property at full color
-                        // regardless of the faded line, so the mapping is clear.
+                        usePointStyle: true,
+                        pointStyle: 'circle',
+                        // Circle swatches at full color — pinned items get a
+                        // dark ring around the circle so it's obvious what's locked.
                         generateLabels: (chart) => {
                             const def = Chart.defaults.plugins.legend.labels.generateLabels(chart);
+                            const pins = chart.$pinned || new Set();
                             return def.map(item => {
                                 const ds = chart.data.datasets[item.datasetIndex];
-                                if (ds && !ds._isMean && ds._baseColor) {
-                                    item.strokeStyle = ds._baseColor;
-                                    item.fillStyle = ds._baseColor;
-                                }
+                                if (!ds) return item;
+                                const base = ds._isMean ? meanBorder : ds._baseColor;
+                                const isPinned = pins.has(ds.label);
+                                item.fillStyle = base;
+                                item.pointStyle = 'circle';
+                                item.strokeStyle = isPinned ? tc.text : base;
+                                item.lineWidth = isPinned ? 2 : 0;
+                                item.fontColor = tc.text;
                                 return item;
                             });
                         },
                     },
                     onHover: (evt, legendItem, legend) => {
-                        const chart = legend.chart;
-                        const activeIdx = legendItem.datasetIndex;
-                        chart.data.datasets.forEach((ds, i) => {
-                            if (i === activeIdx) {
-                                // Spotlight the hovered series.
-                                ds.borderColor = ds._isMean ? meanBorder : ds._baseColor;
-                                ds.borderWidth = ds._isMean ? 4.5 : 3;
-                                ds.pointRadius = ds._isMean ? 6 : 4;
-                            } else if (ds._isMean) {
-                                // Keep mean solid+visible but slightly recede.
-                                ds.borderColor = meanBorder;
-                                ds.borderWidth = 2;
-                                ds.pointRadius = 3;
-                            } else {
-                                // Push other properties further back.
-                                ds.borderColor = hexToRgba(ds._baseColor, PROP_DIM_ALPHA);
-                                ds.borderWidth = 1.25;
-                                ds.pointRadius = 0;
-                            }
-                        });
+                        applyAvgRenewedState(legend.chart, legend.chart.data.datasets[legendItem.datasetIndex]?.label || null);
                         evt.native?.target && (evt.native.target.style.cursor = 'pointer');
-                        chart.update('none');
                     },
                     onLeave: (evt, legendItem, legend) => {
-                        const chart = legend.chart;
-                        chart.data.datasets.forEach(ds => {
-                            if (ds._isMean) {
-                                ds.borderColor = meanBorder;
-                                ds.borderWidth = 3;
-                                ds.pointRadius = 5;
-                            } else {
-                                ds.borderColor = hexToRgba(ds._baseColor, PROP_IDLE_ALPHA);
-                                ds.borderWidth = 1.5;
-                                ds.pointRadius = 0;
-                            }
-                        });
+                        applyAvgRenewedState(legend.chart, null);
                         evt.native?.target && (evt.native.target.style.cursor = 'default');
-                        chart.update('none');
+                    },
+                    onClick: (evt, legendItem, legend) => {
+                        const chart = legend.chart;
+                        if (!chart.$pinned) chart.$pinned = new Set();
+                        const label = chart.data.datasets[legendItem.datasetIndex]?.label;
+                        if (!label) return;
+                        if (chart.$pinned.has(label)) chart.$pinned.delete(label);
+                        else chart.$pinned.add(label);
+                        // Keep spotlight on the clicked item while cursor is still there.
+                        applyAvgRenewedState(chart, label);
                     },
                 },
                 tooltip: {
-                    mode: 'nearest', intersect: false,
+                    // Single-point tooltip — only the hovered point, not every
+                    // dataset at that x-position.
+                    mode: 'nearest', intersect: true,
                     callbacks: {
                         title: ctx => ctx[0].label,
                         label: ctx => {
@@ -2799,6 +2787,49 @@ function renderCharts() {
     });
     STATE.chartFactories.avgRenewed = buildAvgRenewed;
     STATE.charts.avgRenewed = new Chart(document.getElementById('chart-avg-renewed'), buildAvgRenewed());
+
+    // Apply the Avg-Renewed line state based on pinned labels + optional
+    // in-flight hover label. Shared between the inline chart and the expand
+    // modal via chart.$pinned (a Set on the chart instance).
+    window.applyAvgRenewedState = function (chart, hoverLabel) {
+        if (!chart) return;
+        const pinned = chart.$pinned || new Set();
+        const activeLabel = hoverLabel || null;
+        const anySpotlit = pinned.size > 0 || !!activeLabel;
+        chart.data.datasets.forEach(ds => {
+            const isSpotlit = pinned.has(ds.label) || ds.label === activeLabel;
+            if (ds._isMean) {
+                if (isSpotlit) {
+                    ds.borderColor = meanBorder;
+                    ds.borderWidth = 4.5;
+                    ds.pointRadius = 6;
+                } else if (anySpotlit) {
+                    ds.borderColor = meanBorder;
+                    ds.borderWidth = 2;
+                    ds.pointRadius = 3;
+                } else {
+                    ds.borderColor = meanBorder;
+                    ds.borderWidth = 3;
+                    ds.pointRadius = 5;
+                }
+            } else {
+                if (isSpotlit) {
+                    ds.borderColor = ds._baseColor;
+                    ds.borderWidth = 3;
+                    ds.pointRadius = 4;
+                } else if (anySpotlit) {
+                    ds.borderColor = hexToRgba(ds._baseColor, PROP_DIM_ALPHA);
+                    ds.borderWidth = 1.25;
+                    ds.pointRadius = 0;
+                } else {
+                    ds.borderColor = hexToRgba(ds._baseColor, PROP_IDLE_ALPHA);
+                    ds.borderWidth = 1.5;
+                    ds.pointRadius = 0;
+                }
+            }
+        });
+        chart.update('none');
+    };
 }
 
 // Chart expand-to-popup — rebuilds the hovered chart on a big canvas inside a modal.
