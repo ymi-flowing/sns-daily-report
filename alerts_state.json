@@ -8,13 +8,13 @@
       "firstSeen": "2026-11-04",
       "lastMsg": "Lease ends in 22d \u2014 renewal not signed"
     },
-    "49thStr|vacantNotReadyList|26dfa6a4-1ed1-4c12-8ad8-6c59c9306dd4": {
-      "firstSeen": "2026-11-13",
-      "lastMsg": "Past Available Date"
-    },
     "AP|insufficientNoticeList|d8a7d113-a1f0-4c2e-a029-7395dadded6c": {
       "firstSeen": "2026-10-31",
       "lastMsg": "Lease ends in 46d \u2014 renewal not signed"
+    },
+    "AP|pendingInRealUnitList|dc4d0f3f-3d14-49b5-9182-9c970c5c2ba2": {
+      "firstSeen": "2026-11-13",
+      "lastMsg": "Pending applicant in a real unit"
     },
     "EAST|insufficientNoticeList|5a57c287-335d-4f86-9b60-12223bccbb4c": {
       "firstSeen": "2026-11-11",
