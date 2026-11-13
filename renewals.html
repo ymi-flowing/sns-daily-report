@@ -2632,43 +2632,58 @@ function renderCharts() {
     const MEAN_COLOR_LIGHT = '#0f172a';
     const MEAN_COLOR_DARK  = '#f8fafc';
     const meanBorder = isDark ? MEAN_COLOR_DARK : MEAN_COLOR_LIGHT;
-    const meanFill   = isDark ? 'rgba(248,250,252,0.06)' : 'rgba(15,23,42,0.06)';
+    const meanPointBorder = isDark ? '#0f172a' : '#ffffff';
+    // Property lines: faded by default so the Overall Mean reads as the headline.
+    // Hovering a legend label restores that property to full saturation and
+    // mutes the rest further, which is the whole point of the chart.
+    const PROP_IDLE_ALPHA   = 0.22;    // default (very light, just context)
+    const PROP_DIM_ALPHA    = 0.08;    // further dimmed when another property is hovered
+    const hexToRgba = (hex, a) => {
+        const h = hex.replace('#','');
+        const r = parseInt(h.slice(0,2),16), g = parseInt(h.slice(2,4),16), b = parseInt(h.slice(4,6),16);
+        return `rgba(${r},${g},${b},${a})`;
+    };
 
     const buildAvgRenewed = () => ({
         type: 'line',
         data: {
             labels: monthsForAvg.map(fmtMonthLabel),
             datasets: [
-                // Per-property dashed lines
+                // Property dashed lines — faded by default, no points unless hovered.
                 ...perPropertyData.map(p => ({
                     label: p.property,
                     data: p.series.slice(),
-                    borderColor: p.color,
+                    borderColor: hexToRgba(p.color, PROP_IDLE_ALPHA),
                     backgroundColor: 'transparent',
-                    borderDash: [6, 4],
-                    borderWidth: 1.75,
-                    tension: 0.3,
+                    borderDash: [10, 6],
+                    borderWidth: 1.5,
+                    tension: 0.35,
                     fill: false,
                     spanGaps: true,
-                    pointRadius: 2.5,
+                    pointRadius: 0,
                     pointHoverRadius: 5,
                     pointBackgroundColor: p.color,
+                    pointBorderColor: p.color,
+                    pointBorderWidth: 0,
                     _isMean: false,
+                    _baseColor: p.color,
                 })),
-                // Overall mean — solid, thick, drawn last so it sits on top
+                // Overall mean — bold solid, ringed points, drawn on top.
                 {
                     label: 'Overall Mean',
                     data: meanSeries.slice(),
                     borderColor: meanBorder,
-                    backgroundColor: meanFill,
+                    backgroundColor: 'transparent',
                     borderDash: [],
                     borderWidth: 3,
-                    tension: 0.3,
-                    fill: true,
+                    tension: 0.35,
+                    fill: false,
                     spanGaps: true,
-                    pointRadius: 4.5,
+                    pointRadius: 5,
                     pointHoverRadius: 7,
                     pointBackgroundColor: meanBorder,
+                    pointBorderColor: meanPointBorder,
+                    pointBorderWidth: 2,
                     _isMean: true,
                     order: -1,
                 },
@@ -2690,22 +2705,43 @@ function renderCharts() {
                     position: 'bottom',
                     labels: {
                         color: tc.text,
-                        boxWidth: 18, boxHeight: 2,
+                        boxWidth: 22, boxHeight: 2,
+                        padding: 10,
                         font: { size: 11 },
                         usePointStyle: false,
+                        // Legend swatches always show each property at full color
+                        // regardless of the faded line, so the mapping is clear.
+                        generateLabels: (chart) => {
+                            const def = Chart.defaults.plugins.legend.labels.generateLabels(chart);
+                            return def.map(item => {
+                                const ds = chart.data.datasets[item.datasetIndex];
+                                if (ds && !ds._isMean && ds._baseColor) {
+                                    item.strokeStyle = ds._baseColor;
+                                    item.fillStyle = ds._baseColor;
+                                }
+                                return item;
+                            });
+                        },
                     },
                     onHover: (evt, legendItem, legend) => {
                         const chart = legend.chart;
                         const activeIdx = legendItem.datasetIndex;
                         chart.data.datasets.forEach((ds, i) => {
-                            if (ds._origBorderWidth === undefined) ds._origBorderWidth = ds.borderWidth;
-                            if (ds._origPointRadius === undefined) ds._origPointRadius = ds.pointRadius;
                             if (i === activeIdx) {
-                                ds.borderWidth = ds._isMean ? 5 : 4;
-                                ds.pointRadius = ds._isMean ? 6 : 4.5;
+                                // Spotlight the hovered series.
+                                ds.borderColor = ds._isMean ? meanBorder : ds._baseColor;
+                                ds.borderWidth = ds._isMean ? 4.5 : 3;
+                                ds.pointRadius = ds._isMean ? 6 : 4;
+                            } else if (ds._isMean) {
+                                // Keep mean solid+visible but slightly recede.
+                                ds.borderColor = meanBorder;
+                                ds.borderWidth = 2;
+                                ds.pointRadius = 3;
                             } else {
-                                ds.borderWidth = 1;
-                                ds.pointRadius = 1.5;
+                                // Push other properties further back.
+                                ds.borderColor = hexToRgba(ds._baseColor, PROP_DIM_ALPHA);
+                                ds.borderWidth = 1.25;
+                                ds.pointRadius = 0;
                             }
                         });
                         evt.native?.target && (evt.native.target.style.cursor = 'pointer');
@@ -2714,13 +2750,14 @@ function renderCharts() {
                     onLeave: (evt, legendItem, legend) => {
                         const chart = legend.chart;
                         chart.data.datasets.forEach(ds => {
-                            if (ds._origBorderWidth !== undefined) {
-                                ds.borderWidth = ds._origBorderWidth;
-                                delete ds._origBorderWidth;
-                            }
-                            if (ds._origPointRadius !== undefined) {
-                                ds.pointRadius = ds._origPointRadius;
-                                delete ds._origPointRadius;
+                            if (ds._isMean) {
+                                ds.borderColor = meanBorder;
+                                ds.borderWidth = 3;
+                                ds.pointRadius = 5;
+                            } else {
+                                ds.borderColor = hexToRgba(ds._baseColor, PROP_IDLE_ALPHA);
+                                ds.borderWidth = 1.5;
+                                ds.pointRadius = 0;
                             }
                         });
                         evt.native?.target && (evt.native.target.style.cursor = 'default');
