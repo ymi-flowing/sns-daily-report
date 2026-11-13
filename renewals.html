@@ -281,6 +281,130 @@
             .multi-panel { min-width: 220px; max-height: 300px; }
         }
 
+        /* ==== MOBILE (phones) — pocket-use polish. Desktop unaffected. ==== */
+        @media (max-width: 640px) {
+            body { padding: 10px !important; }
+
+            /* Header: make the row dense and let the title truncate instead of wrap. */
+            h1.text-2xl, h1.text-xl { font-size: 18px; line-height: 1.15; }
+            #last-updated { font-size: 11px; }
+            /* Icon-only Renewal Offers button on mobile (keep accessible label) */
+            #offers-btn { padding: 0 12px; gap: 6px; }
+            #offers-btn > span,
+            #offers-btn:not(:has(.sr-only))::after { }
+            /* Shrink the <label>&nbsp;</label> spacers that create the second row */
+            header label, .max-w-7xl > div > div > div > label { display: none !important; }
+
+            /* FILTER BAR: dense 2-column grid so all 6 filters + search fit in ~3 rows */
+            #filter-region, #filter-property, #filter-status,
+            #filter-month, #filter-unitType, #filter-floorplan,
+            #filter-unit-search {
+                min-width: 0;
+                flex: 1 1 calc(50% - 6px);
+            }
+            #filter-region .multi-trigger,
+            #filter-property .multi-trigger,
+            #filter-status .multi-trigger,
+            #filter-month .multi-trigger,
+            #filter-unitType .multi-trigger,
+            #filter-floorplan .multi-trigger,
+            #filter-unit-search .multi-trigger {
+                width: 100%;
+                min-width: 0;
+                padding: 8px 10px !important;
+                font-size: 12px;
+            }
+            #unit-search { width: 100% !important; }
+            #clear-filters { padding: 7px 12px !important; font-size: 11px; height: auto; }
+
+            /* EXPIRING LEASES toolbar: compact buttons + smaller labels */
+            .toggle-filter { padding: 6px 8px !important; font-size: 11px !important; gap: 5px !important; }
+            #csv-export { padding: 6px 10px !important; font-size: 11px !important; gap: 5px !important; }
+            /* Shrink the h2 title + counter chip */
+            #row-count { font-size: 11px !important; margin-left: 4px !important; }
+
+            /* Roster table: slightly bigger text than default .text-xs for readability
+               (default is 12px; we bump to 12.5 and reduce side padding to recover width). */
+            #roster-table th, #roster-table td {
+                padding: 7px 8px !important;
+                font-size: 12px !important;
+            }
+            /* Tighten sticky widths so more non-frozen content is visible.
+               FORCE widths via max-width + overflow:hidden so the static left
+               offsets (below) stay accurate — otherwise wider header text
+               ("PROPERTY ▲") grows the cell and sticky columns overlap. */
+            #roster-table thead th:nth-child(1),
+            #roster-table tbody td:nth-child(1),
+            #modal-table thead th:nth-child(1),
+            #modal-table tbody td:nth-child(1) {
+                width: 82px !important;
+                min-width: 82px !important;
+                max-width: 82px !important;
+                overflow: hidden; text-overflow: ellipsis;
+            }
+            #roster-table thead th:nth-child(2),
+            #roster-table tbody td:nth-child(2),
+            #modal-table thead th:nth-child(2),
+            #modal-table tbody td:nth-child(2) {
+                left: 82px !important;
+                width: 60px !important;
+                min-width: 60px !important;
+                max-width: 60px !important;
+                overflow: hidden; text-overflow: ellipsis;
+            }
+            #roster-table thead th:nth-child(3),
+            #roster-table tbody td:nth-child(3),
+            #modal-table thead th:nth-child(3),
+            #modal-table tbody td:nth-child(3) {
+                left: 142px !important;
+                width: 114px !important;
+                min-width: 114px !important;
+                max-width: 114px !important;
+                overflow: hidden; text-overflow: ellipsis;
+            }
+            /* Shrink header text on mobile so "PROPERTY/UNIT/STATUS" fit the narrower cols,
+               and hide the sort arrows (sort still works by tapping the cell). */
+            #roster-table thead th { font-size: 9.5px !important; padding: 6px 5px !important; letter-spacing: 0.02em !important; }
+            #roster-table thead th .arrow { display: none !important; }
+
+            /* Scroll affordance: subtle right-edge gradient so users know to swipe */
+            #roster-scroll { position: relative; }
+            #roster-scroll::after {
+                content: ''; position: sticky; right: 0; top: 0; bottom: 0;
+                width: 18px; pointer-events: none; display: block; float: right;
+                background: linear-gradient(90deg, transparent, rgba(255,255,255,0.85));
+            }
+            .dark #roster-scroll::after {
+                background: linear-gradient(90deg, transparent, rgba(30,41,59,0.85));
+            }
+
+            /* Bigger tap target for the drag handle */
+            #roster-resize { padding: 10px 0 !important; }
+            #roster-resize > div { width: 48px !important; height: 3px !important; }
+
+            /* KPI cards: smaller padding and number sizes so 2x2 grid fits nicely */
+            #kpi-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; }
+            #kpi-grid > div { padding: 12px !important; }
+            #kpi-grid .text-2xl { font-size: 18px !important; }
+            #kpi-grid .text-xl { font-size: 16px !important; }
+            #kpi-grid .text-xs { font-size: 10px !important; }
+
+            /* Section cards: reduce vertical padding */
+            .max-w-7xl > div.bg-white { padding: 12px !important; }
+            .max-w-7xl > div.bg-white > h3.text-sm,
+            .max-w-7xl > div.bg-white > h3 { font-size: 13px !important; }
+
+            /* Status × Month + summary tables: smaller font so columns fit */
+            #summary-table th, #summary-table td { padding: 5px 6px !important; font-size: 10.5px !important; }
+
+            /* Charts: shorter so you can see more above the fold */
+            .relative.h-72 { height: 220px !important; }
+
+            /* Modal full-screen fallback on phones */
+            .modal-backdrop { padding: 8px !important; }
+            .modal-box { max-height: 95vh !important; border-radius: 12px !important; }
+        }
+
         /* Allow .tip to be pinned open via JS (used on tap/click) */
         .tip.tip-visible::after,
         [data-hover-tip].hover-tip-visible::after {
@@ -509,6 +633,145 @@
         .dark #modal-table tbody td:nth-child(3) {
             border-right-color: rgba(100, 116, 139, 0.35);
         }
+        /* Kill the 1px right-border on the first two frozen cells — otherwise
+           scrolled body rows peek through the thin gap between stickies.
+           The third frozen column keeps its visible divider (above). */
+        #roster-table thead th:nth-child(1),
+        #roster-table thead th:nth-child(2),
+        #roster-table tbody td:nth-child(1),
+        #roster-table tbody td:nth-child(2),
+        #modal-table thead th:nth-child(1),
+        #modal-table thead th:nth-child(2),
+        #modal-table tbody td:nth-child(1),
+        #modal-table tbody td:nth-child(2) {
+            border-right: 0 !important;
+        }
+
+        /* Roster scroll container — height is driven inline by JS (default = 15 rows),
+           with a drag handle below. */
+        #roster-scroll { height: 500px; }
+        #roster-resize:active { background-color: #e2e8f0; }
+        .dark #roster-resize:active { background-color: #1e293b; }
+
+        /* Per-row Renewal-Offer breakdown popover */
+        .offer-info-btn {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 18px; height: 18px; margin-left: 4px;
+            border-radius: 50%; background: transparent;
+            color: #94a3b8;
+            cursor: pointer; vertical-align: middle;
+            border: 1px solid transparent;
+            transition: color 120ms, background 120ms, border-color 120ms;
+            flex-shrink: 0;
+        }
+        .offer-info-btn:hover,
+        .offer-info-btn:focus {
+            color: #0891b2; background: rgba(6, 182, 212, 0.10);
+            border-color: rgba(6, 182, 212, 0.35);
+            outline: none;
+        }
+        .dark .offer-info-btn { color: #64748b; }
+        .dark .offer-info-btn:hover,
+        .dark .offer-info-btn:focus {
+            color: #67e8f9; background: rgba(34, 211, 238, 0.14);
+            border-color: rgba(34, 211, 238, 0.45);
+        }
+        .offer-info-btn svg { width: 11px; height: 11px; }
+        .offer-cell-inline {
+            display: inline-flex; align-items: center; gap: 2px;
+        }
+
+        /* The breakdown popover itself — JS positions it absolutely.
+           On mobile it collapses to a centered sheet. */
+        #offer-breakdown {
+            position: fixed;
+            z-index: 120;
+            background: #ffffff;
+            color: #0f172a;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            box-shadow: 0 20px 50px rgba(15, 23, 42, 0.25);
+            padding: 14px 16px 12px;
+            width: 320px;
+            max-width: calc(100vw - 20px);
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        .dark #offer-breakdown {
+            background: #1e293b;
+            color: #e2e8f0;
+            border-color: #334155;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.55);
+        }
+        #offer-breakdown.hidden { display: none; }
+        #offer-breakdown .ob-close {
+            position: absolute; top: 6px; right: 6px;
+            width: 24px; height: 24px; border-radius: 6px;
+            display: inline-flex; align-items: center; justify-content: center;
+            color: #64748b; background: transparent; border: none; cursor: pointer;
+        }
+        #offer-breakdown .ob-close:hover { background: #f1f5f9; color: #0f172a; }
+        .dark #offer-breakdown .ob-close:hover { background: #334155; color: #e2e8f0; }
+        #offer-breakdown .ob-head {
+            padding-right: 22px;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 8px; margin-bottom: 8px;
+        }
+        .dark #offer-breakdown .ob-head { border-color: #334155; }
+        #offer-breakdown .ob-head .ob-title { font-weight: 700; font-size: 13px; }
+        #offer-breakdown .ob-head .ob-sub { color: #64748b; font-size: 11px; margin-top: 2px; }
+        .dark #offer-breakdown .ob-head .ob-sub { color: #94a3b8; }
+        #offer-breakdown table.ob-grid { width: 100%; border-collapse: collapse; }
+        #offer-breakdown table.ob-grid th,
+        #offer-breakdown table.ob-grid td {
+            padding: 3px 4px; text-align: right; font-variant-numeric: tabular-nums;
+        }
+        #offer-breakdown table.ob-grid th:first-child,
+        #offer-breakdown table.ob-grid td:first-child {
+            text-align: left; color: #64748b; font-weight: 500;
+        }
+        .dark #offer-breakdown table.ob-grid th:first-child,
+        .dark #offer-breakdown table.ob-grid td:first-child { color: #94a3b8; }
+        #offer-breakdown table.ob-grid thead th {
+            font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em;
+            color: #64748b; font-weight: 700; padding-bottom: 6px;
+            border-bottom: 1px dashed #e2e8f0;
+        }
+        .dark #offer-breakdown table.ob-grid thead th { border-color: #334155; }
+        #offer-breakdown table.ob-grid tr.ob-total td {
+            border-top: 1px solid #e2e8f0;
+            padding-top: 6px; margin-top: 2px;
+            font-weight: 700; color: #0f172a;
+        }
+        .dark #offer-breakdown table.ob-grid tr.ob-total td {
+            border-color: #475569; color: #e2e8f0;
+        }
+        #offer-breakdown .ob-footer {
+            margin-top: 10px; padding-top: 8px;
+            border-top: 1px solid #e2e8f0;
+            display: flex; justify-content: space-between; gap: 8px;
+            font-weight: 600;
+        }
+        .dark #offer-breakdown .ob-footer { border-color: #334155; }
+        #offer-breakdown .ob-footer .ob-delta-pos { color: #0891b2; }
+        .dark #offer-breakdown .ob-footer .ob-delta-pos { color: #22d3ee; }
+        #offer-breakdown .ob-footer .ob-delta-neg { color: #dc2626; }
+        .dark #offer-breakdown .ob-footer .ob-delta-neg { color: #fca5a5; }
+        #offer-breakdown .ob-footer .ob-delta-zero { color: #64748b; }
+        @media (max-width: 480px) {
+            #offer-breakdown {
+                left: 10px !important;
+                right: 10px !important;
+                width: auto;
+                top: auto !important;
+                bottom: 10px !important;
+                max-height: 70vh;
+                overflow-y: auto;
+            }
+        }
+
+        /* Make the roster-table currentTotal + totalOfferA cells visually grouped */
+        #roster-table td .offer-cell-inline { white-space: nowrap; }
 
         /* Sort indicators */
         th.sortable { cursor: pointer; user-select: none; }
@@ -694,6 +957,17 @@
     <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
         <div class="flex flex-wrap items-center gap-3">
             <span class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 pr-1">Filters</span>
+            <div class="multi-wrap" id="filter-region">
+                <button class="multi-trigger" data-key="region">
+                    <span class="label">Region</span>
+                    <span class="count-badge hidden">0</span>
+                    <svg class="w-3 h-3 ml-auto" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg>
+                </button>
+                <div class="multi-panel hidden">
+                    <div class="multi-actions"><button data-action="all">All</button><button data-action="none">None</button></div>
+                    <div class="multi-list"></div>
+                </div>
+            </div>
             <div class="multi-wrap" id="filter-property">
                 <button class="multi-trigger" data-key="property">
                     <span class="label">Property</span>
@@ -749,7 +1023,48 @@
                     <div class="multi-list"></div>
                 </div>
             </div>
+            <div id="filter-unit-search">
+                <div class="multi-trigger" style="cursor: text; padding: 6px 10px 6px 12px;">
+                    <svg class="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 103.5 10a7.5 7.5 0 0013.15 6.65z"/></svg>
+                    <input id="unit-search" type="search" autocomplete="off" placeholder="Search unit…"
+                           class="bg-transparent outline-none text-slate-700 dark:text-slate-200 text-sm font-medium w-[120px] sm:w-[140px]">
+                </div>
+            </div>
             <button id="clear-filters" class="h-10 px-4 rounded-xl text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 border-2 border-slate-200 dark:border-slate-600 hover:border-red-300 dark:hover:border-red-700 transition-colors">Clear all</button>
+        </div>
+    </div>
+
+    <!-- TABLE (moved above KPIs so filters + roster sit side-by-side) -->
+    <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+        <div class="p-4 border-b border-slate-200 dark:border-slate-700 flex flex-wrap items-center justify-between gap-3">
+            <div>
+                <h2 class="text-lg font-bold text-slate-800 dark:text-white">Expiring leases <span id="row-count" class="text-sm font-normal text-slate-500 dark:text-slate-400 ml-2"></span></h2>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+                <button class="toggle-filter h-9 px-3 inline-flex items-center gap-2 rounded-lg text-xs font-semibold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:border-slate-400 dark:hover:border-slate-500 transition-colors" data-key="insufficientNotice">
+                    <span class="toggle-box inline-flex items-center justify-center w-4 h-4 rounded border-2 border-slate-300 dark:border-slate-500 text-white text-[10px] leading-none">&nbsp;</span>
+                    Insufficient Notice
+                </button>
+                <button class="toggle-filter h-9 px-3 inline-flex items-center gap-2 rounded-lg text-xs font-semibold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:border-slate-400 dark:hover:border-slate-500 transition-colors" data-key="earlyTerm">
+                    <span class="toggle-box inline-flex items-center justify-center w-4 h-4 rounded border-2 border-slate-300 dark:border-slate-500 text-white text-[10px] leading-none">&nbsp;</span>
+                    Early Termination
+                </button>
+                <button id="csv-export" data-hover-tip="Export filtered table as CSV" class="h-9 px-3 rounded-lg bg-slate-100 dark:bg-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                    Export CSV
+                </button>
+            </div>
+        </div>
+        <div id="roster-scroll" class="overflow-auto fancy-scroll">
+            <table class="min-w-full text-xs" id="roster-table">
+                <thead class="bg-slate-50 dark:bg-slate-900 sticky top-0 z-10"></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+        <div id="roster-resize" role="separator" aria-label="Resize table" tabindex="0"
+             class="flex items-center justify-center py-1.5 cursor-ns-resize bg-slate-50 dark:bg-slate-900/60 border-t border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 touch-none select-none"
+             data-hover-tip="Drag to resize">
+            <div class="w-10 h-1 bg-slate-300 dark:bg-slate-600 rounded-full"></div>
         </div>
     </div>
 
@@ -798,35 +1113,6 @@
                 <span class="tip" data-tip="Mean of Actual Renewal per expiring month">?</span>
             </h3>
             <div class="relative h-72"><canvas id="chart-avg-renewed"></canvas></div>
-        </div>
-    </div>
-
-    <!-- TABLE -->
-    <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
-        <div class="p-4 border-b border-slate-200 dark:border-slate-700 flex flex-wrap items-center justify-between gap-3">
-            <div>
-                <h2 class="text-lg font-bold text-slate-800 dark:text-white">Expiring leases <span id="row-count" class="text-sm font-normal text-slate-500 dark:text-slate-400 ml-2"></span></h2>
-            </div>
-            <div class="flex flex-wrap items-center gap-2">
-                <button class="toggle-filter h-9 px-3 inline-flex items-center gap-2 rounded-lg text-xs font-semibold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:border-slate-400 dark:hover:border-slate-500 transition-colors" data-key="insufficientNotice">
-                    <span class="toggle-box inline-flex items-center justify-center w-4 h-4 rounded border-2 border-slate-300 dark:border-slate-500 text-white text-[10px] leading-none">&nbsp;</span>
-                    Insufficient Notice
-                </button>
-                <button class="toggle-filter h-9 px-3 inline-flex items-center gap-2 rounded-lg text-xs font-semibold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:border-slate-400 dark:hover:border-slate-500 transition-colors" data-key="earlyTerm">
-                    <span class="toggle-box inline-flex items-center justify-center w-4 h-4 rounded border-2 border-slate-300 dark:border-slate-500 text-white text-[10px] leading-none">&nbsp;</span>
-                    Early Termination
-                </button>
-                <button id="csv-export" data-hover-tip="Export filtered table as CSV" class="h-9 px-3 rounded-lg bg-slate-100 dark:bg-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600 flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                    Export CSV
-                </button>
-            </div>
-        </div>
-        <div class="overflow-x-auto fancy-scroll max-h-[600px]">
-            <table class="min-w-full text-xs" id="roster-table">
-                <thead class="bg-slate-50 dark:bg-slate-900 sticky top-0 z-10"></thead>
-                <tbody></tbody>
-            </table>
         </div>
     </div>
 
@@ -1017,6 +1303,23 @@ const PROPERTY_NAMES = {
 };
 const PROPERTY_ORDER = ['49thStr','AP','EAST','MOC','MUSO','ORT','ROP','SJ','TV'];
 
+// Property → metro region. Mirrors PROPERTY_GROUPS in generate_dashboard.py,
+// split further so Ocala (MOC/MUSO) and Orlando (TV, Winter Park) are distinct
+// per the Renewals filter spec. Unknown codes fall through as blank.
+const PROPERTY_REGION = {
+    '49thStr': 'Tampa',
+    'EAST':    'Ft. Lauderdale',
+    'MOC':     'Ocala',
+    'MUSO':    'Ocala',
+    'AP':      'Jacksonville',
+    'SJ':      'Jacksonville',
+    'ROP':     'Jacksonville',
+    'ORT':     'Jacksonville',
+    'TV':      'Orlando',
+    'TRA-AN3': 'Jacksonville',
+};
+const REGION_ORDER = ['Ft. Lauderdale', 'Tampa', 'Ocala', 'Jacksonville', 'Orlando'];
+
 const STATUS_COLORS = {
     'Renewed':         { bg: '#10b981', bgSoft: 'rgba(16,185,129,0.15)',  textLight: '#065f46', textDark: '#6ee7b7' },
     'Lower Offer':     { bg: '#f59e0b', bgSoft: 'rgba(245,158,11,0.15)',  textLight: '#92400e', textDark: '#fcd34d' },
@@ -1042,7 +1345,16 @@ const TABLE_COLUMNS = [
     { key: 'Resident Name',  label: 'Resident',       align: 'center', fmt: (v, row) => residentLinkHtml(v, row && row['Lease ID']) },
     { key: 'expMonthKey',    label: 'Exp Month',      align: 'center', fmt: v => v || '' },
     { key: 'currentTotal',   label: 'Current Rate',   align: 'center', fmt: fmtMoney },
-    { key: 'totalOfferA',    label: 'Renewal Offer',  align: 'center', fmt: fmtMoney },
+    { key: 'totalOfferA',    label: 'Renewal Offer',  align: 'center',
+      fmt: (v, row) => {
+          const amt = fmtMoney(v);
+          if (!row || row.__idx === undefined) return amt;
+          return `<span class="offer-cell-inline">${amt}`
+               + `<button type="button" class="offer-info-btn" data-row-idx="${row.__idx}"`
+               +   ` aria-label="Offer breakdown" data-hover-tip="Current vs offer breakdown">`
+               +   `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`
+               + `</button></span>`;
+      } },
     { key: 'deltaA',         label: 'Δ Offer',        align: 'center', fmt: fmtMoney },
     { key: 'deltaApct',      label: 'Δ Offer %',      align: 'center', fmt: fmtPct },
     { key: 'actualRenewal',  label: 'Actual Renewal', align: 'center', fmt: v => v ? fmtMoney(v) : '—' },
@@ -1062,6 +1374,7 @@ const STATE = {
     tabs: {},
     rows: [],
     filters: {
+        region: new Set(),
         property: new Set(),
         status: new Set(),
         month: new Set(),
@@ -1069,12 +1382,14 @@ const STATE = {
         floorplan: new Set(),
         earlyTerm: false,            // boolean toggle
         insufficientNotice: false,   // boolean toggle
+        unitSearch: '',              // text filter on Unit (substring, case-insensitive)
     },
     sort: { col: 'property', dir: 'asc' },
     charts: {},
     allMonths: [],
     allStatuses: [],
     allProperties: [],
+    allRegions: [],
     allUnitTypes: [],
     allFloorplans: [],
 };
@@ -1429,6 +1744,7 @@ function normalize(tabs) {
             row.actualDelta = toNum(row['Actual Delta']);
             row.actualDeltaPct = toNum(row['Actual Delta %']);
             row.monthsInProperty = toNum(row['Months in Property']);
+            row.region = PROPERTY_REGION[row.property] || '';
             out.push(row);
         }
     }
@@ -1441,6 +1757,7 @@ function normalize(tabs) {
 // Pick the row field that corresponds to a given filter key.
 function rowFieldFor(r, key) {
     switch (key) {
+        case 'region':    return r.region;
         case 'property':  return r.property;
         case 'status':    return r.statusKey;
         case 'month':     return r.expMonthKey;
@@ -1449,9 +1766,17 @@ function rowFieldFor(r, key) {
     }
 }
 
+function matchesUnitSearch(r, q) {
+    if (!q) return true;
+    const unit = String(r.Unit ?? '').toLowerCase();
+    return unit.includes(q);
+}
+
 function filtered() {
     const f = STATE.filters;
+    const q = (f.unitSearch || '').trim().toLowerCase();
     return STATE.rows.filter(r => {
+        if (f.region.size    > 0 && !f.region.has(r.region))          return false;
         if (f.property.size  > 0 && !f.property.has(r.property))      return false;
         if (f.status.size    > 0 && !f.status.has(r.statusKey))       return false;
         if (f.month.size     > 0 && !f.month.has(r.expMonthKey))      return false;
@@ -1459,6 +1784,7 @@ function filtered() {
         if (f.floorplan.size > 0 && !f.floorplan.has(r.floorplan))    return false;
         if (f.earlyTerm          && !isEarlyTermination(r))           return false;
         if (f.insufficientNotice && !isInsufficientNotice(r))         return false;
+        if (!matchesUnitSearch(r, q))                                 return false;
         return true;
     });
 }
@@ -1474,6 +1800,7 @@ function naturalCompare(a, b) {
 
 // Compute the universe of values across ALL rows -- used as the "parent" set.
 function buildFilterOptions() {
+    STATE.allRegions    = REGION_ORDER.filter(x => STATE.rows.some(r => r.region === x));
     STATE.allProperties = PROPERTY_ORDER.filter(p => STATE.rows.some(r => r.property === p));
     STATE.allStatuses   = STATUS_ORDER.filter(s => STATE.rows.some(r => r.statusKey === s));
     STATE.allMonths     = [...new Set(STATE.rows.map(r => r.expMonthKey).filter(Boolean))].sort();
@@ -1487,6 +1814,7 @@ function buildFilterOptions() {
 // Any previously-selected value that no longer exists in context is dropped.
 function rebuildMultiOptions() {
     const configs = [
+        { id: 'filter-region',    key: 'region',    all: STATE.allRegions,     labelFn: v => v },
         { id: 'filter-property',  key: 'property',  all: STATE.allProperties,  labelFn: v => `${v} — ${PROPERTY_NAMES[v]||v}` },
         { id: 'filter-status',    key: 'status',    all: STATE.allStatuses,    labelFn: v => v },
         { id: 'filter-month',     key: 'month',     all: STATE.allMonths,      labelFn: v => fmtMonthLabel(v) },
@@ -1494,6 +1822,7 @@ function rebuildMultiOptions() {
         { id: 'filter-floorplan', key: 'floorplan', all: STATE.allFloorplans,  labelFn: v => v },
     ];
     const f = STATE.filters;
+    const q = (f.unitSearch || '').trim().toLowerCase();
     for (const cfg of configs) {
         const otherKeys = configs.filter(c => c.key !== cfg.key).map(c => c.key);
         const inContext = STATE.rows.filter(r => {
@@ -1505,6 +1834,7 @@ function rebuildMultiOptions() {
             // Boolean toggles always narrow context for the cascade.
             if (f.earlyTerm          && !isEarlyTermination(r))   return false;
             if (f.insufficientNotice && !isInsufficientNotice(r)) return false;
+            if (!matchesUnitSearch(r, q))                         return false;
             return true;
         });
         const presentSet = new Set(inContext.map(r => rowFieldFor(r, cfg.key)).filter(Boolean));
@@ -1607,14 +1937,18 @@ function initMulti() {
         for (const k of Object.keys(STATE.filters)) {
             const v = STATE.filters[k];
             if (v instanceof Set) v.clear();
+            else if (typeof v === 'string') STATE.filters[k] = '';
             else STATE.filters[k] = false;
         }
         document.querySelectorAll('.multi-list input').forEach(cb => cb.checked = false);
         document.querySelectorAll('.multi-wrap').forEach(wrap => {
-            const key = wrap.querySelector('.multi-trigger').dataset.key;
-            updateTriggerBadge(wrap, key);
+            const trig = wrap.querySelector('.multi-trigger');
+            if (!trig || !trig.dataset.key) return;
+            updateTriggerBadge(wrap, trig.dataset.key);
         });
         document.querySelectorAll('.toggle-filter').forEach(btn => btn.classList.remove('active'));
+        const search = document.getElementById('unit-search');
+        if (search) search.value = '';
         renderAll();
     });
 
@@ -1628,6 +1962,197 @@ function initMulti() {
             renderAll();
         });
     });
+
+    // Unit-number search box — debounced live filter on the Expiring leases table.
+    const unitSearch = document.getElementById('unit-search');
+    if (unitSearch) {
+        let t = null;
+        unitSearch.addEventListener('input', () => {
+            STATE.filters.unitSearch = unitSearch.value || '';
+            clearTimeout(t);
+            t = setTimeout(renderAll, 80);
+        });
+        unitSearch.addEventListener('keydown', e => {
+            if (e.key === 'Escape') { unitSearch.value = ''; STATE.filters.unitSearch = ''; renderAll(); }
+        });
+        // Clicking the wrapping pill should focus the input.
+        const wrap = document.getElementById('filter-unit-search');
+        if (wrap) wrap.addEventListener('click', e => {
+            if (e.target.tagName !== 'INPUT') unitSearch.focus();
+        });
+    }
+}
+
+// =============================================================================
+// ROSTER TABLE HEIGHT — 15-row default + bottom drag handle, persists to LS
+// =============================================================================
+const ROSTER_HEIGHT_KEY = 'renewals.roster.scrollHeight';
+const ROSTER_HEIGHT_DEFAULT = 500;   // ~15 rows @ ~32px row height
+const ROSTER_HEIGHT_MIN = 180;
+function applyRosterHeight(px) {
+    const el = document.getElementById('roster-scroll');
+    if (!el) return;
+    const vp = Math.max(240, window.innerHeight - 120);
+    const clamped = Math.max(ROSTER_HEIGHT_MIN, Math.min(vp, Math.round(px)));
+    el.style.height = clamped + 'px';
+}
+function initRosterResize() {
+    const scroll = document.getElementById('roster-scroll');
+    const handle = document.getElementById('roster-resize');
+    if (!scroll || !handle) return;
+    // Hydrate saved height (fall back to default).
+    const saved = parseInt(localStorage.getItem(ROSTER_HEIGHT_KEY) || '', 10);
+    applyRosterHeight(Number.isFinite(saved) && saved > 0 ? saved : ROSTER_HEIGHT_DEFAULT);
+
+    let startY = 0, startH = 0, dragging = false, pid = null;
+    const onDown = (e) => {
+        dragging = true;
+        startY = (e.touches ? e.touches[0].clientY : e.clientY);
+        startH = scroll.getBoundingClientRect().height;
+        if (e.pointerId !== undefined) { pid = e.pointerId; handle.setPointerCapture(pid); }
+        document.body.style.userSelect = 'none';
+        e.preventDefault();
+    };
+    const onMove = (e) => {
+        if (!dragging) return;
+        const y = (e.touches ? e.touches[0].clientY : e.clientY);
+        applyRosterHeight(startH + (y - startY));
+        e.preventDefault();
+    };
+    const onUp = () => {
+        if (!dragging) return;
+        dragging = false;
+        document.body.style.userSelect = '';
+        const h = Math.round(scroll.getBoundingClientRect().height);
+        try { localStorage.setItem(ROSTER_HEIGHT_KEY, String(h)); } catch(_) {}
+        if (pid !== null) { try { handle.releasePointerCapture(pid); } catch(_){} pid = null; }
+    };
+    handle.addEventListener('pointerdown', onDown);
+    handle.addEventListener('pointermove', onMove);
+    handle.addEventListener('pointerup', onUp);
+    handle.addEventListener('pointercancel', onUp);
+    // Keyboard: Arrow Up/Down resize in 40px steps.
+    handle.addEventListener('keydown', e => {
+        if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+        const h = scroll.getBoundingClientRect().height + (e.key === 'ArrowUp' ? -40 : 40);
+        applyRosterHeight(h);
+        try { localStorage.setItem(ROSTER_HEIGHT_KEY, String(Math.round(scroll.getBoundingClientRect().height))); } catch(_) {}
+        e.preventDefault();
+    });
+}
+
+// =============================================================================
+// PER-ROW RENEWAL OFFER BREAKDOWN POPOVER
+// =============================================================================
+const OFFER_BREAKDOWN_LINES = [
+    { label: 'Utility',   key: 'Utility'  },
+    { label: 'Valet',     key: 'Valet'    },
+    { label: 'Pest',      key: 'Pest'     },
+    { label: 'Amenity',   key: 'Amenity'  },
+    { label: 'Internet',  key: 'Internet' },
+    { label: 'Pet',       key: 'Pet'      },
+    { label: 'Parking',   key: 'Parking'  },
+    { label: 'WD',        key: 'WD'       },
+    { label: 'Storage',   key: 'Storage'  },
+];
+function moneyOrBlankCell(v) {
+    if (v === null || v === undefined || v === '') return '<span class="text-slate-300 dark:text-slate-600">—</span>';
+    return fmtMoney(v);
+}
+function ensureBreakdownEl() {
+    let el = document.getElementById('offer-breakdown');
+    if (el) return el;
+    el = document.createElement('div');
+    el.id = 'offer-breakdown';
+    el.className = 'hidden';
+    el.innerHTML = '';
+    document.body.appendChild(el);
+    el.addEventListener('click', e => e.stopPropagation());
+    return el;
+}
+function hideOfferBreakdown() {
+    const el = document.getElementById('offer-breakdown');
+    if (el) el.classList.add('hidden');
+}
+function positionBreakdown(el, anchor) {
+    // Mobile-sheet layout handles its own positioning via CSS media query.
+    if (window.innerWidth <= 480) { el.style.left = ''; el.style.top = ''; return; }
+    const rect = anchor.getBoundingClientRect();
+    el.style.left = '0px'; el.style.top = '0px';
+    const w = el.offsetWidth, h = el.offsetHeight;
+    const pad = 8;
+    // Prefer below the icon; flip up if it would overflow viewport.
+    let top = rect.bottom + pad;
+    if (top + h > window.innerHeight - 8) top = Math.max(8, rect.top - h - pad);
+    let left = rect.left + rect.width/2 - w/2;
+    left = Math.max(8, Math.min(window.innerWidth - w - 8, left));
+    el.style.left = left + 'px';
+    el.style.top = top + 'px';
+}
+function openOfferBreakdown(row, anchor) {
+    const el = ensureBreakdownEl();
+    const base = toNum(row['Base Rent']);
+    const rentA = toNum(row['Rent A']);
+    const curTotal = toNum(row['Current Total']);
+    const offTotal = toNum(row['Total Offer A']);
+    const d = row.deltaA ?? (offTotal !== null && curTotal !== null ? offTotal - curTotal : null);
+    const dp = row.deltaApct ?? (curTotal ? d/curTotal : null);
+    const unit = row.Unit ?? '';
+    const resident = row['Resident Name'] || '';
+    const dClass = d === null ? 'ob-delta-zero' : (d > 0 ? 'ob-delta-pos' : (d < 0 ? 'ob-delta-neg' : 'ob-delta-zero'));
+    const dTxt = d === null ? '—' : signedMoney(d);
+    const dpTxt = dp === null ? '—' : ((dp > 0 ? '+' : '') + (dp * 100).toFixed(1) + '%');
+    const lineRows = OFFER_BREAKDOWN_LINES.map(line => {
+        const v = toNum(row[line.key]);
+        if (v === null || v === 0) return '';
+        return `<tr><td>${line.label}</td><td>${fmtMoney(v)}</td><td>${fmtMoney(v)}</td></tr>`;
+    }).join('');
+    el.innerHTML =
+        `<button type="button" class="ob-close" aria-label="Close">`
+        + `<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>`
+        + `</button>`
+        + `<div class="ob-head">`
+        +   `<div class="ob-title">Unit ${escapeHtml(String(unit))} · ${escapeHtml(row.property || '')}</div>`
+        +   `<div class="ob-sub">${escapeHtml(resident)}</div>`
+        + `</div>`
+        + `<table class="ob-grid">`
+        +   `<thead><tr><th></th><th>Current</th><th>Offer</th></tr></thead>`
+        +   `<tbody>`
+        +     `<tr><td>Rent</td><td>${moneyOrBlankCell(base)}</td><td>${moneyOrBlankCell(rentA)}</td></tr>`
+        +     lineRows
+        +     `<tr class="ob-total"><td>Total</td><td>${moneyOrBlankCell(curTotal)}</td><td>${moneyOrBlankCell(offTotal)}</td></tr>`
+        +   `</tbody>`
+        + `</table>`
+        + `<div class="ob-footer"><span>Δ <span class="${dClass}">${dTxt}</span></span><span>Δ% <span class="${dClass}">${dpTxt}</span></span></div>`;
+    el.querySelector('.ob-close').addEventListener('click', hideOfferBreakdown);
+    el.classList.remove('hidden');
+    positionBreakdown(el, anchor);
+}
+function initOfferBreakdown() {
+    // Delegate: handle clicks on any .offer-info-btn in the roster table.
+    const tbody = document.querySelector('#roster-table tbody');
+    if (!tbody) return;
+    tbody.addEventListener('click', e => {
+        const btn = e.target.closest('.offer-info-btn');
+        if (!btn) return;
+        e.stopPropagation();
+        const idx = parseInt(btn.dataset.rowIdx, 10);
+        const row = ROSTER_VIEW[idx];
+        if (!row) return;
+        openOfferBreakdown(row, btn);
+    });
+    // Close on outside click, Esc, scroll, resize.
+    document.addEventListener('click', e => {
+        const el = document.getElementById('offer-breakdown');
+        if (!el || el.classList.contains('hidden')) return;
+        if (e.target.closest('#offer-breakdown') || e.target.closest('.offer-info-btn')) return;
+        hideOfferBreakdown();
+    });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') hideOfferBreakdown(); });
+    window.addEventListener('resize', hideOfferBreakdown);
+    // Hide when the roster scrolls so the anchor stays accurate.
+    const scroll = document.getElementById('roster-scroll');
+    if (scroll) scroll.addEventListener('scroll', hideOfferBreakdown, { passive: true });
 }
 
 // =============================================================================
@@ -2165,13 +2690,19 @@ function renderTable() {
             renderTable();
         });
     });
-    tbody.innerHTML = rows.map(r => `
+    // Stash the sorted-filtered view so the breakdown popover can look rows up
+    // by index without walking STATE.rows again.
+    ROSTER_VIEW = rows;
+    tbody.innerHTML = rows.map((r, i) => {
+        r.__idx = i;
+        return `
         <tr class="data-row border-b border-slate-200 dark:border-slate-700">
             ${TABLE_COLUMNS.map(c => `<td class="px-3 py-2 text-${c.align} text-slate-700 dark:text-slate-200">${c.fmt(r[c.key], r)}</td>`).join('')}
-        </tr>
-    `).join('');
+        </tr>`;
+    }).join('');
     document.getElementById('row-count').textContent = `(${rows.length} rows)`;
 }
+let ROSTER_VIEW = [];
 // Columns whose cell values should be compared as real Dates, not strings.
 const DATE_SORT_COLS = new Set([
     'MI Date', 'Exp Date', 'expMonthKey',
@@ -4355,6 +4886,8 @@ wireHorizontalScroll(offersScroll);
 applyTheme();
 initMulti();
 offersInitMulti();
+initRosterResize();
+initOfferBreakdown();
 fetchData();
 </script>
 </body>
