@@ -240,6 +240,56 @@
             background: transparent;
         }
 
+        /* ==== Shared App Tabs (Daily KPIs ↔ Renewals) ====
+           Pill-nav above the page header on both tools so they feel like one app. */
+        .app-tabs { display: flex; justify-content: center; }
+        .app-tabs .app-tabs-inner {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 5px;
+            border-radius: 14px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+        }
+        .dark .app-tabs .app-tabs-inner {
+            background: #1e293b;
+            border-color: #334155;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+        }
+        .app-tab {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #64748b;
+            text-decoration: none;
+            transition: background-color 0.15s, color 0.15s;
+            line-height: 1;
+            white-space: nowrap;
+        }
+        .app-tab:hover { color: #0f172a; background: #f1f5f9; }
+        .dark .app-tab { color: #94a3b8; }
+        .dark .app-tab:hover { color: #e2e8f0; background: #334155; }
+        .app-tab.app-tab-active,
+        .app-tab.app-tab-active:hover {
+            background: #06b6d4; color: #ffffff;
+            box-shadow: 0 1px 2px rgba(6, 182, 212, 0.35);
+        }
+        .dark .app-tab.app-tab-active,
+        .dark .app-tab.app-tab-active:hover {
+            background: #0891b2; color: #ffffff;
+        }
+        .app-tab svg { width: 15px; height: 15px; flex-shrink: 0; }
+        @media (max-width: 640px) {
+            .app-tab { padding: 7px 14px; font-size: 12.5px; gap: 5px; }
+            .app-tab svg { width: 14px; height: 14px; }
+        }
+
         /* Mobile Responsive Styles */
         @media (max-width: 768px) {
             body { padding: 12px !important; }
@@ -344,6 +394,20 @@
     </div>
 
     <div class="max-w-7xl mx-auto space-y-5">
+
+        <!-- APP TABS (shared with Renewals Dashboard) -->
+        <nav class="app-tabs" aria-label="App navigation">
+            <div class="app-tabs-inner">
+                <a href="dashboard_live.html" class="app-tab app-tab-active" aria-current="page">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3v18h18M7 14l4-4 4 4 5-6"/></svg>
+                    Daily KPIs
+                </a>
+                <a href="renewals.html" class="app-tab" title="Renewals Dashboard">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    Renewals
+                </a>
+            </div>
+        </nav>
 
         <!-- Header -->
         <div class="mobile-header flex justify-between items-center bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
