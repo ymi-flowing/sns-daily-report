@@ -8,10 +8,6 @@
       "firstSeen": "2026-11-04",
       "lastMsg": "Lease ends in 21d \u2014 renewal not signed"
     },
-    "49thStr|vacantNotReadyList|07594c72-6157-44b0-9747-e748ddd61ada": {
-      "firstSeen": "2026-11-14",
-      "lastMsg": "Past Available Date"
-    },
     "AP|insufficientNoticeList|d8a7d113-a1f0-4c2e-a029-7395dadded6c": {
       "firstSeen": "2026-10-31",
       "lastMsg": "Lease ends in 45d \u2014 renewal not signed"
@@ -56,10 +52,6 @@
       "firstSeen": "2026-11-14",
       "lastMsg": "Past Available Date"
     },
-    "MUSO|insufficientNoticeList|2baf0995-4f66-4f86-be12-f9e6c9d84115": {
-      "firstSeen": "2026-11-13",
-      "lastMsg": "Lease ends in 58d \u2014 renewal not signed"
-    },
     "MUSO|insufficientNoticeList|a3edb3ce-5021-4a02-8881-f5715508f559": {
       "firstSeen": "2026-11-13",
       "lastMsg": "Lease ends in 58d \u2014 no NTV filed"
@@ -71,6 +63,38 @@
     "ORT|ntvList|51fd625d-e435-4420-864a-50a5413a5278": {
       "firstSeen": "2026-11-14",
       "lastMsg": "Past Move-Out Date"
+    },
+    "ORT|pendingInRealUnitList|418b7cb2-2ab6-4779-9f21-155ba935cb8b": {
+      "firstSeen": "2026-11-14",
+      "lastMsg": "Pending applicant in a real unit"
+    },
+    "ORT|pendingInRealUnitList|4925e0b8-1d10-45e2-a7e8-92605e597eb8": {
+      "firstSeen": "2026-11-14",
+      "lastMsg": "Pending applicant in a real unit"
+    },
+    "ORT|pendingInRealUnitList|57c7c2e6-ab93-4db8-add4-d3c054ceb314": {
+      "firstSeen": "2026-11-14",
+      "lastMsg": "Pending applicant in a real unit"
+    },
+    "ORT|pendingInRealUnitList|7476946e-4987-43df-87a5-fd3f633fd8be": {
+      "firstSeen": "2026-11-14",
+      "lastMsg": "Pending applicant in a real unit"
+    },
+    "ORT|pendingInRealUnitList|ac64a779-7524-4bca-9a35-27f9ac500a8b": {
+      "firstSeen": "2026-11-14",
+      "lastMsg": "Pending applicant in a real unit"
+    },
+    "ORT|pendingInRealUnitList|ad79170d-66be-4d20-beed-20f5d48f9cd1": {
+      "firstSeen": "2026-11-14",
+      "lastMsg": "Pending applicant in a real unit"
+    },
+    "ORT|pendingInRealUnitList|afceafed-686f-4910-b846-4324efb73b49": {
+      "firstSeen": "2026-11-14",
+      "lastMsg": "Pending applicant in a real unit"
+    },
+    "ORT|pendingInRealUnitList|c8368f7e-a57b-44c3-90c9-2ff4c114067a": {
+      "firstSeen": "2026-11-14",
+      "lastMsg": "Pending applicant in a real unit"
     },
     "ORT|vacantNotReadyList|be1ccb7b-de47-4958-8d35-7df5d6877494": {
       "firstSeen": "2026-11-12",
