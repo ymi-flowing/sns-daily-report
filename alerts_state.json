@@ -64,43 +64,7 @@
       "firstSeen": "2026-11-14",
       "lastMsg": "Past Move-Out Date"
     },
-    "ORT|pendingInRealUnitList|0064a9ce-d071-4eca-adc1-7d3c4d34a3e9": {
-      "firstSeen": "2026-11-14",
-      "lastMsg": "Pending applicant in a real unit"
-    },
-    "ORT|pendingInRealUnitList|06e59a5b-54cc-4527-9151-11f9972d84bf": {
-      "firstSeen": "2026-11-14",
-      "lastMsg": "Pending applicant in a real unit"
-    },
-    "ORT|pendingInRealUnitList|118b0e74-01ea-4b5c-8edf-e9a366ced2f6": {
-      "firstSeen": "2026-11-14",
-      "lastMsg": "Pending applicant in a real unit"
-    },
-    "ORT|pendingInRealUnitList|35e08013-2a6d-47fb-8bdf-16e783bf0a18": {
-      "firstSeen": "2026-11-14",
-      "lastMsg": "Pending applicant in a real unit"
-    },
-    "ORT|pendingInRealUnitList|418b7cb2-2ab6-4779-9f21-155ba935cb8b": {
-      "firstSeen": "2026-11-14",
-      "lastMsg": "Pending applicant in a real unit"
-    },
-    "ORT|pendingInRealUnitList|4925e0b8-1d10-45e2-a7e8-92605e597eb8": {
-      "firstSeen": "2026-11-14",
-      "lastMsg": "Pending applicant in a real unit"
-    },
-    "ORT|pendingInRealUnitList|57c7c2e6-ab93-4db8-add4-d3c054ceb314": {
-      "firstSeen": "2026-11-14",
-      "lastMsg": "Pending applicant in a real unit"
-    },
-    "ORT|pendingInRealUnitList|7476946e-4987-43df-87a5-fd3f633fd8be": {
-      "firstSeen": "2026-11-14",
-      "lastMsg": "Pending applicant in a real unit"
-    },
-    "ORT|pendingInRealUnitList|ac64a779-7524-4bca-9a35-27f9ac500a8b": {
-      "firstSeen": "2026-11-14",
-      "lastMsg": "Pending applicant in a real unit"
-    },
-    "ORT|pendingInRealUnitList|ad79170d-66be-4d20-beed-20f5d48f9cd1": {
+    "ORT|pendingInRealUnitList|23b547b5-4353-42a5-a5b5-022a8255e1bc": {
       "firstSeen": "2026-11-14",
       "lastMsg": "Pending applicant in a real unit"
     },
@@ -108,13 +72,9 @@
       "firstSeen": "2026-11-14",
       "lastMsg": "Pending applicant in a real unit"
     },
-    "ORT|pendingInRealUnitList|be1ccb7b-de47-4958-8d35-7df5d6877494": {
+    "ORT|vacantNotReadyList|be1ccb7b-de47-4958-8d35-7df5d6877494": {
       "firstSeen": "2026-11-14",
-      "lastMsg": "Pending applicant in a real unit"
-    },
-    "ORT|pendingInRealUnitList|c8368f7e-a57b-44c3-90c9-2ff4c114067a": {
-      "firstSeen": "2026-11-14",
-      "lastMsg": "Pending applicant in a real unit"
+      "lastMsg": "Past Available Date"
     },
     "SJ|pendingInRealUnitList|6cbb0063-a39b-4b1c-8572-5e819cd322a5": {
       "firstSeen": "2026-11-13",
