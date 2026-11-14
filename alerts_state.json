@@ -2,39 +2,79 @@
   "alerts": {
     "49thStr|insufficientNoticeList|0239c86a-ecf6-4dfc-a86a-8f609f4e286b": {
       "firstSeen": "2026-11-10",
-      "lastMsg": "Lease ends in 56d \u2014 renewal not signed"
+      "lastMsg": "Lease ends in 55d \u2014 renewal not signed"
     },
     "49thStr|insufficientNoticeList|d859066d-cd92-4e45-a427-1ef9b0e1a0d2": {
       "firstSeen": "2026-11-04",
-      "lastMsg": "Lease ends in 22d \u2014 renewal not signed"
+      "lastMsg": "Lease ends in 21d \u2014 renewal not signed"
+    },
+    "49thStr|vacantNotReadyList|07594c72-6157-44b0-9747-e748ddd61ada": {
+      "firstSeen": "2026-11-14",
+      "lastMsg": "Past Available Date"
     },
     "AP|insufficientNoticeList|d8a7d113-a1f0-4c2e-a029-7395dadded6c": {
       "firstSeen": "2026-10-31",
-      "lastMsg": "Lease ends in 46d \u2014 renewal not signed"
+      "lastMsg": "Lease ends in 45d \u2014 renewal not signed"
+    },
+    "AP|pendingInRealUnitList|08c98f5b-e90c-4e1c-9cc7-da89e25035d4": {
+      "firstSeen": "2026-11-14",
+      "lastMsg": "Pending applicant in a real unit"
+    },
+    "AP|vacantLeasedList|08c98f5b-e90c-4e1c-9cc7-da89e25035d4": {
+      "firstSeen": "2026-11-14",
+      "lastMsg": "Past Move-In Date"
     },
     "EAST|insufficientNoticeList|5a57c287-335d-4f86-9b60-12223bccbb4c": {
       "firstSeen": "2026-11-11",
-      "lastMsg": "Lease ends in 57d \u2014 no NTV filed"
+      "lastMsg": "Lease ends in 56d \u2014 no NTV filed"
     },
     "EAST|insufficientNoticeList|645711a1-0cd0-4f23-907b-22eed7c92c9b": {
       "firstSeen": "2026-11-07",
-      "lastMsg": "Lease ends in 53d \u2014 no NTV filed"
+      "lastMsg": "Lease ends in 52d \u2014 no NTV filed"
+    },
+    "EAST|ntvList|265356fd-5435-4677-a3ea-4c920c52f54c": {
+      "firstSeen": "2026-11-14",
+      "lastMsg": "5 business days to get ready"
     },
     "MOC|insufficientNoticeList|692b3d9f-5d57-4a28-903b-222289ea3773": {
       "firstSeen": "2026-11-10",
-      "lastMsg": "Lease ends in 56d \u2014 renewal not signed"
+      "lastMsg": "Lease ends in 55d \u2014 renewal not signed"
     },
     "MOC|insufficientNoticeList|9e759533-d8c0-4831-b379-4e7f9c40c492": {
       "firstSeen": "2026-11-11",
-      "lastMsg": "Lease ends in 57d \u2014 no NTV filed"
+      "lastMsg": "Lease ends in 56d \u2014 no NTV filed"
+    },
+    "MOC|ntvList|fc10298f-abc4-4708-b725-a93348591209": {
+      "firstSeen": "2026-11-14",
+      "lastMsg": "Past Move-Out Date"
+    },
+    "MOC|vacantNotReadyList|62bee211-cc2a-4fba-8668-0bfeabc6a8e9": {
+      "firstSeen": "2026-11-14",
+      "lastMsg": "Past Available Date"
+    },
+    "MOC|vacantNotReadyList|83190491-0460-4750-a571-f5d3bd0b3656": {
+      "firstSeen": "2026-11-14",
+      "lastMsg": "Past Available Date"
+    },
+    "MOC|vacantNotReadyList|f67c2192-06d2-454e-bcf3-8494e4e026ee": {
+      "firstSeen": "2026-11-14",
+      "lastMsg": "Past Available Date"
     },
     "MUSO|insufficientNoticeList|2baf0995-4f66-4f86-be12-f9e6c9d84115": {
       "firstSeen": "2026-11-13",
-      "lastMsg": "Lease ends in 59d \u2014 renewal not signed"
+      "lastMsg": "Lease ends in 58d \u2014 renewal not signed"
     },
     "MUSO|insufficientNoticeList|a3edb3ce-5021-4a02-8881-f5715508f559": {
       "firstSeen": "2026-11-13",
+      "lastMsg": "Lease ends in 58d \u2014 no NTV filed"
+    },
+    "ORT|insufficientNoticeList|fedb72d0-8de1-40b0-80a7-c3892cb20b8d": {
+      "firstSeen": "2026-11-14",
       "lastMsg": "Lease ends in 59d \u2014 no NTV filed"
+    },
+    "ORT|ntvList|51fd625d-e435-4420-864a-50a5413a5278": {
+      "firstSeen": "2026-11-14",
+      "lastMsg": "Past Move-Out Date"
     },
     "ORT|vacantNotReadyList|be1ccb7b-de47-4958-8d35-7df5d6877494": {
       "firstSeen": "2026-11-12",
@@ -43,7 +83,11 @@
     "SJ|pendingInRealUnitList|6cbb0063-a39b-4b1c-8572-5e819cd322a5": {
       "firstSeen": "2026-11-13",
       "lastMsg": "Pending applicant in a real unit"
+    },
+    "TV|ntvList|7de7ed12-4fcb-46cc-922f-1a69719adfc3": {
+      "firstSeen": "2026-11-14",
+      "lastMsg": "Available 15 business days before move-out"
     }
   },
-  "updated": "2026-11-13"
+  "updated": "2026-11-14"
 }
