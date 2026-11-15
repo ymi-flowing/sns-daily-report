@@ -88,22 +88,6 @@
       "firstSeen": "2026-11-14",
       "lastMsg": "Past Move-Out Date"
     },
-    "ORT|pendingInRealUnitList|23b547b5-4353-42a5-a5b5-022a8255e1bc": {
-      "firstSeen": "2026-11-14",
-      "lastMsg": "Pending applicant in a real unit"
-    },
-    "ORT|pendingInRealUnitList|afceafed-686f-4910-b846-4324efb73b49": {
-      "firstSeen": "2026-11-14",
-      "lastMsg": "Pending applicant in a real unit"
-    },
-    "ORT|pendingInRealUnitList|ccbb5ba1-ee2c-4ae7-b340-7ec72b62daa3": {
-      "firstSeen": "2026-11-15",
-      "lastMsg": "Pending applicant in a real unit"
-    },
-    "ORT|vacantLeasedList|afceafed-686f-4910-b846-4324efb73b49": {
-      "firstSeen": "2026-11-15",
-      "lastMsg": "Past Move-In Date"
-    },
     "ORT|vacantNotReadyList|4925e0b8-1d10-45e2-a7e8-92605e597eb8": {
       "firstSeen": "2026-11-15",
       "lastMsg": "Past Available Date"
