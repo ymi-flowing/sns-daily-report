@@ -1,16 +1,16 @@
 {
   "month": "2026-11",
   "monthLabel": "November 2026",
-  "generatedAt": "2026-11-16T03:54:18-05:00",
+  "generatedAt": "2026-11-16T08:17:22-05:00",
   "properties": {
     "ROP": {
       "current": 0,
       "pendingRenewal": 0,
-      "renewed": 5,
-      "ntvFormers": 1,
+      "renewed": 0,
+      "ntvFormers": 0,
       "underEviction": 0,
-      "total": 6,
-      "renewalPct": 83.3
+      "total": 0,
+      "renewalPct": 0.0
     },
     "TV": {
       "current": 0,
@@ -78,20 +78,20 @@
     "AP": {
       "current": 0,
       "pendingRenewal": 0,
-      "renewed": 0,
-      "ntvFormers": 0,
+      "renewed": 12,
+      "ntvFormers": 8,
       "underEviction": 0,
-      "total": 0,
-      "renewalPct": 0.0
+      "total": 20,
+      "renewalPct": 60.0
     }
   },
   "portfolio": {
     "current": 0,
     "pendingRenewal": 0,
-    "renewed": 82,
-    "ntvFormers": 40,
+    "renewed": 89,
+    "ntvFormers": 47,
     "underEviction": 3,
-    "total": 125,
-    "renewalPct": 65.6
+    "total": 139,
+    "renewalPct": 64.0
   }
 }
