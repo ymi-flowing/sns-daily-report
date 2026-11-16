@@ -360,8 +360,8 @@ def main():
         print(json.dumps(all_rows[0], indent=2, default=str))
         return
 
-    url = os.environ.get("SUPABASE_URL")
-    key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+    url = (os.environ.get("SUPABASE_URL") or "").lstrip("﻿").strip()
+    key = (os.environ.get("SUPABASE_SERVICE_ROLE_KEY") or "").lstrip("﻿").strip()
     if not url or not key:
         print("ERROR: SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set.",
               file=sys.stderr)

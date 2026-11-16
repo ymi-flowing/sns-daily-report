@@ -94,8 +94,10 @@ class handler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_POST(self):
-        url = os.environ.get("SUPABASE_URL", "")
-        key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
+        # Vercel env var UI occasionally pastes a leading UTF-8 BOM; strip it
+        # so `requests` doesn't reject the URL with "No connection adapters".
+        url = os.environ.get("SUPABASE_URL", "").lstrip("﻿").strip()
+        key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "").lstrip("﻿").strip()
         if not url or not key:
             self._send(500, {
                 "status": "error",

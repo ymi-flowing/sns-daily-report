@@ -361,8 +361,8 @@ def main():
         upsert_snapshots(rows, "", "", dry_run=True)
         return
 
-    url = os.environ.get("SUPABASE_URL")
-    key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+    url = (os.environ.get("SUPABASE_URL") or "").lstrip("﻿").strip()
+    key = (os.environ.get("SUPABASE_SERVICE_ROLE_KEY") or "").lstrip("﻿").strip()
     if not url or not key:
         print("ERROR: SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set.",
               file=sys.stderr)
