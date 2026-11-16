@@ -123,8 +123,8 @@ PROPERTY_GROUPS = {
 
 # API Configuration
 API_TIMEOUT = 30  # Standard timeout
-API_MAX_RETRIES = 2
-API_RETRY_DELAY = 3  # Seconds between retries
+API_MAX_RETRIES = 4
+API_RETRY_DELAY = 5  # Seconds between retries
 API_CALL_DELAY = 0.5  # Small delay between API calls
 PROPERTY_REQUEST_DELAY = 1  # Seconds between property requests
 
