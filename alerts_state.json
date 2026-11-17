@@ -52,10 +52,6 @@
       "firstSeen": "2026-11-11",
       "lastMsg": "Lease ends in 53d \u2014 no NTV filed"
     },
-    "MOC|ntvList|d962a331-84ae-42b6-86ce-f27c9de446f5": {
-      "firstSeen": "2026-11-17",
-      "lastMsg": "Past Move-Out Date"
-    },
     "MUSO|insufficientNoticeList|a3edb3ce-5021-4a02-8881-f5715508f559": {
       "firstSeen": "2026-11-13",
       "lastMsg": "Lease ends in 55d \u2014 no NTV filed"
@@ -75,10 +71,6 @@
     "ORT|ntvList|8ade63b6-7330-413f-9ba2-22f57eeedf8a": {
       "firstSeen": "2026-11-17",
       "lastMsg": "Past Move-Out Date"
-    },
-    "ORT|ntvList|f3bcb937-2b96-44cf-af87-62d7618a8d25": {
-      "firstSeen": "2026-11-17",
-      "lastMsg": "5 business days to get ready"
     },
     "ORT|pendingInRealUnitList|afceafed-686f-4910-b846-4324efb73b49": {
       "firstSeen": "2026-11-16",
