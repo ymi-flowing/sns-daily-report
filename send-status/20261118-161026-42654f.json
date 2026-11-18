@@ -4,7 +4,28 @@
   "mode": "live",
   "status": "running",
   "total": 14,
-  "sent": [],
+  "sent": [
+    {
+      "property": "SJ",
+      "month": "2027-02",
+      "unit": "1721DU",
+      "resident": "William Wilson",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "San Jose - Feb 2027 - 1721DU.pdf",
+      "at": "2026-11-18T16:16:54"
+    },
+    {
+      "property": "SJ",
+      "month": "2027-02",
+      "unit": "5539BS",
+      "resident": "Patricia Norris",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "San Jose - Feb 2027 - 5539BS.pdf",
+      "at": "2026-11-18T16:16:58"
+    }
+  ],
   "staged": [],
   "failed": [],
   "completedAt": null
