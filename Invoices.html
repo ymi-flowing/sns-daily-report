@@ -123,6 +123,18 @@
         #roster-table th.sortable:hover { color: #0891b2; }
         .dark #roster-table th.sortable:hover { color: #67e8f9; }
 
+        /* Group row chevron (collapsed → right; expanded → down via rotate) */
+        .group-chevron {
+            width: 14px; height: 14px;
+            color: #94a3b8;
+            transition: transform 0.15s ease, color 0.15s ease;
+            flex-shrink: 0;
+        }
+        .dark .group-chevron { color: #64748b; }
+        .group-row:hover .group-chevron { color: #06b6d4; }
+        .group-row.open .group-chevron { transform: rotate(90deg); color: #06b6d4; }
+        .dark .group-row.open .group-chevron { color: #22d3ee; }
+
         /* Sticky totals footer for the roster table */
         #roster-table tfoot td {
             position: sticky; bottom: 0; z-index: 2;
@@ -1346,10 +1358,10 @@ function renderRosterGrouped(rows) {
     const html = [];
     for (const g of arr) {
         const open = STATE.expandedGroups.has(g.key);
-        const chevron = open ? '▼' : '▶';
+        const chevronSvg = '<svg class="group-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>';
         html.push(
-            '<tr class="group-row cursor-pointer" data-group="' + escapeAttr(g.key) + '">',
-            '<td class="px-3 py-1.5 text-slate-500">' + chevron + '</td>',
+            '<tr class="group-row cursor-pointer' + (open ? ' open' : '') + '" data-group="' + escapeAttr(g.key) + '">',
+            '<td class="px-3 py-1.5"><span class="inline-flex items-center">' + chevronSvg + '</span></td>',
             '<td class="px-3 py-1.5 font-medium text-slate-800 dark:text-slate-100">' + escapeHtml(g.propertyAbbreviation) + '</td>',
             '<td class="px-3 py-1.5">' + escapeHtml(g.bucket) + '</td>',
             '<td class="px-3 py-1.5">' + groupUnitCellHtml(g) + '</td>',
