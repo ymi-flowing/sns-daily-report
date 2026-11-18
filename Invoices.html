@@ -180,16 +180,54 @@
         }
         .dark .refresh-overlay .box { background: #1e293b; color: #cbd5e1; }
 
-        /* --- Nav tabs --- */
-        .nav-tab {
-            padding: 6px 14px; border-radius: 10px; font-size: 13px; font-weight: 600;
-            color: #64748b; text-decoration: none; transition: all 0.15s;
+        /* --- Shared App Tabs (Daily KPIs ↔ Renewals ↔ Invoices) --- */
+        .app-tabs { display: flex; justify-content: center; }
+        .app-tabs .app-tabs-inner {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 5px;
+            border-radius: 14px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
         }
-        .nav-tab:hover { background: #f1f5f9; color: #0f172a; }
-        .dark .nav-tab { color: #94a3b8; }
-        .dark .nav-tab:hover { background: #334155; color: #e2e8f0; }
-        .nav-tab.active { background: #0e7490; color: white; }
-        .dark .nav-tab.active { background: #0e7490; color: white; }
+        .dark .app-tabs .app-tabs-inner {
+            background: #1e293b;
+            border-color: #334155;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+        }
+        .app-tab {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #64748b;
+            text-decoration: none;
+            transition: background-color 0.15s, color 0.15s;
+            line-height: 1;
+            white-space: nowrap;
+        }
+        .app-tab:hover { color: #0f172a; background: #f1f5f9; }
+        .dark .app-tab { color: #94a3b8; }
+        .dark .app-tab:hover { color: #e2e8f0; background: #334155; }
+        .app-tab.app-tab-active,
+        .app-tab.app-tab-active:hover {
+            background: #06b6d4; color: #ffffff;
+            box-shadow: 0 1px 2px rgba(6, 182, 212, 0.35);
+        }
+        .dark .app-tab.app-tab-active,
+        .dark .app-tab.app-tab-active:hover {
+            background: #0891b2; color: #ffffff;
+        }
+        .app-tab svg { width: 15px; height: 15px; flex-shrink: 0; }
+        @media (max-width: 640px) {
+            .app-tab { padding: 7px 14px; font-size: 12.5px; gap: 5px; }
+            .app-tab svg { width: 14px; height: 14px; }
+        }
 
         /* Dollar amounts: right-aligned in table */
         .num { text-align: right; font-variant-numeric: tabular-nums; }
@@ -203,20 +241,63 @@
 </head>
 <body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 min-h-screen">
 
+<!-- PAGE GATE (prompts for Tali124$ on every load — not cached) -->
+<div id="page-gate" class="fixed inset-0 z-[300] flex items-center justify-center bg-slate-900/95 dark:bg-slate-950/95">
+    <div class="w-[360px] max-w-[90vw] bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-xl border border-slate-200 dark:border-slate-700">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-xl bg-cyan-100 dark:bg-cyan-900/40 text-cyan-700 dark:text-cyan-300 flex items-center justify-center">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+            </div>
+            <div>
+                <h2 class="text-base font-bold text-slate-900 dark:text-white">SNS Invoices</h2>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Password required to view</p>
+            </div>
+        </div>
+        <form onsubmit="submitGate(event)" autocomplete="off">
+            <input type="text" name="username" value="sns" autocomplete="username" style="display:none" readonly />
+            <input id="gate-password" name="password" type="password" autocomplete="off"
+                   placeholder="Password"
+                   class="w-full px-3 py-2.5 rounded-lg border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 text-sm focus:outline-none focus:border-cyan-500" />
+            <div id="gate-error" class="text-xs text-red-500 mt-2 hidden">Wrong password</div>
+            <button type="submit" class="mt-4 w-full px-4 py-2.5 text-sm font-semibold bg-cyan-700 hover:bg-cyan-800 text-white rounded-lg">
+                Unlock
+            </button>
+        </form>
+    </div>
+</div>
+
+
 <div class="max-w-[1600px] mx-auto px-3 sm:px-5 py-5 space-y-4">
+
+    <!-- APP TABS (shared with Daily KPIs + Renewals) -->
+    <nav class="app-tabs" aria-label="App navigation">
+        <div class="app-tabs-inner">
+            <a href="dashboard_live.html" class="app-tab" title="Portfolio Daily KPIs">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3v18h18M7 14l4-4 4 4 5-6"/></svg>
+                Daily KPIs
+            </a>
+            <a href="renewals.html" class="app-tab" title="Renewals Dashboard">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                Renewals
+            </a>
+            <a href="Invoices.html" class="app-tab app-tab-active" aria-current="page">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6M9.5 8.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"/></svg>
+                Invoices
+            </a>
+        </div>
+    </nav>
 
     <!-- HEADER -->
     <div class="flex flex-wrap items-end justify-between gap-3 bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
-        <div class="flex items-center gap-4">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 sm:w-14 sm:h-14 flex items-center justify-center">
+                <img src="https://www.dropbox.com/scl/fi/ss6tqrjk1xyldcwl5g3w9/SNS-Blue.png?rlkey=zcsommki78v65qmk6zvzo0jxh&raw=1" alt="SNS Logo" class="w-10 h-10 sm:w-14 sm:h-14 object-contain dark:hidden">
+                <img src="https://www.dropbox.com/scl/fi/8qha3kw2j503jbd037ahh/SNS-White.png?rlkey=s3gjbikiohpe00vpcx8x1td3r&raw=1" alt="SNS Logo" class="w-10 h-10 sm:w-14 sm:h-14 object-contain hidden dark:block">
+            </div>
             <div>
-                <h1 class="text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-100">SNS Invoices</h1>
+                <h1 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">Invoices Dashboard</h1>
                 <p class="text-xs text-slate-500 dark:text-slate-400">Expense & move-out analytics across the portfolio</p>
             </div>
-            <nav class="flex items-center gap-1 ml-2">
-                <a href="/" class="nav-tab">Daily KPIs</a>
-                <a href="/renewals" class="nav-tab">Renewals</a>
-                <a href="/Invoices.html" class="nav-tab active">Invoices</a>
-            </nav>
         </div>
         <div class="flex flex-wrap items-center gap-2 sm:gap-3">
             <!-- Window chip -->
@@ -400,22 +481,6 @@
     </div>
 </div>
 
-<!-- Password modal -->
-<div id="password-modal" class="modal-backdrop hidden" onclick="if(event.target===this)closePasswordModal()">
-    <div class="modal-box" style="width: 360px;">
-        <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100 mb-3">Refresh requires password</h3>
-        <form onsubmit="submitPassword(event)" autocomplete="on">
-            <input type="text" name="username" value="sns" autocomplete="username" style="display:none" readonly />
-            <input id="password-input" name="password" type="password" autocomplete="current-password"
-                   class="w-full px-3 py-2 rounded-lg border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100" />
-            <div id="password-error" class="text-xs text-red-500 mt-2 hidden">Wrong password</div>
-            <div class="flex items-center justify-end gap-2 mt-4">
-                <button type="button" onclick="closePasswordModal()" class="px-4 py-2 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100">Cancel</button>
-                <button type="submit" class="px-4 py-2 text-sm font-semibold bg-cyan-700 hover:bg-cyan-800 text-white rounded-lg">Refresh</button>
-            </div>
-        </form>
-    </div>
-</div>
 
 <!-- Refresh overlay -->
 <div id="refresh-overlay" class="refresh-overlay hidden">
@@ -530,9 +595,17 @@ function flatten() {
 
 function updateHeader() {
     const since = STATE.data.sinceDate || '';
-    document.getElementById('window-chip').textContent = since ? ('Window: ' + since + ' → today') : 'No data';
+    document.getElementById('window-chip').textContent = since ? ('Window: ' + formatDateUS(since) + ' → today') : 'No data';
     const gen = STATE.data.generatedAt || '';
     document.getElementById('last-updated').textContent = gen ? ('Updated ' + formatWhen(gen)) : '—';
+}
+
+function formatDateUS(ymd) {
+    if (!ymd) return '';
+    const parts = String(ymd).slice(0, 10).split('-');
+    if (parts.length !== 3) return ymd;
+    const [y, m, d] = parts;
+    return m + '/' + d + '/' + y;
 }
 
 function formatWhen(iso) {
@@ -1018,7 +1091,7 @@ function openDrillModal(title, rows) {
     for (const r of sorted) {
         const glCell = r.glAccountNumber + (r.glName ? ' <span class="text-slate-400">· ' + escapeHtml(r.glName) + '</span>' : '');
         html.push('<tr class="border-t border-slate-100 dark:border-slate-700">');
-        html.push('<td class="py-1.5 pr-3">' + (r.accountingDate || '') + '</td>');
+        html.push('<td class="py-1.5 pr-3">' + formatDateUS(r.accountingDate) + '</td>');
         html.push('<td class="py-1.5 pr-3">' + escapeHtml(r.propertyAbbreviation || '') + '</td>');
         html.push('<td class="py-1.5 pr-3">' + escapeHtml(r.location || (r.locationType ? '' : 'Common')) + '</td>');
         html.push('<td class="py-1.5 pr-3">' + escapeHtml(r.invoiceNumber || '') + '</td>');
@@ -1045,7 +1118,7 @@ function closeDetailModal() {
 // ============================================================================
 const ROSTER_COLS = [
     { key: 'propertyAbbreviation', label: 'Property' },
-    { key: 'accountingDate', label: 'Date' },
+    { key: 'accountingDate', label: 'Date', fmt: v => formatDateUS(v) },
     { key: 'locationType', label: 'Bucket', fmt: v => v || 'Common' },
     { key: 'location', label: 'Unit / Bldg', fmt: v => v || '—' },
     { key: 'glAccountNumber', label: 'GL', cls: 'font-mono text-xs',
@@ -1179,7 +1252,7 @@ function renderRosterGrouped(rows) {
                 const glCell = r.glAccountNumber + (r.glName ? ' <span class="text-slate-400">· ' + escapeHtml(r.glName) + '</span>' : '');
                 html.push(
                     '<tr class="border-t border-slate-100 dark:border-slate-700">',
-                    '<td class="py-1.5 pr-3 pl-3">' + (r.accountingDate || '') + '</td>',
+                    '<td class="py-1.5 pr-3 pl-3">' + formatDateUS(r.accountingDate) + '</td>',
                     '<td class="py-1.5 pr-3">' + escapeHtml(r.invoiceNumber || '') + '</td>',
                     '<td class="py-1.5 pr-3">' + escapeHtml(r.vendor || '') + '</td>',
                     '<td class="py-1.5 pr-3 font-mono text-xs">' + glCell + '</td>',
@@ -1212,22 +1285,9 @@ function renderRosterGrouped(rows) {
 // Refresh flow
 // ============================================================================
 function refreshData() {
-    openPasswordModal();
-}
-function openPasswordModal() {
-    document.getElementById('password-modal').classList.remove('hidden');
-    document.getElementById('password-error').classList.add('hidden');
-    setTimeout(() => document.getElementById('password-input').focus(), 50);
-}
-function closePasswordModal() {
-    document.getElementById('password-modal').classList.add('hidden');
-    document.getElementById('password-input').value = '';
-}
-async function submitPassword(e) {
-    e.preventDefault();
-    const pw = document.getElementById('password-input').value;
-    closePasswordModal();
-    startRefresh(pw);
+    // Page gate already authenticated — reuse that password.
+    if (!AUTH_PASSWORD) return;  // should never happen while page is visible
+    startRefresh(AUTH_PASSWORD);
 }
 async function startRefresh(password) {
     showOverlay('Dispatching refresh…');
@@ -1334,12 +1394,36 @@ function escapeAttr(s) {
 }
 
 // ============================================================================
-// Boot
+// Page gate (prompted on every load — not cached)
 // ============================================================================
-loadData().catch(err => {
-    console.error(err);
-    document.getElementById('kpi-total').textContent = 'Error';
-    alert('Failed to load invoices_data.json. Run a Refresh or check the file.');
+const PAGE_PASSWORD = 'Tali124$';
+let AUTH_PASSWORD = null;   // set once the user unlocks; used by Refresh without re-prompting
+
+function submitGate(e) {
+    e.preventDefault();
+    const pw = document.getElementById('gate-password').value;
+    if (pw !== PAGE_PASSWORD) {
+        document.getElementById('gate-error').classList.remove('hidden');
+        document.getElementById('gate-password').focus();
+        return;
+    }
+    AUTH_PASSWORD = pw;
+    document.getElementById('page-gate').remove();
+    boot();
+}
+
+function boot() {
+    loadData().catch(err => {
+        console.error(err);
+        document.getElementById('kpi-total').textContent = 'Error';
+        alert('Failed to load invoices_data.json. Run a Refresh or check the file.');
+    });
+}
+
+// Focus the gate field on load.
+window.addEventListener('DOMContentLoaded', () => {
+    const el = document.getElementById('gate-password');
+    if (el) el.focus();
 });
 </script>
 </body>
