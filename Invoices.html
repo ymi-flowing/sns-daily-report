@@ -1,0 +1,1177 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SNS Invoices Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>tailwind.config = { darkMode: 'class' };</script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        html, body { overflow-x: hidden; max-width: 100vw; }
+        html:not(.dark) .bg-white { background-color: #fafbfc !important; }
+
+        /* --- Multi-select popovers (ported from renewals.html) --- */
+        .multi-wrap { position: relative; }
+        .multi-trigger {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 10px 14px; min-width: 180px;
+            border-radius: 12px; border: 2px solid #e2e8f0; background: #fafbfc;
+            color: #334155; font-size: 13px; font-weight: 500; cursor: pointer;
+            transition: border-color 0.15s;
+        }
+        .dark .multi-trigger { background: #1e293b; border-color: #334155; color: #cbd5e1; }
+        .multi-trigger:hover { border-color: #94a3b8; }
+        .dark .multi-trigger:hover { border-color: #64748b; }
+        .multi-trigger.active { border-color: #64748b; background: #f1f5f9; }
+        .dark .multi-trigger.active { background: #334155; border-color: #94a3b8; }
+        .multi-trigger .count-badge {
+            background: #0e7490; color: white; font-size: 10px; font-weight: 700;
+            border-radius: 10px; padding: 2px 7px; margin-left: 2px;
+        }
+        .multi-trigger svg { opacity: 0.5; }
+        .multi-panel {
+            position: absolute; top: calc(100% + 6px); left: 0; z-index: 50;
+            min-width: 280px; max-height: 420px; overflow: auto;
+            background: #fafbfc; border: 1px solid #e2e8f0; border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.15); padding: 8px;
+            white-space: nowrap;
+        }
+        .dark .multi-panel { background: #1e293b; border-color: #334155; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .multi-panel.hidden { display: none; }
+        .multi-item {
+            display: flex; align-items: center; gap: 8px;
+            padding: 7px 10px; border-radius: 8px; cursor: pointer;
+            font-size: 13px; color: #334155; white-space: nowrap;
+        }
+        .dark .multi-item { color: #cbd5e1; }
+        .multi-item:hover { background: #eff6ff; }
+        .dark .multi-item:hover { background: #1e293b80; }
+        .multi-item input[type="checkbox"] {
+            appearance: none; -webkit-appearance: none;
+            width: 16px; height: 16px; border: 1.5px solid #94a3b8; border-radius: 4px;
+            background: transparent; cursor: pointer; position: relative; flex-shrink: 0;
+            display: inline-flex; align-items: center; justify-content: center;
+        }
+        .multi-item input[type="checkbox"]:hover { border-color: #64748b; }
+        .dark .multi-item input[type="checkbox"] { border-color: #64748b; }
+        .multi-item input[type="checkbox"]:checked::after {
+            content: '✓'; font-size: 11px; font-weight: 900; line-height: 1; color: #64748b;
+        }
+        .dark .multi-item input[type="checkbox"]:checked::after { color: #94a3b8; }
+        .multi-actions {
+            display: flex; justify-content: space-between; padding: 6px 10px 2px;
+            font-size: 11px; border-bottom: 1px solid #e2e8f0; margin-bottom: 6px;
+            gap: 8px;
+        }
+        .dark .multi-actions { border-color: #334155; }
+        .multi-actions button {
+            background: none; border: none; color: #1e40af; cursor: pointer; font-weight: 600;
+        }
+        .dark .multi-actions button { color: #60a5fa; }
+        .multi-search {
+            width: 100%; padding: 6px 10px; margin-bottom: 6px;
+            border-radius: 8px; border: 1px solid #e2e8f0; background: white;
+            font-size: 12px; color: #334155;
+        }
+        .dark .multi-search { background: #0f172a; border-color: #334155; color: #cbd5e1; }
+
+        /* --- Toggle chip --- */
+        .toggle-filter {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 10px 14px; border-radius: 12px; border: 2px solid #e2e8f0;
+            background: #fafbfc; color: #334155; font-size: 13px; font-weight: 500;
+            cursor: pointer; transition: border-color 0.15s;
+        }
+        .dark .toggle-filter { background: #1e293b; border-color: #334155; color: #cbd5e1; }
+        .toggle-filter:hover { border-color: #94a3b8; }
+        .toggle-filter.active { background: #f1f5f9; border-color: #64748b; }
+        .dark .toggle-filter.active { background: #334155; border-color: #94a3b8; }
+        .toggle-box {
+            width: 16px; height: 16px; border: 1.5px solid #94a3b8; border-radius: 4px;
+            background: transparent; display: inline-flex; align-items: center; justify-content: center;
+        }
+        .toggle-filter.active .toggle-box::after {
+            content: '✓'; font-size: 11px; font-weight: 900; color: #64748b; line-height: 1;
+        }
+        .dark .toggle-filter.active .toggle-box::after { color: #94a3b8; }
+
+        /* --- Tables --- */
+        #roster-table th, #roster-table td { white-space: nowrap; }
+        #roster-table tbody td { background-color: #fafbfc; border-right: 1px solid rgba(100,116,139,0.1); }
+        #roster-table tbody td:last-child { border-right: 0; }
+        .dark #roster-table tbody td { background-color: #1e293b; border-right-color: rgba(148,163,184,0.1); }
+        #roster-table tbody tr:hover td { background-color: #eff6ff; }
+        .dark #roster-table tbody tr:hover td { background-color: #253551; }
+        #roster-table thead th { background-color: #f8fafc; }
+        .dark #roster-table thead th { background-color: #0f172a; }
+        #roster-table th.sortable { cursor: pointer; user-select: none; }
+        #roster-table th.sortable:hover { color: #0891b2; }
+        .dark #roster-table th.sortable:hover { color: #67e8f9; }
+
+        /* --- Charts --- */
+        .chart-card {
+            background: white; border-radius: 16px; padding: 16px;
+            border: 1px solid #e2e8f0; position: relative;
+        }
+        .dark .chart-card { background: #1e293b; border-color: #334155; }
+        .chart-title {
+            font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 4px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .dark .chart-title { color: #cbd5e1; }
+        .chart-expand {
+            background: none; border: none; cursor: pointer; padding: 4px;
+            color: #94a3b8; border-radius: 6px;
+        }
+        .chart-expand:hover { background: #f1f5f9; color: #475569; }
+        .dark .chart-expand:hover { background: #334155; color: #cbd5e1; }
+        .chart-canvas-box { position: relative; height: 240px; }
+
+        /* --- Modals --- */
+        .modal-backdrop {
+            position: fixed; inset: 0; background: rgba(15,23,42,0.5); z-index: 100;
+            display: flex; align-items: center; justify-content: center; padding: 20px;
+        }
+        .modal-backdrop.hidden { display: none; }
+        .modal-box {
+            background: white; border-radius: 16px; padding: 20px;
+            max-width: 90vw; max-height: 90vh; overflow: auto;
+            box-shadow: 0 20px 60px rgba(15,23,42,0.4);
+        }
+        .dark .modal-box { background: #1e293b; }
+
+        /* Full-screen chart expand modal */
+        #chart-expand-modal .modal-box {
+            width: 96vw; height: 94vh; max-width: 96vw; max-height: 94vh; padding: 24px;
+            display: flex; flex-direction: column;
+        }
+
+        /* --- KPI cards --- */
+        .kpi-card {
+            background: white; border-radius: 16px; padding: 16px;
+            border: 2px solid #e2e8f0;
+        }
+        .dark .kpi-card { background: #1e293b; border-color: #334155; }
+
+        /* --- Refresh overlay --- */
+        .refresh-overlay {
+            position: fixed; inset: 0; background: rgba(15,23,42,0.75); z-index: 200;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .refresh-overlay.hidden { display: none; }
+        .refresh-overlay .box {
+            background: white; border-radius: 20px; padding: 28px 40px; min-width: 320px;
+            text-align: center; box-shadow: 0 20px 60px rgba(15,23,42,0.5);
+        }
+        .dark .refresh-overlay .box { background: #1e293b; color: #cbd5e1; }
+
+        /* --- Nav tabs --- */
+        .nav-tab {
+            padding: 6px 14px; border-radius: 10px; font-size: 13px; font-weight: 600;
+            color: #64748b; text-decoration: none; transition: all 0.15s;
+        }
+        .nav-tab:hover { background: #f1f5f9; color: #0f172a; }
+        .dark .nav-tab { color: #94a3b8; }
+        .dark .nav-tab:hover { background: #334155; color: #e2e8f0; }
+        .nav-tab.active { background: #0e7490; color: white; }
+        .dark .nav-tab.active { background: #0e7490; color: white; }
+
+        /* Dollar amounts: right-aligned in table */
+        .num { text-align: right; font-variant-numeric: tabular-nums; }
+
+        @media (max-width: 768px) {
+            .multi-trigger { min-width: 140px; padding: 8px 10px; font-size: 12px; }
+            .multi-panel { min-width: 240px; max-height: 320px; }
+            .kpi-card { padding: 12px; }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 min-h-screen">
+
+<div class="max-w-[1600px] mx-auto px-3 sm:px-5 py-5 space-y-4">
+
+    <!-- HEADER -->
+    <div class="flex flex-wrap items-end justify-between gap-3 bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
+        <div class="flex items-center gap-4">
+            <div>
+                <h1 class="text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-100">SNS Invoices</h1>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Expense & move-out analytics across the portfolio</p>
+            </div>
+            <nav class="flex items-center gap-1 ml-2">
+                <a href="/" class="nav-tab">Daily KPIs</a>
+                <a href="/renewals" class="nav-tab">Renewals</a>
+                <a href="/Invoices.html" class="nav-tab active">Invoices</a>
+            </nav>
+        </div>
+        <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+            <!-- Window chip -->
+            <div class="h-11 py-2.5 px-4 bg-slate-100 dark:bg-slate-700 rounded-xl border-2 border-slate-200 dark:border-slate-600 flex items-center text-sm font-semibold text-slate-700 dark:text-slate-200" title="Data window (recomputed on every Refresh)">
+                <span id="window-chip">Loading…</span>
+            </div>
+            <!-- Last Updated chip -->
+            <div class="h-11 py-2.5 px-4 bg-slate-100 dark:bg-slate-700 rounded-xl border-2 border-slate-200 dark:border-slate-600 flex items-center text-sm font-semibold text-slate-700 dark:text-slate-200" title="Last ResMan sync">
+                <span id="last-updated">Loading…</span>
+            </div>
+            <!-- Refresh -->
+            <button id="refresh-btn" onclick="refreshData()" class="h-11 w-11 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 border-2 border-slate-200 dark:border-slate-600 flex items-center justify-center" title="Pull all properties from ResMan (~5 min)">
+                <svg id="refresh-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                <svg id="refresh-spinner" class="w-5 h-5 hidden animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+            </button>
+            <!-- Theme toggle -->
+            <button id="theme-toggle" class="h-11 w-11 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 border-2 border-slate-200 dark:border-slate-600 flex items-center justify-center" title="Toggle theme">
+                <svg id="theme-dark-icon" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+                <svg id="theme-light-icon" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- KPI STRIP -->
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div class="kpi-card"><div class="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">Total Spend</div><div id="kpi-total" class="text-2xl font-bold text-slate-800 dark:text-slate-100 mt-1">—</div><div id="kpi-total-sub" class="text-xs text-slate-500 dark:text-slate-400 mt-0.5"> </div></div>
+        <div class="kpi-card"><div class="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">Invoices</div><div id="kpi-invoices" class="text-2xl font-bold text-slate-800 dark:text-slate-100 mt-1">—</div><div id="kpi-invoices-sub" class="text-xs text-slate-500 dark:text-slate-400 mt-0.5"> </div></div>
+        <div class="kpi-card"><div class="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">Line Items</div><div id="kpi-lines" class="text-2xl font-bold text-slate-800 dark:text-slate-100 mt-1">—</div><div id="kpi-lines-sub" class="text-xs text-slate-500 dark:text-slate-400 mt-0.5"> </div></div>
+        <div class="kpi-card"><div class="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">Vendors</div><div id="kpi-vendors" class="text-2xl font-bold text-slate-800 dark:text-slate-100 mt-1">—</div><div id="kpi-vendors-sub" class="text-xs text-slate-500 dark:text-slate-400 mt-0.5"> </div></div>
+        <div class="kpi-card"><div class="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">Move-Out Units</div><div id="kpi-mo-units" class="text-2xl font-bold text-slate-800 dark:text-slate-100 mt-1">—</div><div id="kpi-mo-units-sub" class="text-xs text-slate-500 dark:text-slate-400 mt-0.5"> </div></div>
+        <div class="kpi-card"><div class="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">Move-Out Spend</div><div id="kpi-mo-spend" class="text-2xl font-bold text-slate-800 dark:text-slate-100 mt-1">—</div><div id="kpi-mo-spend-sub" class="text-xs text-slate-500 dark:text-slate-400 mt-0.5"> </div></div>
+    </div>
+
+    <!-- FILTER BAR -->
+    <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
+        <div class="flex flex-wrap items-center gap-3">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 pr-1">Filters</span>
+
+            <div class="multi-wrap" id="filter-property">
+                <button class="multi-trigger" data-key="property">
+                    <span class="label">Property</span>
+                    <span class="count-badge hidden">0</span>
+                    <svg class="w-3 h-3 ml-auto" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg>
+                </button>
+                <div class="multi-panel hidden">
+                    <div class="multi-actions"><button data-action="all">All</button><button data-action="none">None</button></div>
+                    <div class="multi-list"></div>
+                </div>
+            </div>
+
+            <div class="multi-wrap" id="filter-month">
+                <button class="multi-trigger" data-key="month">
+                    <span class="label">Month</span>
+                    <span class="count-badge hidden">0</span>
+                    <svg class="w-3 h-3 ml-auto" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg>
+                </button>
+                <div class="multi-panel hidden">
+                    <div class="multi-actions"><button data-action="all">All</button><button data-action="none">None</button></div>
+                    <div class="multi-list"></div>
+                </div>
+            </div>
+
+            <div class="multi-wrap" id="filter-gl">
+                <button class="multi-trigger" data-key="gl">
+                    <span class="label">GL Account</span>
+                    <span class="count-badge hidden">0</span>
+                    <svg class="w-3 h-3 ml-auto" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg>
+                </button>
+                <div class="multi-panel hidden">
+                    <div class="multi-actions"><button data-action="all">All</button><button data-action="none">None</button></div>
+                    <input type="text" class="multi-search" placeholder="Search GL…" />
+                    <div class="multi-list"></div>
+                </div>
+            </div>
+
+            <button id="toggle-moveouts" class="toggle-filter">
+                <span class="toggle-box"></span>
+                <span>Move-outs last 3 months only</span>
+            </button>
+
+            <button id="reset-filters" class="text-xs font-semibold text-cyan-600 dark:text-cyan-400 hover:underline ml-2">Reset</button>
+        </div>
+    </div>
+
+    <!-- CHART GRID -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3">
+        <div class="chart-card">
+            <div class="chart-title"><span>Spend by Month</span><button class="chart-expand" data-chart="chart-month" title="Expand">⤢</button></div>
+            <div class="text-xs text-slate-500 dark:text-slate-400 mb-2">Click a bar to filter to that month</div>
+            <div class="chart-canvas-box"><canvas id="chart-month"></canvas></div>
+        </div>
+        <div class="chart-card">
+            <div class="chart-title"><span>Spend by Property</span><button class="chart-expand" data-chart="chart-property" title="Expand">⤢</button></div>
+            <div class="text-xs text-slate-500 dark:text-slate-400 mb-2">Click a bar to filter to that property</div>
+            <div class="chart-canvas-box"><canvas id="chart-property"></canvas></div>
+        </div>
+        <div class="chart-card">
+            <div class="chart-title"><span>Top 10 GL Accounts</span><button class="chart-expand" data-chart="chart-gl" title="Expand">⤢</button></div>
+            <div class="text-xs text-slate-500 dark:text-slate-400 mb-2">Click a bar to filter to that GL</div>
+            <div class="chart-canvas-box"><canvas id="chart-gl"></canvas></div>
+        </div>
+        <div class="chart-card">
+            <div class="chart-title"><span>Top 10 Vendors</span><button class="chart-expand" data-chart="chart-vendor" title="Expand">⤢</button></div>
+            <div class="text-xs text-slate-500 dark:text-slate-400 mb-2">Click a bar for invoice detail</div>
+            <div class="chart-canvas-box"><canvas id="chart-vendor"></canvas></div>
+        </div>
+        <div class="chart-card">
+            <div class="chart-title"><span>Location Mix</span><button class="chart-expand" data-chart="chart-bucket" title="Expand">⤢</button></div>
+            <div class="text-xs text-slate-500 dark:text-slate-400 mb-2">Unit vs Building vs property-wide</div>
+            <div class="chart-canvas-box"><canvas id="chart-bucket"></canvas></div>
+        </div>
+        <div id="chart-moveout-card" class="chart-card hidden">
+            <div class="chart-title"><span>Top 20 Move-Out Units by Spend</span><button class="chart-expand" data-chart="chart-moveout" title="Expand">⤢</button></div>
+            <div class="text-xs text-slate-500 dark:text-slate-400 mb-2">Visible when move-out toggle is on · click for detail</div>
+            <div class="chart-canvas-box" style="height:320px"><canvas id="chart-moveout"></canvas></div>
+        </div>
+    </div>
+
+    <!-- ROSTER TABLE -->
+    <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+        <div class="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-slate-700">
+            <div class="text-sm font-semibold text-slate-700 dark:text-slate-200">
+                Line items <span id="roster-count" class="text-slate-500 dark:text-slate-400 font-normal">—</span>
+            </div>
+            <div class="text-xs text-slate-500 dark:text-slate-400" id="roster-sum">—</div>
+        </div>
+        <div class="overflow-auto" style="max-height: 70vh">
+            <table id="roster-table" class="w-full text-sm">
+                <thead class="sticky top-0 z-10"><tr id="roster-thead"></tr></thead>
+                <tbody id="roster-tbody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="text-xs text-center text-slate-500 dark:text-slate-400 py-2">
+        SNS Multi Family · Data sourced from ResMan Partners API · <a href="/invoices_data.json" class="hover:underline">raw JSON</a>
+    </div>
+</div>
+
+<!-- Chart expand modal -->
+<div id="chart-expand-modal" class="modal-backdrop hidden" onclick="if(event.target===this)closeChartExpand()">
+    <div class="modal-box">
+        <div class="flex items-center justify-between mb-3">
+            <h3 id="chart-expand-title" class="text-lg font-bold text-slate-800 dark:text-slate-100">Chart</h3>
+            <button onclick="closeChartExpand()" class="text-slate-500 dark:text-slate-400 hover:text-red-500 text-2xl font-bold">×</button>
+        </div>
+        <div class="flex-1 relative min-h-0"><canvas id="chart-expand-canvas"></canvas></div>
+    </div>
+</div>
+
+<!-- Detail modal (vendor / unit drill-downs) -->
+<div id="detail-modal" class="modal-backdrop hidden" onclick="if(event.target===this)closeDetailModal()">
+    <div class="modal-box" style="width: 1000px; max-width: 95vw;">
+        <div class="flex items-center justify-between mb-3">
+            <h3 id="detail-modal-title" class="text-lg font-bold text-slate-800 dark:text-slate-100">Detail</h3>
+            <button onclick="closeDetailModal()" class="text-slate-500 dark:text-slate-400 hover:text-red-500 text-2xl font-bold">×</button>
+        </div>
+        <div id="detail-modal-body" class="text-sm"></div>
+    </div>
+</div>
+
+<!-- Password modal -->
+<div id="password-modal" class="modal-backdrop hidden" onclick="if(event.target===this)closePasswordModal()">
+    <div class="modal-box" style="width: 360px;">
+        <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100 mb-3">Refresh requires password</h3>
+        <form onsubmit="submitPassword(event)" autocomplete="on">
+            <input type="text" name="username" value="sns" autocomplete="username" style="display:none" readonly />
+            <input id="password-input" name="password" type="password" autocomplete="current-password"
+                   class="w-full px-3 py-2 rounded-lg border-2 border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100" />
+            <div id="password-error" class="text-xs text-red-500 mt-2 hidden">Wrong password</div>
+            <div class="flex items-center justify-end gap-2 mt-4">
+                <button type="button" onclick="closePasswordModal()" class="px-4 py-2 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100">Cancel</button>
+                <button type="submit" class="px-4 py-2 text-sm font-semibold bg-cyan-700 hover:bg-cyan-800 text-white rounded-lg">Refresh</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Refresh overlay -->
+<div id="refresh-overlay" class="refresh-overlay hidden">
+    <div class="box">
+        <div class="animate-spin w-10 h-10 border-4 border-cyan-200 border-t-cyan-500 rounded-full mx-auto mb-4"></div>
+        <div id="refresh-overlay-status" class="text-lg font-semibold text-slate-800 dark:text-slate-100">Pulling ResMan…</div>
+        <div id="refresh-overlay-elapsed" class="text-xs text-slate-500 dark:text-slate-400 mt-1">0s</div>
+        <div class="text-xs text-slate-500 dark:text-slate-400 mt-3">Typical: 3–5 minutes</div>
+    </div>
+</div>
+
+<script>
+// ============================================================================
+// State
+// ============================================================================
+const STATE = {
+    data: null,              // raw payload from invoices_data.json
+    lineItems: [],           // flattened: one row per lineItem (with invoice context)
+    movedOutUnitIds: null,   // Set<string> of unitIds that moved out in the window
+    filters: {
+        property: new Set(),  // empty = all selected
+        month: new Set(),
+        gl: new Set(),
+        movedOutOnly: false,
+    },
+    sort: { col: 'accountingDate', dir: 'desc' },
+    charts: {},              // chart instances by id
+    expandChart: null,       // current expand modal chart instance
+    pendingAction: null,     // callback awaiting password
+};
+
+const REPO_OWNER = 'ymi-flowing';
+const REPO_NAME = 'sns-daily-report';
+const DATA_PATH = 'invoices_data.json';
+
+// ============================================================================
+// Theme
+// ============================================================================
+function applyTheme(theme) {
+    document.documentElement.classList.toggle('dark', theme === 'dark');
+    document.getElementById('theme-dark-icon').classList.toggle('hidden', theme !== 'dark');
+    document.getElementById('theme-light-icon').classList.toggle('hidden', theme === 'dark');
+    try { localStorage.setItem('invoices-theme', theme); } catch (e) {}
+    // re-render charts so bar colors pick up the new palette
+    if (STATE.data) renderCharts();
+}
+document.getElementById('theme-toggle').addEventListener('click', () => {
+    const next = document.documentElement.classList.contains('dark') ? 'light' : 'dark';
+    applyTheme(next);
+});
+(function initTheme() {
+    let t = 'light';
+    try { t = localStorage.getItem('invoices-theme') || 'light'; } catch (e) {}
+    applyTheme(t);
+})();
+
+// ============================================================================
+// Data load + flatten
+// ============================================================================
+async function loadData() {
+    const resp = await fetch('/invoices_data.json', { cache: 'no-store' });
+    if (!resp.ok) throw new Error('Failed to load invoices_data.json: HTTP ' + resp.status);
+    STATE.data = await resp.json();
+    flatten();
+    initFilters();
+    renderAll();
+    updateHeader();
+}
+
+function flatten() {
+    const rows = [];
+    for (const inv of STATE.data.invoices || []) {
+        const lineItems = inv.lineItems || [];
+        for (const li of lineItems) {
+            rows.push({
+                propertyAbbreviation: inv.propertyAbbreviation,
+                propertyName: inv.propertyName,
+                invoiceId: inv.invoiceId,
+                invoiceNumber: inv.number,
+                accountingDate: (inv.accountingDate || '').slice(0, 10),
+                month: (inv.accountingDate || '').slice(0, 7),
+                vendor: inv.vendorName,
+                invoiceStatus: inv.status,
+                imageUrl: inv.imageUrl || null,
+                invoiceTotal: inv.total,
+                lineItemId: li.lineItemId,
+                glAccountNumber: li.glAccountNumber || '',
+                glDescription: li.description || '',
+                locationType: li.locationType,         // null | "Unit" | "Building"
+                locationId: li.locationId,
+                location: li.location,
+                total: Number(li.total) || 0,
+                qty: Number(li.quantity) || 0,
+                description: li.description || inv.description || '',
+            });
+        }
+    }
+    STATE.lineItems = rows;
+    STATE.movedOutUnitIds = new Set(
+        (STATE.data.moved_out_units || [])
+            .map(u => u.unitId)
+            .filter(Boolean)
+    );
+}
+
+function updateHeader() {
+    const since = STATE.data.sinceDate || '';
+    document.getElementById('window-chip').textContent = since ? ('Window: ' + since + ' → today') : 'No data';
+    const gen = STATE.data.generatedAt || '';
+    document.getElementById('last-updated').textContent = gen ? ('Updated ' + formatWhen(gen)) : '—';
+}
+
+function formatWhen(iso) {
+    try {
+        const d = new Date(iso);
+        const diff = (Date.now() - d.getTime()) / 1000;
+        if (diff < 3600) return Math.max(1, Math.floor(diff / 60)) + 'm ago';
+        if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+        return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    } catch (e) { return iso; }
+}
+
+// ============================================================================
+// Filters: multi-select popovers + toggle
+// ============================================================================
+function initFilters() {
+    // Property options
+    const properties = (STATE.data.properties || []).map(p => ({
+        value: p.abbreviation,
+        label: p.abbreviation + ' — ' + (p.name || ''),
+    }));
+    buildMultiList('filter-property', properties);
+
+    // Month options (distinct months sorted ascending)
+    const monthSet = new Set();
+    STATE.lineItems.forEach(r => { if (r.month) monthSet.add(r.month); });
+    const months = [...monthSet].sort().map(m => ({
+        value: m,
+        label: formatMonth(m),
+    }));
+    buildMultiList('filter-month', months);
+
+    // GL options — label "<code> — <description>"
+    const glMap = new Map();
+    STATE.lineItems.forEach(r => {
+        if (!r.glAccountNumber) return;
+        if (!glMap.has(r.glAccountNumber)) {
+            glMap.set(r.glAccountNumber, { total: 0, description: r.glDescription || '' });
+        }
+        glMap.get(r.glAccountNumber).total += r.total;
+    });
+    const gls = [...glMap.entries()]
+        .sort((a, b) => b[1].total - a[1].total)
+        .map(([code, info]) => ({
+            value: code,
+            label: code + ' — $' + formatMoney0(info.total),
+        }));
+    buildMultiList('filter-gl', gls);
+
+    // Toggle
+    document.getElementById('toggle-moveouts').addEventListener('click', () => {
+        STATE.filters.movedOutOnly = !STATE.filters.movedOutOnly;
+        document.getElementById('toggle-moveouts').classList.toggle('active', STATE.filters.movedOutOnly);
+        document.getElementById('chart-moveout-card').classList.toggle('hidden', !STATE.filters.movedOutOnly);
+        renderAll();
+    });
+
+    // Reset
+    document.getElementById('reset-filters').addEventListener('click', () => {
+        STATE.filters.property.clear();
+        STATE.filters.month.clear();
+        STATE.filters.gl.clear();
+        STATE.filters.movedOutOnly = false;
+        document.getElementById('toggle-moveouts').classList.remove('active');
+        document.getElementById('chart-moveout-card').classList.add('hidden');
+        document.querySelectorAll('.multi-list input[type="checkbox"]').forEach(cb => cb.checked = false);
+        document.querySelectorAll('.multi-trigger').forEach(t => updateMultiTriggerLabel(t));
+        renderAll();
+    });
+
+    // Popover trigger toggles + outside click dismiss
+    document.querySelectorAll('.multi-trigger').forEach(trigger => {
+        trigger.addEventListener('click', e => {
+            e.stopPropagation();
+            const panel = trigger.nextElementSibling;
+            const open = !panel.classList.contains('hidden');
+            document.querySelectorAll('.multi-panel').forEach(p => p.classList.add('hidden'));
+            document.querySelectorAll('.multi-trigger').forEach(t => t.classList.remove('active'));
+            if (!open) {
+                panel.classList.remove('hidden');
+                trigger.classList.add('active');
+            }
+        });
+    });
+    document.addEventListener('click', e => {
+        if (!e.target.closest('.multi-wrap')) {
+            document.querySelectorAll('.multi-panel').forEach(p => p.classList.add('hidden'));
+            document.querySelectorAll('.multi-trigger').forEach(t => t.classList.remove('active'));
+        }
+    });
+
+    // All / None buttons
+    document.querySelectorAll('.multi-actions button').forEach(btn => {
+        btn.addEventListener('click', e => {
+            e.stopPropagation();
+            const action = btn.dataset.action;
+            const panel = btn.closest('.multi-panel');
+            const wrap = panel.parentElement;
+            const key = wrap.id.replace('filter-', '');
+            const checkboxes = panel.querySelectorAll('.multi-list input[type="checkbox"]');
+            if (action === 'all') {
+                checkboxes.forEach(cb => cb.checked = false);
+                STATE.filters[key].clear();
+            } else {
+                checkboxes.forEach(cb => { cb.checked = true; STATE.filters[key].add(cb.value); });
+            }
+            updateMultiTriggerLabel(wrap.querySelector('.multi-trigger'));
+            renderAll();
+        });
+    });
+
+    // Search inside GL panel
+    const glSearch = document.querySelector('#filter-gl .multi-search');
+    if (glSearch) {
+        glSearch.addEventListener('input', () => {
+            const q = glSearch.value.toLowerCase();
+            document.querySelectorAll('#filter-gl .multi-item').forEach(item => {
+                const match = item.textContent.toLowerCase().includes(q);
+                item.style.display = match ? '' : 'none';
+            });
+        });
+        glSearch.addEventListener('click', e => e.stopPropagation());
+    }
+}
+
+function buildMultiList(wrapId, options) {
+    const list = document.querySelector('#' + wrapId + ' .multi-list');
+    const key = wrapId.replace('filter-', '');
+    list.innerHTML = '';
+    options.forEach(opt => {
+        const row = document.createElement('label');
+        row.className = 'multi-item';
+        row.innerHTML = '<input type="checkbox" value="' + escapeAttr(opt.value) + '"><span>' + escapeHtml(opt.label) + '</span>';
+        list.appendChild(row);
+        row.querySelector('input').addEventListener('change', e => {
+            e.stopPropagation();
+            if (e.target.checked) STATE.filters[key].add(opt.value);
+            else STATE.filters[key].delete(opt.value);
+            updateMultiTriggerLabel(document.querySelector('#' + wrapId + ' .multi-trigger'));
+            renderAll();
+        });
+    });
+    updateMultiTriggerLabel(document.querySelector('#' + wrapId + ' .multi-trigger'));
+}
+
+function updateMultiTriggerLabel(trigger) {
+    const key = trigger.dataset.key;
+    const n = STATE.filters[key].size;
+    const badge = trigger.querySelector('.count-badge');
+    if (n === 0) {
+        badge.classList.add('hidden');
+    } else {
+        badge.textContent = n;
+        badge.classList.remove('hidden');
+    }
+}
+
+// Programmatically set a filter to a single value (used by chart click drill-down)
+function setSingleFilter(key, value) {
+    STATE.filters[key].clear();
+    STATE.filters[key].add(value);
+    const wrap = document.getElementById('filter-' + key);
+    if (wrap) {
+        wrap.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+            cb.checked = (cb.value === value);
+        });
+        updateMultiTriggerLabel(wrap.querySelector('.multi-trigger'));
+    }
+    renderAll();
+}
+
+// ============================================================================
+// Filtering + rendering
+// ============================================================================
+function getFilteredRows() {
+    const { property, month, gl, movedOutOnly } = STATE.filters;
+    return STATE.lineItems.filter(r => {
+        if (property.size && !property.has(r.propertyAbbreviation)) return false;
+        if (month.size && !month.has(r.month)) return false;
+        if (gl.size && !gl.has(r.glAccountNumber)) return false;
+        if (movedOutOnly) {
+            if (r.locationType !== 'Unit') return false;
+            if (!STATE.movedOutUnitIds.has(r.locationId)) return false;
+        }
+        return true;
+    });
+}
+
+function renderAll() {
+    const rows = getFilteredRows();
+    renderKpis(rows);
+    renderCharts(rows);
+    renderRoster(rows);
+}
+
+function renderKpis(rows) {
+    const total = rows.reduce((s, r) => s + r.total, 0);
+    const invSet = new Set(rows.map(r => r.invoiceId));
+    const vendorSet = new Set(rows.map(r => r.vendor).filter(Boolean));
+    const moSpend = rows.filter(r => r.locationType === 'Unit' && STATE.movedOutUnitIds.has(r.locationId))
+                        .reduce((s, r) => s + r.total, 0);
+    const moUnits = (STATE.data.moved_out_units || []).filter(u => {
+        if (STATE.filters.property.size && !STATE.filters.property.has(u.propertyAbbreviation)) return false;
+        return true;
+    });
+
+    set('kpi-total', '$' + formatMoney0(total));
+    set('kpi-invoices', invSet.size.toLocaleString());
+    set('kpi-lines', rows.length.toLocaleString());
+    set('kpi-vendors', vendorSet.size.toLocaleString());
+    set('kpi-mo-units', moUnits.length.toLocaleString());
+    set('kpi-mo-spend', '$' + formatMoney0(moSpend));
+
+    const pct = total > 0 ? Math.round(moSpend / total * 100) : 0;
+    document.getElementById('kpi-mo-spend-sub').textContent = pct + '% of total';
+    document.getElementById('kpi-total-sub').textContent = rows.length + ' line items';
+    document.getElementById('kpi-mo-units-sub').textContent = 'in the window';
+}
+
+function set(id, txt) { document.getElementById(id).textContent = txt; }
+
+// ============================================================================
+// Charts
+// ============================================================================
+function chartPalette() {
+    const dark = document.documentElement.classList.contains('dark');
+    return {
+        bar: dark ? '#22d3ee' : '#06b6d4',
+        barAlt: dark ? '#818cf8' : '#6366f1',
+        grid: dark ? '#334155' : '#e2e8f0',
+        text: dark ? '#cbd5e1' : '#475569',
+        pie: ['#06b6d4', '#8b5cf6', '#f59e0b', '#ef4444', '#10b981'],
+    };
+}
+
+function destroyChart(id) {
+    if (STATE.charts[id]) { STATE.charts[id].destroy(); delete STATE.charts[id]; }
+}
+
+function renderCharts(rowsArg) {
+    const rows = rowsArg || getFilteredRows();
+    const p = chartPalette();
+    Chart.defaults.color = p.text;
+    Chart.defaults.borderColor = p.grid;
+
+    renderMonthChart(rows, p);
+    renderPropertyChart(rows, p);
+    renderGlChart(rows, p);
+    renderVendorChart(rows, p);
+    renderBucketChart(rows, p);
+    if (STATE.filters.movedOutOnly) renderMoveoutChart(rows, p);
+}
+
+function groupSum(rows, keyFn) {
+    const m = new Map();
+    for (const r of rows) {
+        const k = keyFn(r);
+        if (!k) continue;
+        m.set(k, (m.get(k) || 0) + r.total);
+    }
+    return m;
+}
+
+function renderMonthChart(rows, p) {
+    const byMonth = groupSum(rows, r => r.month);
+    const labels = [...byMonth.keys()].sort();
+    const data = labels.map(k => byMonth.get(k));
+    renderBar('chart-month', labels.map(formatMonth), data, p.bar, p, (idx) => {
+        setSingleFilter('month', labels[idx]);
+    });
+}
+
+function renderPropertyChart(rows, p) {
+    const byProp = groupSum(rows, r => r.propertyAbbreviation);
+    const entries = [...byProp.entries()].sort((a, b) => b[1] - a[1]);
+    const labels = entries.map(e => e[0]);
+    const data = entries.map(e => e[1]);
+    renderBar('chart-property', labels, data, p.bar, p, (idx) => {
+        setSingleFilter('property', labels[idx]);
+    }, 'y');
+}
+
+function renderGlChart(rows, p) {
+    const byGl = groupSum(rows, r => r.glAccountNumber);
+    const entries = [...byGl.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10);
+    const labels = entries.map(e => e[0]);
+    const data = entries.map(e => e[1]);
+    renderBar('chart-gl', labels, data, p.barAlt, p, (idx) => {
+        setSingleFilter('gl', labels[idx]);
+    }, 'y');
+}
+
+function renderVendorChart(rows, p) {
+    const byV = groupSum(rows, r => r.vendor);
+    const entries = [...byV.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10);
+    const labels = entries.map(e => e[0]);
+    const data = entries.map(e => e[1]);
+    renderBar('chart-vendor', labels, data, p.barAlt, p, (idx) => {
+        openVendorModal(labels[idx], rows);
+    }, 'y');
+}
+
+function renderBucketChart(rows, p) {
+    const byB = new Map();
+    for (const r of rows) {
+        const b = r.locationType || 'Common';
+        byB.set(b, (byB.get(b) || 0) + r.total);
+    }
+    const labels = [...byB.keys()];
+    const data = labels.map(k => byB.get(k));
+    destroyChart('chart-bucket');
+    STATE.charts['chart-bucket'] = new Chart(document.getElementById('chart-bucket'), {
+        type: 'doughnut',
+        data: {
+            labels,
+            datasets: [{ data, backgroundColor: p.pie.slice(0, labels.length), borderWidth: 0 }],
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom', labels: { color: p.text } },
+                tooltip: { callbacks: { label: (ctx) => ctx.label + ': $' + formatMoney0(ctx.parsed) } },
+            },
+        },
+    });
+}
+
+function renderMoveoutChart(rows, p) {
+    const byUnit = new Map();
+    for (const r of rows) {
+        if (r.locationType !== 'Unit') continue;
+        const key = r.propertyAbbreviation + ' · ' + (r.location || r.locationId);
+        if (!byUnit.has(key)) byUnit.set(key, { total: 0, unitId: r.locationId });
+        byUnit.get(key).total += r.total;
+    }
+    const entries = [...byUnit.entries()].sort((a, b) => b[1].total - a[1].total).slice(0, 20);
+    const labels = entries.map(e => e[0]);
+    const data = entries.map(e => e[1].total);
+    const unitIds = entries.map(e => e[1].unitId);
+    renderBar('chart-moveout', labels, data, p.bar, p, (idx) => {
+        openUnitModal(unitIds[idx], labels[idx], rows);
+    }, 'y');
+}
+
+function renderBar(canvasId, labels, data, color, p, onClick, orient) {
+    destroyChart(canvasId);
+    const indexAxis = orient === 'y' ? 'y' : 'x';
+    STATE.charts[canvasId] = new Chart(document.getElementById(canvasId), {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [{ data, backgroundColor: color, borderRadius: 4, borderSkipped: false }],
+        },
+        options: {
+            indexAxis,
+            responsive: true, maintainAspectRatio: false,
+            onClick: onClick ? (evt, elements) => {
+                if (!elements.length) return;
+                onClick(elements[0].index);
+            } : undefined,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: (ctx) => '$' + formatMoney0(ctx.parsed[indexAxis === 'y' ? 'x' : 'y']),
+                    },
+                },
+            },
+            scales: {
+                x: {
+                    grid: { color: p.grid, display: indexAxis === 'y' },
+                    ticks: { color: p.text, callback: v => indexAxis === 'y' ? '$' + formatMoneyShort(v) : labels[v] },
+                },
+                y: {
+                    grid: { color: p.grid, display: indexAxis !== 'y' },
+                    ticks: { color: p.text, callback: v => indexAxis === 'y' ? labels[v] : '$' + formatMoneyShort(v) },
+                },
+            },
+        },
+    });
+}
+
+// Chart expand modal
+document.querySelectorAll('.chart-expand').forEach(btn => {
+    btn.addEventListener('click', () => openChartExpand(btn.dataset.chart));
+});
+function openChartExpand(chartId) {
+    const src = STATE.charts[chartId];
+    if (!src) return;
+    document.getElementById('chart-expand-title').textContent = chartId.replace('chart-', '').replace(/^./, c => c.toUpperCase());
+    document.getElementById('chart-expand-modal').classList.remove('hidden');
+    if (STATE.expandChart) STATE.expandChart.destroy();
+    const canvas = document.getElementById('chart-expand-canvas');
+    const cfg = JSON.parse(JSON.stringify({
+        type: src.config.type,
+        data: src.config.data,
+        options: src.config.options,
+    }));
+    // Click handlers don't survive JSON clone — the expand view is view-only.
+    cfg.options.onClick = undefined;
+    STATE.expandChart = new Chart(canvas, cfg);
+}
+function closeChartExpand() {
+    document.getElementById('chart-expand-modal').classList.add('hidden');
+    if (STATE.expandChart) { STATE.expandChart.destroy(); STATE.expandChart = null; }
+}
+
+// ============================================================================
+// Detail modal (vendor / unit)
+// ============================================================================
+function openVendorModal(vendor, rows) {
+    const subset = rows.filter(r => r.vendor === vendor);
+    const total = subset.reduce((s, r) => s + r.total, 0);
+    const byInv = new Map();
+    for (const r of subset) {
+        if (!byInv.has(r.invoiceId)) {
+            byInv.set(r.invoiceId, { invoice: r, lines: [] });
+        }
+        byInv.get(r.invoiceId).lines.push(r);
+    }
+    const title = vendor + ' — $' + formatMoney0(total) + ' · ' + byInv.size + ' invoices';
+    const html = [
+        '<table class="w-full text-xs">',
+        '<thead class="text-slate-500 dark:text-slate-400"><tr>',
+        '<th class="py-2 pr-3 text-left">Date</th><th class="py-2 pr-3 text-left">Invoice</th>',
+        '<th class="py-2 pr-3 text-left">Property</th><th class="py-2 pr-3 text-left">Unit</th>',
+        '<th class="py-2 pr-3 text-left">GL</th><th class="py-2 pr-3 text-left">Description</th>',
+        '<th class="py-2 pr-3 num">Amount</th><th class="py-2 pr-3">PDF</th>',
+        '</tr></thead><tbody>',
+    ];
+    subset.sort((a, b) => (a.accountingDate < b.accountingDate ? 1 : -1));
+    for (const r of subset) {
+        html.push('<tr class="border-t border-slate-100 dark:border-slate-700">');
+        html.push('<td class="py-1.5 pr-3">' + (r.accountingDate || '') + '</td>');
+        html.push('<td class="py-1.5 pr-3">' + escapeHtml(r.invoiceNumber || '') + '</td>');
+        html.push('<td class="py-1.5 pr-3">' + escapeHtml(r.propertyAbbreviation || '') + '</td>');
+        html.push('<td class="py-1.5 pr-3">' + escapeHtml(r.location || '') + '</td>');
+        html.push('<td class="py-1.5 pr-3 font-mono text-xs">' + escapeHtml(r.glAccountNumber) + '</td>');
+        html.push('<td class="py-1.5 pr-3">' + escapeHtml(r.description || '') + '</td>');
+        html.push('<td class="py-1.5 pr-3 num">$' + formatMoney(r.total) + '</td>');
+        html.push('<td class="py-1.5 pr-3">' + (r.imageUrl ? '<a href="' + escapeAttr(r.imageUrl) + '" target="_blank" class="text-cyan-500 hover:underline">PDF</a>' : '') + '</td>');
+        html.push('</tr>');
+    }
+    html.push('</tbody></table>');
+    document.getElementById('detail-modal-title').textContent = title;
+    document.getElementById('detail-modal-body').innerHTML = html.join('');
+    document.getElementById('detail-modal').classList.remove('hidden');
+}
+
+function openUnitModal(unitId, label, rows) {
+    const subset = rows.filter(r => r.locationType === 'Unit' && r.locationId === unitId);
+    const total = subset.reduce((s, r) => s + r.total, 0);
+    const mo = (STATE.data.moved_out_units || []).find(u => u.unitId === unitId);
+    const header = mo
+        ? 'Resident: ' + (mo.resident || '—') + ' · Move-out: ' + mo.moveOutDate + (mo.moveInDate ? ' · Move-in: ' + mo.moveInDate : '')
+        : '';
+    const html = [
+        header ? '<div class="text-xs text-slate-500 dark:text-slate-400 mb-3">' + escapeHtml(header) + '</div>' : '',
+        '<table class="w-full text-xs">',
+        '<thead class="text-slate-500 dark:text-slate-400"><tr>',
+        '<th class="py-2 pr-3 text-left">Date</th><th class="py-2 pr-3 text-left">Invoice</th>',
+        '<th class="py-2 pr-3 text-left">Vendor</th><th class="py-2 pr-3 text-left">GL</th>',
+        '<th class="py-2 pr-3 text-left">Description</th>',
+        '<th class="py-2 pr-3 num">Amount</th><th class="py-2 pr-3">PDF</th>',
+        '</tr></thead><tbody>',
+    ];
+    subset.sort((a, b) => (a.accountingDate < b.accountingDate ? 1 : -1));
+    for (const r of subset) {
+        html.push('<tr class="border-t border-slate-100 dark:border-slate-700">');
+        html.push('<td class="py-1.5 pr-3">' + (r.accountingDate || '') + '</td>');
+        html.push('<td class="py-1.5 pr-3">' + escapeHtml(r.invoiceNumber || '') + '</td>');
+        html.push('<td class="py-1.5 pr-3">' + escapeHtml(r.vendor || '') + '</td>');
+        html.push('<td class="py-1.5 pr-3 font-mono text-xs">' + escapeHtml(r.glAccountNumber) + '</td>');
+        html.push('<td class="py-1.5 pr-3">' + escapeHtml(r.description || '') + '</td>');
+        html.push('<td class="py-1.5 pr-3 num">$' + formatMoney(r.total) + '</td>');
+        html.push('<td class="py-1.5 pr-3">' + (r.imageUrl ? '<a href="' + escapeAttr(r.imageUrl) + '" target="_blank" class="text-cyan-500 hover:underline">PDF</a>' : '') + '</td>');
+        html.push('</tr>');
+    }
+    html.push('</tbody></table>');
+    document.getElementById('detail-modal-title').textContent = label + ' — $' + formatMoney0(total) + ' · ' + subset.length + ' line items';
+    document.getElementById('detail-modal-body').innerHTML = html.join('');
+    document.getElementById('detail-modal').classList.remove('hidden');
+}
+
+function closeDetailModal() {
+    document.getElementById('detail-modal').classList.add('hidden');
+}
+
+// ============================================================================
+// Roster table
+// ============================================================================
+const ROSTER_COLS = [
+    { key: 'propertyAbbreviation', label: 'Property' },
+    { key: 'accountingDate', label: 'Date' },
+    { key: 'locationType', label: 'Bucket', fmt: v => v || 'Common' },
+    { key: 'location', label: 'Unit / Bldg', fmt: v => v || '—' },
+    { key: 'glAccountNumber', label: 'GL', cls: 'font-mono text-xs' },
+    { key: 'vendor', label: 'Vendor' },
+    { key: 'description', label: 'Description' },
+    { key: 'total', label: 'Amount', cls: 'num', fmt: v => '$' + formatMoney(v) },
+    { key: 'invoiceNumber', label: 'Invoice' },
+    { key: 'imageUrl', label: 'PDF', fmt: (v) => v ? '<a href="' + escapeAttr(v) + '" target="_blank" class="text-cyan-500 hover:underline">PDF</a>' : '' },
+];
+
+function renderRoster(rows) {
+    // sort
+    const { col, dir } = STATE.sort;
+    const sign = dir === 'asc' ? 1 : -1;
+    const sorted = [...rows].sort((a, b) => {
+        const av = a[col], bv = b[col];
+        if (av == null && bv == null) return 0;
+        if (av == null) return 1;
+        if (bv == null) return -1;
+        if (typeof av === 'number' && typeof bv === 'number') return (av - bv) * sign;
+        return String(av).localeCompare(String(bv)) * sign;
+    });
+
+    // thead
+    const thead = document.getElementById('roster-thead');
+    thead.innerHTML = ROSTER_COLS.map(c => {
+        const arrow = STATE.sort.col === c.key ? (STATE.sort.dir === 'asc' ? ' ↑' : ' ↓') : '';
+        return '<th class="sortable px-3 py-2 text-left text-xs font-semibold text-slate-600 dark:text-slate-300 ' + (c.cls || '') + '" data-col="' + c.key + '">' + c.label + arrow + '</th>';
+    }).join('');
+    thead.querySelectorAll('th.sortable').forEach(th => {
+        th.addEventListener('click', () => {
+            const k = th.dataset.col;
+            if (STATE.sort.col === k) STATE.sort.dir = STATE.sort.dir === 'asc' ? 'desc' : 'asc';
+            else { STATE.sort.col = k; STATE.sort.dir = 'asc'; }
+            renderRoster(rows);
+        });
+    });
+
+    // tbody — cap at 2000 rows for perf (filters trim naturally)
+    const MAX = 2000;
+    const shown = sorted.slice(0, MAX);
+    const tbody = document.getElementById('roster-tbody');
+    tbody.innerHTML = shown.map(r => {
+        return '<tr>' + ROSTER_COLS.map(c => {
+            const v = r[c.key];
+            const content = c.fmt ? c.fmt(v, r) : (v == null ? '' : escapeHtml(String(v)));
+            return '<td class="px-3 py-1.5 text-slate-700 dark:text-slate-200 ' + (c.cls || '') + '">' + content + '</td>';
+        }).join('') + '</tr>';
+    }).join('');
+
+    const total = rows.reduce((s, r) => s + r.total, 0);
+    document.getElementById('roster-count').textContent = rows.length.toLocaleString() + (shown.length < rows.length ? ' (showing first ' + MAX + ')' : '');
+    document.getElementById('roster-sum').textContent = 'Sum: $' + formatMoney(total);
+}
+
+// ============================================================================
+// Refresh flow
+// ============================================================================
+function refreshData() {
+    openPasswordModal();
+}
+function openPasswordModal() {
+    document.getElementById('password-modal').classList.remove('hidden');
+    document.getElementById('password-error').classList.add('hidden');
+    setTimeout(() => document.getElementById('password-input').focus(), 50);
+}
+function closePasswordModal() {
+    document.getElementById('password-modal').classList.add('hidden');
+    document.getElementById('password-input').value = '';
+}
+async function submitPassword(e) {
+    e.preventDefault();
+    const pw = document.getElementById('password-input').value;
+    closePasswordModal();
+    startRefresh(pw);
+}
+async function startRefresh(password) {
+    showOverlay('Dispatching refresh…');
+    const t0 = Date.now();
+    const elapsedTimer = setInterval(() => {
+        document.getElementById('refresh-overlay-elapsed').textContent = Math.floor((Date.now() - t0) / 1000) + 's';
+    }, 1000);
+
+    let dispatchedAt;
+    try {
+        const resp = await fetch('/api/refresh_invoices', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password }),
+        });
+        const body = await resp.json().catch(() => ({}));
+        if (!resp.ok || !body.success) {
+            clearInterval(elapsedTimer);
+            hideOverlay();
+            alert(body.message || ('Dispatch failed: HTTP ' + resp.status));
+            return;
+        }
+        dispatchedAt = new Date(body.dispatchedAt || Date.now()).getTime();
+    } catch (err) {
+        clearInterval(elapsedTimer);
+        hideOverlay();
+        alert('Dispatch failed: ' + err.message);
+        return;
+    }
+
+    document.getElementById('refresh-overlay-status').textContent = 'Running GH Action…';
+    const originalSha = await getDataFileSha();
+    const deadline = Date.now() + 10 * 60 * 1000;
+    while (Date.now() < deadline) {
+        await sleep(10000);
+        const sha = await getDataFileSha();
+        if (sha && sha !== originalSha) {
+            document.getElementById('refresh-overlay-status').textContent = 'Reloading…';
+            await loadData();
+            clearInterval(elapsedTimer);
+            hideOverlay();
+            return;
+        }
+    }
+    clearInterval(elapsedTimer);
+    hideOverlay();
+    alert('Refresh is taking longer than 10 minutes. Check GitHub Actions.');
+}
+
+async function getDataFileSha() {
+    try {
+        const resp = await fetch(
+            'https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/commits?path=' + DATA_PATH + '&per_page=1',
+            { cache: 'no-store' }
+        );
+        if (!resp.ok) return null;
+        const arr = await resp.json();
+        return arr[0] && arr[0].sha;
+    } catch (e) { return null; }
+}
+
+function showOverlay(status) {
+    document.getElementById('refresh-overlay-status').textContent = status;
+    document.getElementById('refresh-overlay-elapsed').textContent = '0s';
+    document.getElementById('refresh-overlay').classList.remove('hidden');
+}
+function hideOverlay() { document.getElementById('refresh-overlay').classList.add('hidden'); }
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ============================================================================
+// Utils
+// ============================================================================
+function formatMoney(n) {
+    const neg = n < 0;
+    const s = Math.abs(n).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return neg ? '-' + s : s;
+}
+function formatMoney0(n) {
+    const neg = n < 0;
+    const s = Math.abs(n).toLocaleString(undefined, { maximumFractionDigits: 0 });
+    return neg ? '-' + s : s;
+}
+function formatMoneyShort(n) {
+    const abs = Math.abs(n);
+    if (abs >= 1e6) return (n / 1e6).toFixed(1) + 'M';
+    if (abs >= 1e3) return (n / 1e3).toFixed(0) + 'k';
+    return String(n);
+}
+function formatMonth(ym) {
+    if (!ym) return '';
+    const [y, m] = ym.split('-').map(Number);
+    const names = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return names[(m || 1) - 1] + ' ' + y;
+}
+function escapeHtml(s) {
+    return String(s == null ? '' : s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+function escapeAttr(s) {
+    return String(s == null ? '' : s).replace(/"/g, '&quot;').replace(/&/g, '&amp;');
+}
+
+// ============================================================================
+// Boot
+// ============================================================================
+loadData().catch(err => {
+    console.error(err);
+    document.getElementById('kpi-total').textContent = 'Error';
+    alert('Failed to load invoices_data.json. Run a Refresh or check the file.');
+});
+</script>
+</body>
+</html>

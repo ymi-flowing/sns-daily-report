@@ -1,0 +1,82 @@
+name: Get Invoices (ResMan -> n8n)
+
+# Fetches ResMan Partners API /Invoices for ONE property since a given datetime,
+# and POSTs the full JSON payload back to a n8n resume URL.
+#
+# n8n trigger pattern:
+#   1. Wait node (On Webhook Call) -> exposes $execution.resumeUrl
+#   2. GitHub -> Create Workflow Dispatch:
+#        workflow: get-invoices.yml
+#        ref: main
+#        inputs:
+#          property: "49thStr"            # abbreviation OR GUID
+#          since:    "2026-08-01"         # YYYY-MM-DD or YYYY-MM-DD HH:MM:SS
+#          callback_url: "{{ $execution.resumeUrl }}"
+#   3. n8n resumes on the Wait node with the invoices payload as input.
+
+on:
+  workflow_dispatch:
+    inputs:
+      property:
+        description: 'Property abbreviation (e.g. 49thStr) or GUID'
+        required: true
+      since:
+        description: 'Fetch invoices modified since this datetime (YYYY-MM-DD or YYYY-MM-DD HH:MM:SS)'
+        required: true
+      only_moved_out_since:
+        description: 'Optional YYYY-MM-DD. Keep only line items for units that moved out on/after this date.'
+        required: false
+        default: ''
+      callback_url:
+        description: 'Optional n8n resumeUrl. If set, the payload is POSTed here when done.'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  fetch:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Fetch invoices and POST to callback
+        env:
+          RESMAN_API_KEY: ${{ secrets.RESMAN_API_KEY }}
+          RESMAN_PARTNER_ID: ${{ secrets.RESMAN_PARTNER_ID }}
+          RESMAN_ACCOUNT_ID: ${{ secrets.RESMAN_ACCOUNT_ID }}
+        run: |
+          CALLBACK_FLAG=""
+          if [ -n "${{ github.event.inputs.callback_url }}" ]; then
+            CALLBACK_FLAG="--callback ${{ github.event.inputs.callback_url }}"
+          fi
+          MO_FLAG=""
+          if [ -n "${{ github.event.inputs.only_moved_out_since }}" ]; then
+            MO_FLAG="--only-moved-out-since ${{ github.event.inputs.only_moved_out_since }}"
+          fi
+          python api/get_invoices.py \
+            --property "${{ github.event.inputs.property }}" \
+            --since    "${{ github.event.inputs.since }}" \
+            --out      invoices.json \
+            $MO_FLAG \
+            $CALLBACK_FLAG
+
+      - name: Upload invoices.json as artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: invoices-${{ github.event.inputs.property }}
+          path: invoices.json
+          if-no-files-found: ignore
+          retention-days: 7

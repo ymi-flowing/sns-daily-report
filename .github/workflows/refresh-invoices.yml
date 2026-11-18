@@ -1,0 +1,54 @@
+name: Refresh Invoices (ResMan -> invoices_data.json)
+
+# Pulls /Invoices + /Leasing/Leases for every active SNS property, writes a
+# merged invoices_data.json at repo root, commits + pushes so Invoices.html
+# picks it up on its next load.
+#
+# Triggered from the Invoices page via /api/refresh_invoices (password-gated).
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Pull invoices for all properties
+        env:
+          RESMAN_API_KEY: ${{ secrets.RESMAN_API_KEY }}
+          RESMAN_PARTNER_ID: ${{ secrets.RESMAN_PARTNER_ID }}
+          RESMAN_ACCOUNT_ID: ${{ secrets.RESMAN_ACCOUNT_ID }}
+        run: python refresh_invoices_all.py --out invoices_data.json
+
+      - name: Commit + push invoices_data.json
+        run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+          git add invoices_data.json
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          git commit -m "Refresh invoices_data.json [$(date -u '+%Y-%m-%d %H:%M UTC')]"
+          # Retry push with pull --rebase to survive concurrent commits to main.
+          for i in 1 2 3 4 5; do
+            if git push; then exit 0; fi
+            echo "push rejected; rebasing and retrying (attempt $i)"
+            git pull --rebase origin main
+          done
+          echo "push failed after 5 retries" && exit 1
