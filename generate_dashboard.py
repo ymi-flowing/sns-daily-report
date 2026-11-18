@@ -2493,8 +2493,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
         <div class="mobile-header flex justify-between items-center bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
             <div class="flex items-center gap-3">
                 <div class="w-14 h-14 flex items-center justify-center">
-                    <img src="https://www.dropbox.com/scl/fi/ss6tqrjk1xyldcwl5g3w9/SNS-Blue.png?rlkey=zcsommki78v65qmk6zvzo0jxh&st=ie5tvrph&raw=1" alt="SNS Logo" class="w-14 h-14 object-contain dark:hidden">
-                    <img src="https://www.dropbox.com/scl/fi/8qha3kw2j503jbd037ahh/SNS-White.png?rlkey=s3gjbikiohpe00vpcx8x1td3r&st=efmsepz3&raw=1" alt="SNS Logo" class="w-14 h-14 object-contain hidden dark:block">
+                    <img src="/sns-logo.png" alt="SNS Logo" class="w-14 h-14 object-contain dark:brightness-[1.8]">
                 </div>
                 <div>
                     <h1 class="text-2xl font-bold text-slate-900 dark:text-white">SNS Daily KPIs</h1>
