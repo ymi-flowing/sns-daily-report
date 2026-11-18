@@ -2,7 +2,7 @@
   "runId": "20261118-154755-0c521a",
   "startedAt": "2026-11-18T15:48:37",
   "mode": "live",
-  "status": "running",
+  "status": "complete",
   "total": 14,
   "sent": [
     {
@@ -74,9 +74,59 @@
       "detail": "",
       "attachment": "Eastpointe - Feb 2027 - 73A1.pdf",
       "at": "2026-11-18T15:49:21"
+    },
+    {
+      "property": "EAST",
+      "month": "2027-02",
+      "unit": "59C1",
+      "resident": "MIGUEL tolon",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "Eastpointe - Feb 2027 - 59C1.pdf",
+      "at": "2026-11-18T15:49:25"
+    },
+    {
+      "property": "EAST",
+      "month": "2027-02",
+      "unit": "67A1",
+      "resident": "Erika Ospina",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "Eastpointe - Feb 2027 - 67A1.pdf",
+      "at": "2026-11-18T15:49:29"
+    },
+    {
+      "property": "EAST",
+      "month": "2027-02",
+      "unit": "45A1",
+      "resident": "Ramon Milanes",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "Eastpointe - Feb 2027 - 45A1.pdf",
+      "at": "2026-11-18T15:49:33"
+    },
+    {
+      "property": "EAST",
+      "month": "2027-02",
+      "unit": "63C1",
+      "resident": "Bernarjah Davis",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "Eastpointe - Feb 2027 - 63C1.pdf",
+      "at": "2026-11-18T15:49:37"
+    },
+    {
+      "property": "EAST",
+      "month": "2027-02",
+      "unit": "41B2",
+      "resident": "Roman Kucher",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "Eastpointe - Feb 2027 - 41B2.pdf",
+      "at": "2026-11-18T15:49:40"
     }
   ],
   "staged": [],
   "failed": [],
-  "completedAt": null
+  "completedAt": "2026-11-18T15:49:40"
 }
