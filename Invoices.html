@@ -123,6 +123,28 @@
         #roster-table th.sortable:hover { color: #0891b2; }
         .dark #roster-table th.sortable:hover { color: #67e8f9; }
 
+        /* Child rows inside an expanded group: subtler bg + cyan left-rail
+           so they read as "contents of the group above", not peers. */
+        #roster-table tbody tr.child-row td {
+            background-color: #fafbfc;
+            border-top: 1px dashed rgba(100, 116, 139, 0.15);
+        }
+        .dark #roster-table tbody tr.child-row td {
+            background-color: #15202d;
+            border-top-color: rgba(148, 163, 184, 0.12);
+        }
+        #roster-table tbody tr.child-row td.child-rail {
+            background-color: #fafbfc;
+            border-left: 2px solid #06b6d4;
+            padding: 0;
+        }
+        .dark #roster-table tbody tr.child-row td.child-rail {
+            background-color: #15202d;
+            border-left-color: #22d3ee;
+        }
+        #roster-table tbody tr.child-row:hover td { background-color: #eff6ff; }
+        .dark #roster-table tbody tr.child-row:hover td { background-color: #1d2a3f; }
+
         /* Group row chevron (collapsed → right; expanded → down via rotate) */
         .group-chevron {
             width: 14px; height: 14px;
@@ -1218,15 +1240,9 @@ function closeDetailModal() {
 const ROSTER_COLS = [
     { key: 'propertyAbbreviation', label: 'Property' },
     { key: 'accountingDate', label: 'Date', fmt: v => formatDateUS(v) },
-    { key: 'locationType', label: 'Bucket', fmt: v => v || 'Common' },
-    { key: 'location', label: 'Unit / Bldg', fmt: (_v, r) => unitCellHtml(r) },
-    { key: 'glAccountNumber', label: 'GL', cls: 'font-mono text-xs',
-      fmt: (v, r) => v + (r && r.glName ? ' <span class="text-slate-400">· ' + escapeHtml(r.glName) + '</span>' : '') },
-    { key: 'vendor', label: 'Vendor' },
-    { key: 'description', label: 'Description' },
+    { key: 'location', label: 'Location', fmt: (_v, r) => locationFullHtml(r) },
+    { key: 'invoiceNumber', label: 'Invoice', fmt: (_v, r) => invoiceNumberLink(r) },
     { key: 'total', label: 'Amount', cls: 'num', fmt: v => '$' + formatMoney(v) },
-    { key: 'invoiceNumber', label: 'Invoice' },
-    { key: 'imageUrl', label: 'Open', fmt: (_v, r) => pdfLink(r) },
 ];
 
 function renderRoster(rows) {
@@ -1280,10 +1296,8 @@ function renderRosterFlat(rows) {
         rows.length.toLocaleString() + (shown.length < rows.length ? ' (showing first ' + MAX + ')' : '');
     document.getElementById('roster-sum').textContent = 'Sum: $' + formatMoney(total);
 
-    // Sticky totals row. Amount column is the 8th col (0-indexed 7); fill 0..6
-    // with a single colspan=7 label, blanks for Invoice + Open on the right.
     const amountIdx = ROSTER_COLS.findIndex(c => c.key === 'total');
-    const leftSpan = amountIdx;  // span everything left of Amount
+    const leftSpan = amountIdx;
     const rightSpan = ROSTER_COLS.length - amountIdx - 1;
     const tfoot = document.getElementById('roster-tfoot');
     tfoot.innerHTML =
@@ -1291,7 +1305,7 @@ function renderRosterFlat(rows) {
             + 'Totals · ' + rows.length.toLocaleString() + ' line items · ' + invoiceCount.toLocaleString() + ' invoices'
         + '</td>'
         + '<td class="num text-slate-800 dark:text-slate-100">$' + formatMoney(total) + '</td>'
-        + '<td colspan="' + rightSpan + '"></td>';
+        + (rightSpan > 0 ? '<td colspan="' + rightSpan + '"></td>' : '');
 }
 
 function renderRosterGrouped(rows) {
@@ -1316,18 +1330,18 @@ function renderRosterGrouped(rows) {
         g.sum += r.total;
         if (r.invoiceId) g.invoiceIds.add(r.invoiceId);
     }
-    // Sortable group columns: accessor + alignment
+    // Grouped mode uses the same 5 columns as flat mode: Property, Date,
+    // Location, Invoice, Amount (+ a leading chevron column).
     const GROUP_COLS = [
         { key: 'propertyAbbreviation', label: 'Property', align: 'left' },
-        { key: 'bucket', label: 'Bucket', align: 'left' },
-        { key: 'location', label: 'Unit / Bldg', align: 'left' },
-        { key: 'lineCount', label: 'Line items', align: 'right', accessor: g => g.rows.length },
-        { key: 'invoiceCount', label: 'Invoices', align: 'right', accessor: g => g.invoiceIds.size },
-        { key: 'sum', label: 'Sum', align: 'right' },
+        { key: 'date', label: 'Date', align: 'left', accessor: g => g.rows[0] ? g.rows[0].accountingDate : '' },
+        { key: 'location', label: 'Location', align: 'left' },
+        { key: 'invoiceCount', label: 'Invoice', align: 'left', accessor: g => g.invoiceIds.size },
+        { key: 'sum', label: 'Amount', align: 'right' },
     ];
     const gs = STATE.groupSort;
     const sign = gs.dir === 'asc' ? 1 : -1;
-    const colDef = GROUP_COLS.find(c => c.key === gs.col) || GROUP_COLS[5];
+    const colDef = GROUP_COLS.find(c => c.key === gs.col) || GROUP_COLS[GROUP_COLS.length - 1];
     const accessor = colDef.accessor || (g => g[colDef.key]);
     const arr = [...groups.values()].sort((a, b) => {
         const av = accessor(a), bv = accessor(b);
@@ -1338,7 +1352,6 @@ function renderRosterGrouped(rows) {
         return String(av).localeCompare(String(bv)) * sign;
     });
 
-    // Header: sortable columns for the group summary row
     const thead = document.getElementById('roster-thead');
     thead.innerHTML = '<th class="px-3 py-2 w-6"></th>' + GROUP_COLS.map(c => {
         const alignCls = c.align === 'right' ? 'text-right' : 'text-left';
@@ -1356,50 +1369,38 @@ function renderRosterGrouped(rows) {
 
     const tbody = document.getElementById('roster-tbody');
     const html = [];
+    const chevronSvg = '<svg class="group-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>';
+
     for (const g of arr) {
         const open = STATE.expandedGroups.has(g.key);
-        const chevronSvg = '<svg class="group-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>';
+        // Group header row: aggregates.
         html.push(
             '<tr class="group-row cursor-pointer' + (open ? ' open' : '') + '" data-group="' + escapeAttr(g.key) + '">',
             '<td class="px-3 py-1.5"><span class="inline-flex items-center">' + chevronSvg + '</span></td>',
             '<td class="px-3 py-1.5 font-medium text-slate-800 dark:text-slate-100">' + escapeHtml(g.propertyAbbreviation) + '</td>',
-            '<td class="px-3 py-1.5">' + escapeHtml(g.bucket) + '</td>',
+            '<td class="px-3 py-1.5 text-slate-400">—</td>',
             '<td class="px-3 py-1.5">' + groupUnitCellHtml(g) + '</td>',
-            '<td class="px-3 py-1.5 num">' + g.rows.length + '</td>',
-            '<td class="px-3 py-1.5 num">' + g.invoiceIds.size + '</td>',
+            '<td class="px-3 py-1.5 text-slate-500 dark:text-slate-400">' + g.invoiceIds.size + ' invoices · ' + g.rows.length + ' lines</td>',
             '<td class="px-3 py-1.5 num font-semibold">$' + formatMoney(g.sum) + '</td>',
             '</tr>'
         );
         if (open) {
+            // Child rows = individual invoice line items. Same 5-col layout,
+            // dimmed Property/Location cells (inherited from the group) and
+            // a cyan vertical-rail border on the left to show containment.
             const sorted = [...g.rows].sort((a, b) => (a.accountingDate < b.accountingDate ? 1 : -1));
-            html.push(
-                '<tr><td></td><td colspan="6" class="px-0 py-0">',
-                '<table class="w-full text-xs ml-0">',
-                '<thead class="text-slate-500 dark:text-slate-400"><tr>',
-                '<th class="py-1.5 pr-3 text-left pl-3">Date</th>',
-                '<th class="py-1.5 pr-3 text-left">Invoice</th>',
-                '<th class="py-1.5 pr-3 text-left">Vendor</th>',
-                '<th class="py-1.5 pr-3 text-left">GL</th>',
-                '<th class="py-1.5 pr-3 text-left">Description</th>',
-                '<th class="py-1.5 pr-3 num">Amount</th>',
-                '<th class="py-1.5 pr-3">Open</th>',
-                '</tr></thead><tbody>'
-            );
             for (const r of sorted) {
-                const glCell = r.glAccountNumber + (r.glName ? ' <span class="text-slate-400">· ' + escapeHtml(r.glName) + '</span>' : '');
                 html.push(
-                    '<tr class="border-t border-slate-100 dark:border-slate-700">',
-                    '<td class="py-1.5 pr-3 pl-3">' + formatDateUS(r.accountingDate) + '</td>',
-                    '<td class="py-1.5 pr-3">' + escapeHtml(r.invoiceNumber || '') + '</td>',
-                    '<td class="py-1.5 pr-3">' + escapeHtml(r.vendor || '') + '</td>',
-                    '<td class="py-1.5 pr-3 font-mono text-xs">' + glCell + '</td>',
-                    '<td class="py-1.5 pr-3">' + escapeHtml(r.description || '') + '</td>',
-                    '<td class="py-1.5 pr-3 num">$' + formatMoney(r.total) + '</td>',
-                    '<td class="py-1.5 pr-3">' + pdfLink(r) + '</td>',
+                    '<tr class="child-row">',
+                    '<td class="px-3 py-1 child-rail"></td>',
+                    '<td class="px-3 py-1 text-slate-300 dark:text-slate-600 text-xs">↳</td>',
+                    '<td class="px-3 py-1 text-slate-700 dark:text-slate-200">' + formatDateUS(r.accountingDate) + '</td>',
+                    '<td class="px-3 py-1 text-slate-400 dark:text-slate-500 text-xs truncate" title="' + escapeAttr((r.vendor || '') + ' · ' + (r.description || '')) + '">' + escapeHtml((r.description || r.vendor || '').slice(0, 42)) + '</td>',
+                    '<td class="px-3 py-1">' + invoiceNumberLink(r) + '</td>',
+                    '<td class="px-3 py-1 num text-slate-800 dark:text-slate-100">$' + formatMoney(r.total) + '</td>',
                     '</tr>'
                 );
             }
-            html.push('</tbody></table></td></tr>');
         }
     }
     tbody.innerHTML = html.join('');
@@ -1418,15 +1419,13 @@ function renderRosterGrouped(rows) {
         arr.length + ' locations · ' + rows.length.toLocaleString() + ' line items';
     document.getElementById('roster-sum').textContent = 'Sum: $' + formatMoney(total);
 
-    // Sticky totals row for grouped view. Group cols = [chevron, Property, Bucket,
-    // Unit/Bldg, Line items, Invoices, Sum] — 7 total. Put the sum under the Sum col.
+    // Sticky totals row. Group table has 6 cells (chevron + 5 data cols).
     const tfoot = document.getElementById('roster-tfoot');
     tfoot.innerHTML =
         '<td colspan="4" class="text-right text-xs text-slate-500 dark:text-slate-400">'
-            + 'Totals · ' + arr.length + ' locations · ' + rows.length.toLocaleString() + ' line items · ' + invoiceCount.toLocaleString() + ' invoices'
+            + 'Totals · ' + arr.length + ' locations · ' + rows.length.toLocaleString() + ' line items'
         + '</td>'
-        + '<td class="num">' + rows.length.toLocaleString() + '</td>'
-        + '<td class="num">' + invoiceCount.toLocaleString() + '</td>'
+        + '<td class="text-slate-500 dark:text-slate-400">' + invoiceCount.toLocaleString() + ' invoices</td>'
         + '<td class="num text-slate-800 dark:text-slate-100">$' + formatMoney(total) + '</td>';
 }
 
@@ -1548,6 +1547,29 @@ function pdfLink(r) {
     if (!r || !r.invoiceId) return '';
     const url = 'https://sns.myresman.com/#/Invoices/Edit/' + encodeURIComponent(r.invoiceId);
     return '<a href="' + escapeAttr(url) + '" target="_blank" rel="noopener" class="text-cyan-500 hover:underline">Open</a>';
+}
+
+function resmanInvoiceUrl(invoiceId) {
+    return 'https://sns.myresman.com/#/Invoices/Edit/' + encodeURIComponent(invoiceId);
+}
+
+function invoiceNumberLink(r) {
+    if (!r || !r.invoiceNumber) return '';
+    if (!r.invoiceId) return escapeHtml(r.invoiceNumber);
+    return '<a href="' + escapeAttr(resmanInvoiceUrl(r.invoiceId)) + '" target="_blank" rel="noopener" class="text-cyan-500 hover:underline">'
+        + escapeHtml(r.invoiceNumber) + '</a>';
+}
+
+function locationFullHtml(r) {
+    const bucket = r.locationType || 'Common';
+    const loc = r.location || '';
+    const label = bucket === 'Common' ? 'Common' : (loc ? (bucket + ' ' + loc) : bucket);
+    const base = escapeHtml(label);
+    if (r.locationType === 'Unit' && r.locationId && STATE.moveOutByUnitId && STATE.moveOutByUnitId.has(r.locationId)) {
+        const mo = STATE.moveOutByUnitId.get(r.locationId);
+        return base + ' <span class="text-slate-400 text-xs whitespace-nowrap">· MO: ' + formatDateUS(mo) + '</span>';
+    }
+    return base;
 }
 
 // ============================================================================
