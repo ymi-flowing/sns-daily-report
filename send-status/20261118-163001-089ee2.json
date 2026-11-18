@@ -4,7 +4,48 @@
   "mode": "live",
   "status": "running",
   "total": 10,
-  "sent": [],
+  "sent": [
+    {
+      "property": "TV",
+      "month": "2027-02",
+      "unit": "4700-3",
+      "resident": "Megan Rodgers",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "The Vista - Feb 2027 - 4700-3.pdf",
+      "at": "2026-11-18T16:31:01"
+    },
+    {
+      "property": "TV",
+      "month": "2027-02",
+      "unit": "4749-2",
+      "resident": "Sandra Pieck Regalo",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "The Vista - Feb 2027 - 4749-2.pdf",
+      "at": "2026-11-18T16:31:04"
+    },
+    {
+      "property": "TV",
+      "month": "2027-02",
+      "unit": "4728-3",
+      "resident": "Isabella D'abate",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "The Vista - Feb 2027 - 4728-3.pdf",
+      "at": "2026-11-18T16:31:08"
+    },
+    {
+      "property": "TV",
+      "month": "2027-02",
+      "unit": "4712-6",
+      "resident": "Johnny Washington",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "The Vista - Feb 2027 - 4712-6.pdf",
+      "at": "2026-11-18T16:31:11"
+    }
+  ],
   "staged": [],
   "failed": [],
   "completedAt": null
