@@ -4,7 +4,18 @@
   "mode": "live",
   "status": "running",
   "total": 30,
-  "sent": [],
+  "sent": [
+    {
+      "property": "49THSTR",
+      "month": "2027-02",
+      "unit": "1101",
+      "resident": "Pamela Fye",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "49th - Feb 2027 - 1101.pdf",
+      "at": "2026-11-18T15:40:15"
+    }
+  ],
   "staged": [],
   "failed": [],
   "completedAt": null
