@@ -234,6 +234,56 @@
       "detail": "",
       "attachment": "49th - Feb 2027 - 513.pdf",
       "at": "2026-11-18T15:41:36"
+    },
+    {
+      "property": "49THSTR",
+      "month": "2027-02",
+      "unit": "401",
+      "resident": "Tristan Barrett",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "49th - Feb 2027 - 401.pdf",
+      "at": "2026-11-18T15:41:39"
+    },
+    {
+      "property": "49THSTR",
+      "month": "2027-02",
+      "unit": "1911",
+      "resident": "Genesis Velez Zamott",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "49th - Feb 2027 - 1911.pdf",
+      "at": "2026-11-18T15:41:43"
+    },
+    {
+      "property": "49THSTR",
+      "month": "2027-02",
+      "unit": "309",
+      "resident": "Justin Yeago",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "49th - Feb 2027 - 309.pdf",
+      "at": "2026-11-18T15:41:46"
+    },
+    {
+      "property": "49THSTR",
+      "month": "2027-02",
+      "unit": "1505",
+      "resident": "LIDICE MENA",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "49th - Feb 2027 - 1505.pdf",
+      "at": "2026-11-18T15:41:49"
+    },
+    {
+      "property": "49THSTR",
+      "month": "2027-02",
+      "unit": "603",
+      "resident": "Taylor Hegedty",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "49th - Feb 2027 - 603.pdf",
+      "at": "2026-11-18T15:41:52"
     }
   ],
   "staged": [],
