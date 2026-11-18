@@ -154,6 +154,46 @@
       "detail": "",
       "attachment": "The Morgan - Feb 2027 - 1805.pdf",
       "at": "2026-11-18T15:57:53"
+    },
+    {
+      "property": "MOC",
+      "month": "2027-02",
+      "unit": "1005",
+      "resident": "Victor Vega madera",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "The Morgan - Feb 2027 - 1005.pdf",
+      "at": "2026-11-18T15:57:57"
+    },
+    {
+      "property": "MOC",
+      "month": "2027-02",
+      "unit": "804",
+      "resident": "Janelle Toy",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "The Morgan - Feb 2027 - 804.pdf",
+      "at": "2026-11-18T15:58:00"
+    },
+    {
+      "property": "MOC",
+      "month": "2027-02",
+      "unit": "2101",
+      "resident": "Maria Teresa Gomez Torres",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "The Morgan - Feb 2027 - 2101.pdf",
+      "at": "2026-11-18T15:58:04"
+    },
+    {
+      "property": "MOC",
+      "month": "2027-02",
+      "unit": "905",
+      "resident": "Cynthia Murry",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "The Morgan - Feb 2027 - 905.pdf",
+      "at": "2026-11-18T15:58:08"
     }
   ],
   "staged": [],
