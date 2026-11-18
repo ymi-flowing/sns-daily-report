@@ -123,6 +123,19 @@
         #roster-table th.sortable:hover { color: #0891b2; }
         .dark #roster-table th.sortable:hover { color: #67e8f9; }
 
+        /* Sticky totals footer for the roster table */
+        #roster-table tfoot td {
+            position: sticky; bottom: 0; z-index: 2;
+            background-color: #f1f5f9;
+            font-weight: 700;
+            border-top: 2px solid rgba(100, 116, 139, 0.3);
+            padding: 10px 12px;
+        }
+        .dark #roster-table tfoot td {
+            background-color: #0f172a;
+            border-top-color: rgba(148, 163, 184, 0.3);
+        }
+
         /* --- Charts --- */
         .chart-card {
             background: white; border-radius: 16px; padding: 16px;
@@ -407,6 +420,7 @@
             <table id="roster-table" class="w-full text-sm">
                 <thead class="sticky top-0 z-10"><tr id="roster-thead"></tr></thead>
                 <tbody id="roster-tbody"></tbody>
+                <tfoot><tr id="roster-tfoot"></tr></tfoot>
             </table>
         </div>
     </div>
@@ -1116,7 +1130,7 @@ const DRILL_COLS = [
     { key: 'total', label: 'Amount', align: 'right',
       cls: 'num',
       fmt: r => '$' + formatMoney(r.total) },
-    { key: 'imageUrl', label: 'PDF', align: 'left', sortable: false,
+    { key: 'imageUrl', label: 'Open', align: 'left', sortable: false,
       fmt: r => pdfLink(r) },
 ];
 
@@ -1200,7 +1214,7 @@ const ROSTER_COLS = [
     { key: 'description', label: 'Description' },
     { key: 'total', label: 'Amount', cls: 'num', fmt: v => '$' + formatMoney(v) },
     { key: 'invoiceNumber', label: 'Invoice' },
-    { key: 'imageUrl', label: 'PDF', fmt: (_v, r) => pdfLink(r) },
+    { key: 'imageUrl', label: 'Open', fmt: (_v, r) => pdfLink(r) },
 ];
 
 function renderRoster(rows) {
@@ -1249,9 +1263,23 @@ function renderRosterFlat(rows) {
     }).join('');
 
     const total = rows.reduce((s, r) => s + r.total, 0);
+    const invoiceCount = new Set(rows.map(r => r.invoiceId)).size;
     document.getElementById('roster-count').textContent =
         rows.length.toLocaleString() + (shown.length < rows.length ? ' (showing first ' + MAX + ')' : '');
     document.getElementById('roster-sum').textContent = 'Sum: $' + formatMoney(total);
+
+    // Sticky totals row. Amount column is the 8th col (0-indexed 7); fill 0..6
+    // with a single colspan=7 label, blanks for Invoice + Open on the right.
+    const amountIdx = ROSTER_COLS.findIndex(c => c.key === 'total');
+    const leftSpan = amountIdx;  // span everything left of Amount
+    const rightSpan = ROSTER_COLS.length - amountIdx - 1;
+    const tfoot = document.getElementById('roster-tfoot');
+    tfoot.innerHTML =
+        '<td colspan="' + leftSpan + '" class="text-right text-xs text-slate-500 dark:text-slate-400">'
+            + 'Totals · ' + rows.length.toLocaleString() + ' line items · ' + invoiceCount.toLocaleString() + ' invoices'
+        + '</td>'
+        + '<td class="num text-slate-800 dark:text-slate-100">$' + formatMoney(total) + '</td>'
+        + '<td colspan="' + rightSpan + '"></td>';
 }
 
 function renderRosterGrouped(rows) {
@@ -1342,7 +1370,7 @@ function renderRosterGrouped(rows) {
                 '<th class="py-1.5 pr-3 text-left">GL</th>',
                 '<th class="py-1.5 pr-3 text-left">Description</th>',
                 '<th class="py-1.5 pr-3 num">Amount</th>',
-                '<th class="py-1.5 pr-3">PDF</th>',
+                '<th class="py-1.5 pr-3">Open</th>',
                 '</tr></thead><tbody>'
             );
             for (const r of sorted) {
@@ -1373,9 +1401,21 @@ function renderRosterGrouped(rows) {
     });
 
     const total = rows.reduce((s, r) => s + r.total, 0);
+    const invoiceCount = new Set(rows.map(r => r.invoiceId)).size;
     document.getElementById('roster-count').textContent =
         arr.length + ' locations · ' + rows.length.toLocaleString() + ' line items';
     document.getElementById('roster-sum').textContent = 'Sum: $' + formatMoney(total);
+
+    // Sticky totals row for grouped view. Group cols = [chevron, Property, Bucket,
+    // Unit/Bldg, Line items, Invoices, Sum] — 7 total. Put the sum under the Sum col.
+    const tfoot = document.getElementById('roster-tfoot');
+    tfoot.innerHTML =
+        '<td colspan="4" class="text-right text-xs text-slate-500 dark:text-slate-400">'
+            + 'Totals · ' + arr.length + ' locations · ' + rows.length.toLocaleString() + ' line items · ' + invoiceCount.toLocaleString() + ' invoices'
+        + '</td>'
+        + '<td class="num">' + rows.length.toLocaleString() + '</td>'
+        + '<td class="num">' + invoiceCount.toLocaleString() + '</td>'
+        + '<td class="num text-slate-800 dark:text-slate-100">$' + formatMoney(total) + '</td>';
 }
 
 // ============================================================================
@@ -1491,12 +1531,11 @@ function escapeAttr(s) {
 }
 
 function pdfLink(r) {
-    // Baked signed URLs expire in ~30 min — route through the proxy that mints
-    // a fresh one on every click.
-    if (!r || !r.invoiceId || !r.propertyId) return '';
-    const url = '/api/invoice_pdf?propertyId=' + encodeURIComponent(r.propertyId)
-              + '&invoiceId=' + encodeURIComponent(r.invoiceId);
-    return '<a href="' + escapeAttr(url) + '" target="_blank" rel="noopener" class="text-cyan-500 hover:underline">PDF</a>';
+    // Direct link to ResMan portal's Invoice Edit view — authoritative source,
+    // no signed-URL expiry, PDF attached inside the UI.
+    if (!r || !r.invoiceId) return '';
+    const url = 'https://sns.myresman.com/#/Invoices/Edit/' + encodeURIComponent(r.invoiceId);
+    return '<a href="' + escapeAttr(url) + '" target="_blank" rel="noopener" class="text-cyan-500 hover:underline">Open</a>';
 }
 
 // ============================================================================
