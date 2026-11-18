@@ -44,6 +44,46 @@
       "detail": "",
       "attachment": "The Vista - Feb 2027 - 4712-6.pdf",
       "at": "2026-11-18T16:31:11"
+    },
+    {
+      "property": "TV",
+      "month": "2027-02",
+      "unit": "4729-7",
+      "resident": "Kristal Torres Cosme",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "The Vista - Feb 2027 - 4729-7.pdf",
+      "at": "2026-11-18T16:31:15"
+    },
+    {
+      "property": "TV",
+      "month": "2027-02",
+      "unit": "4716-7",
+      "resident": "Tiaa Credle",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "The Vista - Feb 2027 - 4716-7.pdf",
+      "at": "2026-11-18T16:31:19"
+    },
+    {
+      "property": "TV",
+      "month": "2027-02",
+      "unit": "4728-7",
+      "resident": "Xiaoxiao Meng",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "The Vista - Feb 2027 - 4728-7.pdf",
+      "at": "2026-11-18T16:31:22"
+    },
+    {
+      "property": "TV",
+      "month": "2027-02",
+      "unit": "4717-8",
+      "resident": "Mikayla Houde",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "The Vista - Feb 2027 - 4717-8.pdf",
+      "at": "2026-11-18T16:31:25"
     }
   ],
   "staged": [],
