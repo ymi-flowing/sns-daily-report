@@ -2,7 +2,7 @@
   "runId": "20261118-155543-ea50d3",
   "startedAt": "2026-11-18T15:56:35",
   "mode": "live",
-  "status": "running",
+  "status": "complete",
   "total": 25,
   "sent": [
     {
@@ -234,9 +234,29 @@
       "detail": "",
       "attachment": "The Morgan - Feb 2027 - 301.pdf",
       "at": "2026-11-18T15:58:23"
+    },
+    {
+      "property": "MOC",
+      "month": "2027-02",
+      "unit": "1503",
+      "resident": "Kimberly Bishop",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "The Morgan - Feb 2027 - 1503.pdf",
+      "at": "2026-11-18T15:58:27"
+    },
+    {
+      "property": "MOC",
+      "month": "2027-02",
+      "unit": "1502",
+      "resident": "Lisandra Casallas",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "The Morgan - Feb 2027 - 1502.pdf",
+      "at": "2026-11-18T15:58:33"
     }
   ],
   "staged": [],
   "failed": [],
-  "completedAt": null
+  "completedAt": "2026-11-18T15:58:33"
 }
