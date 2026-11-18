@@ -4,7 +4,48 @@
   "mode": "live",
   "status": "running",
   "total": 12,
-  "sent": [],
+  "sent": [
+    {
+      "property": "MUSO",
+      "month": "2027-02",
+      "unit": "10908",
+      "resident": "David Mejia Urrea",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "The Mustang - Feb 2027 - 10908.pdf",
+      "at": "2026-11-18T15:59:57"
+    },
+    {
+      "property": "MUSO",
+      "month": "2027-02",
+      "unit": "10307",
+      "resident": "Eddie Roldan",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "The Mustang - Feb 2027 - 10307.pdf",
+      "at": "2026-11-18T16:00:01"
+    },
+    {
+      "property": "MUSO",
+      "month": "2027-02",
+      "unit": "10601",
+      "resident": "Ashlee Schaeffer",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "The Mustang - Feb 2027 - 10601.pdf",
+      "at": "2026-11-18T16:00:04"
+    },
+    {
+      "property": "MUSO",
+      "month": "2027-02",
+      "unit": "10209",
+      "resident": "Dashawn Bellamy",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "The Mustang - Feb 2027 - 10209.pdf",
+      "at": "2026-11-18T16:00:07"
+    }
+  ],
   "staged": [],
   "failed": [],
   "completedAt": null
