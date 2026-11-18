@@ -184,6 +184,56 @@
       "detail": "",
       "attachment": "49th - Feb 2027 - 1016.pdf",
       "at": "2026-11-18T15:41:18"
+    },
+    {
+      "property": "49THSTR",
+      "month": "2027-02",
+      "unit": "1206",
+      "resident": "Johnnie Frazier",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "49th - Feb 2027 - 1206.pdf",
+      "at": "2026-11-18T15:41:23"
+    },
+    {
+      "property": "49THSTR",
+      "month": "2027-02",
+      "unit": "1510",
+      "resident": "Nicholas Ruggieri",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "49th - Feb 2027 - 1510.pdf",
+      "at": "2026-11-18T15:41:26"
+    },
+    {
+      "property": "49THSTR",
+      "month": "2027-02",
+      "unit": "903",
+      "resident": "Barbara Vargas",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "49th - Feb 2027 - 903.pdf",
+      "at": "2026-11-18T15:41:29"
+    },
+    {
+      "property": "49THSTR",
+      "month": "2027-02",
+      "unit": "1311",
+      "resident": "Griselda Lopez Olguin",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "49th - Feb 2027 - 1311.pdf",
+      "at": "2026-11-18T15:41:33"
+    },
+    {
+      "property": "49THSTR",
+      "month": "2027-02",
+      "unit": "513",
+      "resident": "Bradley Spicer",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "49th - Feb 2027 - 513.pdf",
+      "at": "2026-11-18T15:41:36"
     }
   ],
   "staged": [],
