@@ -2,7 +2,7 @@
   "runId": "20261118-163001-089ee2",
   "startedAt": "2026-11-18T16:30:40",
   "mode": "live",
-  "status": "running",
+  "status": "complete",
   "total": 10,
   "sent": [
     {
@@ -84,9 +84,29 @@
       "detail": "",
       "attachment": "The Vista - Feb 2027 - 4717-8.pdf",
       "at": "2026-11-18T16:31:25"
+    },
+    {
+      "property": "TV",
+      "month": "2027-02",
+      "unit": "4700-1",
+      "resident": "Evelin Reynoso",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "The Vista - Feb 2027 - 4700-1.pdf",
+      "at": "2026-11-18T16:31:29"
+    },
+    {
+      "property": "TV",
+      "month": "2027-02",
+      "unit": "4748-5",
+      "resident": "Johanna Ramirez",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "The Vista - Feb 2027 - 4748-5.pdf",
+      "at": "2026-11-18T16:31:33"
     }
   ],
   "staged": [],
   "failed": [],
-  "completedAt": null
+  "completedAt": "2026-11-18T16:31:33"
 }
