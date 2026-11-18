@@ -51,7 +51,7 @@ SHEET_TAB = {
 }
 
 # Sheet rows with these Renewal Status get a letter sent.
-LETTER_STATUSES = {"Current", "NTV"}
+LETTER_STATUSES = {"Current", "NTV", "Under Eviction"}  # Under Eviction added 2026-11-18
 
 # ---- property + month resolution (parameterized 2026-09-10) ----
 #

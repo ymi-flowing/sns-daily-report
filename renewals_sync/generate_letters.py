@@ -215,9 +215,11 @@ def row_context(row_dict: dict, abbr: str, property_name: str,
     }
 
 
-# Renewal Status values that get a letter. Everything else (Under Eviction,
-# Renewed, Lower Offer, Moved Out, Cancelled, Evicted, Denied, blanks) is skipped.
-LETTER_STATUSES = {"Current", "NTV"}
+# Renewal Status values that get a letter. Everything else (Renewed, Lower
+# Offer, Moved Out, Cancelled, Evicted, Denied, blanks) is skipped.
+# "Under Eviction" added 2026-11-18: residents facing eviction still get a
+# renewal offer; "Moved Out" stays blocked.
+LETTER_STATUSES = {"Current", "NTV", "Under Eviction"}
 
 
 def _get_range_with_retry(tab: str, range_a1: str, attempts: int = 4) -> dict:
