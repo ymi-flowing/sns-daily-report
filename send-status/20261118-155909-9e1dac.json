@@ -2,7 +2,7 @@
   "runId": "20261118-155909-9e1dac",
   "startedAt": "2026-11-18T15:59:37",
   "mode": "live",
-  "status": "running",
+  "status": "complete",
   "total": 12,
   "sent": [
     {
@@ -84,9 +84,49 @@
       "detail": "",
       "attachment": "The Mustang - Feb 2027 - 10704.pdf",
       "at": "2026-11-18T16:00:22"
+    },
+    {
+      "property": "MUSO",
+      "month": "2027-02",
+      "unit": "10702",
+      "resident": "Brittany Eady",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "The Mustang - Feb 2027 - 10702.pdf",
+      "at": "2026-11-18T16:00:28"
+    },
+    {
+      "property": "MUSO",
+      "month": "2027-02",
+      "unit": "11401",
+      "resident": "Lindsay Melton",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "The Mustang - Feb 2027 - 11401.pdf",
+      "at": "2026-11-18T16:00:31"
+    },
+    {
+      "property": "MUSO",
+      "month": "2027-02",
+      "unit": "10605",
+      "resident": "Monique Washington",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "The Mustang - Feb 2027 - 10605.pdf",
+      "at": "2026-11-18T16:00:35"
+    },
+    {
+      "property": "MUSO",
+      "month": "2027-02",
+      "unit": "11208",
+      "resident": "Derrick Bragman",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "The Mustang - Feb 2027 - 11208.pdf",
+      "at": "2026-11-18T16:00:38"
     }
   ],
   "staged": [],
   "failed": [],
-  "completedAt": null
+  "completedAt": "2026-11-18T16:00:38"
 }
