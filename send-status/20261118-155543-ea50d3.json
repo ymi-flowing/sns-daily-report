@@ -104,6 +104,56 @@
       "detail": "",
       "attachment": "The Morgan - Feb 2027 - 2704.pdf",
       "at": "2026-11-18T15:57:35"
+    },
+    {
+      "property": "MOC",
+      "month": "2027-02",
+      "unit": "1304",
+      "resident": "Christopher Koplas",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "The Morgan - Feb 2027 - 1304.pdf",
+      "at": "2026-11-18T15:57:39"
+    },
+    {
+      "property": "MOC",
+      "month": "2027-02",
+      "unit": "506",
+      "resident": "Jeniffer Bayman",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "The Morgan - Feb 2027 - 506.pdf",
+      "at": "2026-11-18T15:57:43"
+    },
+    {
+      "property": "MOC",
+      "month": "2027-02",
+      "unit": "212",
+      "resident": "Chandra Debose",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "The Morgan - Feb 2027 - 212.pdf",
+      "at": "2026-11-18T15:57:47"
+    },
+    {
+      "property": "MOC",
+      "month": "2027-02",
+      "unit": "1306",
+      "resident": "Leandra Rivera",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "The Morgan - Feb 2027 - 1306.pdf",
+      "at": "2026-11-18T15:57:50"
+    },
+    {
+      "property": "MOC",
+      "month": "2027-02",
+      "unit": "1805",
+      "resident": "Elizabeth Pacheco",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "The Morgan - Feb 2027 - 1805.pdf",
+      "at": "2026-11-18T15:57:53"
     }
   ],
   "staged": [],
