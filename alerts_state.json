@@ -72,6 +72,10 @@
       "firstSeen": "2026-11-13",
       "lastMsg": "Lease ends in 54d \u2014 no NTV filed"
     },
+    "MUSO|pendingInRealUnitList|81f9cf2e-c591-420e-b9b0-f98eba9f5650": {
+      "firstSeen": "2026-11-18",
+      "lastMsg": "Pending applicant in a real unit"
+    },
     "ORT|insufficientNoticeList|0312d506-954a-42fa-a7a8-dd2b83b12ee3": {
       "firstSeen": "2026-11-18",
       "lastMsg": "Lease ends in 59d \u2014 renewal not signed"
