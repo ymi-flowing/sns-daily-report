@@ -94,6 +94,46 @@
       "detail": "",
       "attachment": "49th - Feb 2027 - 1913.pdf",
       "at": "2026-11-18T15:40:47"
+    },
+    {
+      "property": "49THSTR",
+      "month": "2027-02",
+      "unit": "1312",
+      "resident": "Marilus Naranjo Alvarez",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "49th - Feb 2027 - 1312.pdf",
+      "at": "2026-11-18T15:40:51"
+    },
+    {
+      "property": "49THSTR",
+      "month": "2027-02",
+      "unit": "1302",
+      "resident": "Jorge Diaz Subit",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "49th - Feb 2027 - 1302.pdf",
+      "at": "2026-11-18T15:40:54"
+    },
+    {
+      "property": "49THSTR",
+      "month": "2027-02",
+      "unit": "801",
+      "resident": "Ulises Santisteban",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "49th - Feb 2027 - 801.pdf",
+      "at": "2026-11-18T15:40:58"
+    },
+    {
+      "property": "49THSTR",
+      "month": "2027-02",
+      "unit": "701",
+      "resident": "Tashika McCray",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "49th - Feb 2027 - 701.pdf",
+      "at": "2026-11-18T15:41:01"
     }
   ],
   "staged": [],
