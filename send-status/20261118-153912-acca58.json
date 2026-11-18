@@ -134,6 +134,56 @@
       "detail": "",
       "attachment": "49th - Feb 2027 - 701.pdf",
       "at": "2026-11-18T15:41:01"
+    },
+    {
+      "property": "49THSTR",
+      "month": "2027-02",
+      "unit": "1601",
+      "resident": "Oli Souliya",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "49th - Feb 2027 - 1601.pdf",
+      "at": "2026-11-18T15:41:05"
+    },
+    {
+      "property": "49THSTR",
+      "month": "2027-02",
+      "unit": "314",
+      "resident": "Trayvon Taylor-Miles",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "49th - Feb 2027 - 314.pdf",
+      "at": "2026-11-18T15:41:08"
+    },
+    {
+      "property": "49THSTR",
+      "month": "2027-02",
+      "unit": "510",
+      "resident": "Matthew Whalen",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "49th - Feb 2027 - 510.pdf",
+      "at": "2026-11-18T15:41:12"
+    },
+    {
+      "property": "49THSTR",
+      "month": "2027-02",
+      "unit": "1915",
+      "resident": "HAROLD RUSSELL",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "49th - Feb 2027 - 1915.pdf",
+      "at": "2026-11-18T15:41:15"
+    },
+    {
+      "property": "49THSTR",
+      "month": "2027-02",
+      "unit": "1016",
+      "resident": "Michaela Murphy",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "49th - Feb 2027 - 1016.pdf",
+      "at": "2026-11-18T15:41:18"
     }
   ],
   "staged": [],
