@@ -2,7 +2,7 @@
   "runId": "20261118-153912-acca58",
   "startedAt": "2026-11-18T15:39:44",
   "mode": "live",
-  "status": "running",
+  "status": "complete",
   "total": 30,
   "sent": [
     {
@@ -284,9 +284,29 @@
       "detail": "",
       "attachment": "49th - Feb 2027 - 603.pdf",
       "at": "2026-11-18T15:41:52"
+    },
+    {
+      "property": "49THSTR",
+      "month": "2027-02",
+      "unit": "810",
+      "resident": "Barbara guzman",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "49th - Feb 2027 - 810.pdf",
+      "at": "2026-11-18T15:41:58"
+    },
+    {
+      "property": "49THSTR",
+      "month": "2027-02",
+      "unit": "301",
+      "resident": "Logan Ullrich",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "49th - Feb 2027 - 301.pdf",
+      "at": "2026-11-18T15:42:01"
     }
   ],
   "staged": [],
   "failed": [],
-  "completedAt": null
+  "completedAt": "2026-11-18T15:42:01"
 }
