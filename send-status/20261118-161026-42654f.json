@@ -64,6 +64,46 @@
       "detail": "",
       "attachment": "San Jose - Feb 2027 - 5617DA.pdf",
       "at": "2026-11-18T16:17:14"
+    },
+    {
+      "property": "SJ",
+      "month": "2027-02",
+      "unit": "5634CA",
+      "resident": "Tena Muex",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "San Jose - Feb 2027 - 5634CA.pdf",
+      "at": "2026-11-18T16:17:19"
+    },
+    {
+      "property": "SJ",
+      "month": "2027-02",
+      "unit": "5559AA",
+      "resident": "Jennifer Cerio",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "San Jose - Feb 2027 - 5559AA.pdf",
+      "at": "2026-11-18T16:17:22"
+    },
+    {
+      "property": "SJ",
+      "month": "2027-02",
+      "unit": "5551BA",
+      "resident": "Mary Hurt",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "San Jose - Feb 2027 - 5551BA.pdf",
+      "at": "2026-11-18T16:17:26"
+    },
+    {
+      "property": "SJ",
+      "month": "2027-02",
+      "unit": "5443AS",
+      "resident": "Carol Hadlock",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "San Jose - Feb 2027 - 5443AS.pdf",
+      "at": "2026-11-18T16:17:30"
     }
   ],
   "staged": [],
