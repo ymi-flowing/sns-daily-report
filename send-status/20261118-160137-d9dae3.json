@@ -2,7 +2,7 @@
   "runId": "20261118-160137-d9dae3",
   "startedAt": "2026-11-18T16:02:05",
   "mode": "live",
-  "status": "running",
+  "status": "complete",
   "total": 30,
   "sent": [
     {
@@ -284,9 +284,19 @@
       "detail": "",
       "attachment": "The Villas - Feb 2027 - C197.pdf",
       "at": "2026-11-18T16:04:14"
+    },
+    {
+      "property": "ORT",
+      "month": "2027-02",
+      "unit": "C031",
+      "resident": "Angello Agnew",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "The Villas - Feb 2027 - C031.pdf",
+      "at": "2026-11-18T16:04:18"
     }
   ],
   "staged": [],
   "failed": [],
-  "completedAt": null
+  "completedAt": "2026-11-18T16:04:18"
 }
