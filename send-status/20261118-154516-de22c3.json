@@ -124,6 +124,36 @@
       "detail": "",
       "attachment": "Arbor Place - Feb 2027 - 079.pdf",
       "at": "2026-11-18T15:46:51"
+    },
+    {
+      "property": "AP",
+      "month": "2027-02",
+      "unit": "019",
+      "resident": "Yarisbel Figueredo Salgado",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "Arbor Place - Feb 2027 - 019.pdf",
+      "at": "2026-11-18T15:46:54"
+    },
+    {
+      "property": "AP",
+      "month": "2027-02",
+      "unit": "026",
+      "resident": "Jose Borjas Ramos",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "Arbor Place - Feb 2027 - 026.pdf",
+      "at": "2026-11-18T15:46:59"
+    },
+    {
+      "property": "AP",
+      "month": "2027-02",
+      "unit": "186",
+      "resident": "Iang po",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "Arbor Place - Feb 2027 - 186.pdf",
+      "at": "2026-11-18T15:47:04"
     }
   ],
   "staged": [],
