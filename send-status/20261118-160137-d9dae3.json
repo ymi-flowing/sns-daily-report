@@ -194,6 +194,46 @@
       "detail": "",
       "attachment": "The Villas - Feb 2027 - C029.pdf",
       "at": "2026-11-18T16:03:42"
+    },
+    {
+      "property": "ORT",
+      "month": "2027-02",
+      "unit": "C056",
+      "resident": "Jackie Floyd",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "The Villas - Feb 2027 - C056.pdf",
+      "at": "2026-11-18T16:03:46"
+    },
+    {
+      "property": "ORT",
+      "month": "2027-02",
+      "unit": "C179",
+      "resident": "Tiffany M Cooper",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "The Villas - Feb 2027 - C179.pdf",
+      "at": "2026-11-18T16:03:49"
+    },
+    {
+      "property": "ORT",
+      "month": "2027-02",
+      "unit": "T045",
+      "resident": "Biancia Horne",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "The Villas - Feb 2027 - T045.pdf",
+      "at": "2026-11-18T16:03:53"
+    },
+    {
+      "property": "ORT",
+      "month": "2027-02",
+      "unit": "T138",
+      "resident": "Shominique Phelps",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "The Villas - Feb 2027 - T138.pdf",
+      "at": "2026-11-18T16:03:56"
     }
   ],
   "staged": [],
