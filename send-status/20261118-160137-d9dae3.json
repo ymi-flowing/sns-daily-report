@@ -54,6 +54,56 @@
       "detail": "",
       "attachment": "The Villas - Feb 2027 - T188.pdf",
       "at": "2026-11-18T16:02:50"
+    },
+    {
+      "property": "ORT",
+      "month": "2027-02",
+      "unit": "T216",
+      "resident": "Acenel Mulce",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "The Villas - Feb 2027 - T216.pdf",
+      "at": "2026-11-18T16:02:55"
+    },
+    {
+      "property": "ORT",
+      "month": "2027-02",
+      "unit": "T021",
+      "resident": "Terrell Hall",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "The Villas - Feb 2027 - T021.pdf",
+      "at": "2026-11-18T16:02:59"
+    },
+    {
+      "property": "ORT",
+      "month": "2027-02",
+      "unit": "T010",
+      "resident": "Dashia Mcburrows",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "The Villas - Feb 2027 - T010.pdf",
+      "at": "2026-11-18T16:03:02"
+    },
+    {
+      "property": "ORT",
+      "month": "2027-02",
+      "unit": "T049",
+      "resident": "Heru Khufu",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "The Villas - Feb 2027 - T049.pdf",
+      "at": "2026-11-18T16:03:06"
+    },
+    {
+      "property": "ORT",
+      "month": "2027-02",
+      "unit": "T130",
+      "resident": "Timothy Simpson",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "The Villas - Feb 2027 - T130.pdf",
+      "at": "2026-11-18T16:03:09"
     }
   ],
   "staged": [],
