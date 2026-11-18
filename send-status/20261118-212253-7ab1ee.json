@@ -4,7 +4,38 @@
   "mode": "live",
   "status": "running",
   "total": 6,
-  "sent": [],
+  "sent": [
+    {
+      "property": "ROP",
+      "month": "2027-02",
+      "unit": "110",
+      "resident": "Andre Filson",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "Riverside - Feb 2027 - 110.pdf",
+      "at": "2026-11-18T21:31:37"
+    },
+    {
+      "property": "ROP",
+      "month": "2027-02",
+      "unit": "401",
+      "resident": "Frances Conrad",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "Riverside - Feb 2027 - 401.pdf",
+      "at": "2026-11-18T21:31:41"
+    },
+    {
+      "property": "ROP",
+      "month": "2027-02",
+      "unit": "310",
+      "resident": "Jonathan Huff",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "Riverside - Feb 2027 - 310.pdf",
+      "at": "2026-11-18T21:31:44"
+    }
+  ],
   "staged": [],
   "failed": [],
   "completedAt": null
