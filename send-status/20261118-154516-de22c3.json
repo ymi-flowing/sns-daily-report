@@ -2,7 +2,7 @@
   "runId": "20261118-154516-de22c3",
   "startedAt": "2026-11-18T15:45:48",
   "mode": "live",
-  "status": "running",
+  "status": "complete",
   "total": 17,
   "sent": [
     {
@@ -154,9 +154,29 @@
       "detail": "",
       "attachment": "Arbor Place - Feb 2027 - 186.pdf",
       "at": "2026-11-18T15:47:04"
+    },
+    {
+      "property": "AP",
+      "month": "2027-02",
+      "unit": "061",
+      "resident": "Nu Nu Khin",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "Arbor Place - Feb 2027 - 061.pdf",
+      "at": "2026-11-18T15:47:08"
+    },
+    {
+      "property": "AP",
+      "month": "2027-02",
+      "unit": "191",
+      "resident": "Jaime Isaac Martinez Argueta",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "Arbor Place - Feb 2027 - 191.pdf",
+      "at": "2026-11-18T15:47:11"
     }
   ],
   "staged": [],
   "failed": [],
-  "completedAt": null
+  "completedAt": "2026-11-18T15:47:11"
 }
