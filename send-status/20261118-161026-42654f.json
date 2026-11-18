@@ -24,6 +24,46 @@
       "detail": "",
       "attachment": "San Jose - Feb 2027 - 5539BS.pdf",
       "at": "2026-11-18T16:16:58"
+    },
+    {
+      "property": "SJ",
+      "month": "2027-02",
+      "unit": "5600DA",
+      "resident": "Matthew Stack",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "San Jose - Feb 2027 - 5600DA.pdf",
+      "at": "2026-11-18T16:17:02"
+    },
+    {
+      "property": "SJ",
+      "month": "2027-02",
+      "unit": "5616CA",
+      "resident": "Jimmy Rouse",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "San Jose - Feb 2027 - 5616CA.pdf",
+      "at": "2026-11-18T16:17:06"
+    },
+    {
+      "property": "SJ",
+      "month": "2027-02",
+      "unit": "5607DA",
+      "resident": "Dieunette Noel",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "San Jose - Feb 2027 - 5607DA.pdf",
+      "at": "2026-11-18T16:17:10"
+    },
+    {
+      "property": "SJ",
+      "month": "2027-02",
+      "unit": "5617DA",
+      "resident": "Aisha Williams",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "San Jose - Feb 2027 - 5617DA.pdf",
+      "at": "2026-11-18T16:17:14"
     }
   ],
   "staged": [],
