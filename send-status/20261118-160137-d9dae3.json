@@ -234,6 +234,56 @@
       "detail": "",
       "attachment": "The Villas - Feb 2027 - T138.pdf",
       "at": "2026-11-18T16:03:56"
+    },
+    {
+      "property": "ORT",
+      "month": "2027-02",
+      "unit": "C126",
+      "resident": "Donald Lang",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "The Villas - Feb 2027 - C126.pdf",
+      "at": "2026-11-18T16:04:00"
+    },
+    {
+      "property": "ORT",
+      "month": "2027-02",
+      "unit": "T063",
+      "resident": "Robert Jones",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "The Villas - Feb 2027 - T063.pdf",
+      "at": "2026-11-18T16:04:04"
+    },
+    {
+      "property": "ORT",
+      "month": "2027-02",
+      "unit": "T152",
+      "resident": "lorenae stewart",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "The Villas - Feb 2027 - T152.pdf",
+      "at": "2026-11-18T16:04:07"
+    },
+    {
+      "property": "ORT",
+      "month": "2027-02",
+      "unit": "T018",
+      "resident": "Haim Zamora",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "The Villas - Feb 2027 - T018.pdf",
+      "at": "2026-11-18T16:04:11"
+    },
+    {
+      "property": "ORT",
+      "month": "2027-02",
+      "unit": "C197",
+      "resident": "Brittany Philhower",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "The Villas - Feb 2027 - C197.pdf",
+      "at": "2026-11-18T16:04:14"
     }
   ],
   "staged": [],
