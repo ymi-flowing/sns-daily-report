@@ -108,6 +108,35 @@ def choose_lease_for_row(unit_leases: list, csv_name: str, name_threshold: float
     return best_lease, best_sim, best_person
 
 
+# Lease statuses that mean "this record is dead" — if the sheet's Lease ID
+# points to one of these AND ResMan has a non-terminal sibling for the same
+# unit covering the same period, prefer the sibling. Recovers roommate-turnover
+# cases where ResMan cancels the original lease and issues a new one with the
+# same start/end dates (e.g. ORT T015 — Jennifer Gonzalez → Dante Bruno).
+TERMINAL_LEASE_STATUSES = {"Former", "Cancelled", "Evicted", "Denied"}
+
+
+def _find_active_twin(locked_lease: dict, siblings: list) -> dict | None:
+    """
+    If locked_lease has a terminal status and a sibling lease for the same
+    unit has a non-terminal status + same leaseEndDate, return the sibling.
+    Returns None if the locked lease is already active, or no twin exists.
+    """
+    if locked_lease.get("leaseStatus") not in TERMINAL_LEASE_STATUSES:
+        return None
+    end = locked_lease.get("leaseEndDate")
+    if not end:
+        return None
+    for s in siblings:
+        if s is locked_lease:
+            continue
+        if s.get("leaseStatus") in TERMINAL_LEASE_STATUSES:
+            continue
+        if s.get("leaseEndDate") == end:
+            return s
+    return None
+
+
 def parse_sheet_date(s: str):
     """Sheet MI/Exp cells can be MM/DD/YYYY text or ISO with time. Returns datetime or None."""
     if not s:
@@ -371,8 +400,19 @@ def run_sync(abbr: str, dry_run: bool = False, limit: int | None = None) -> int:
         lease = None
         if existing_lease_id and existing_lease_id in by_id:
             lease = by_id[existing_lease_id]
-            stats["matched_by_id"] += 1
-            lease_id_out = existing_lease_id
+            # Safeguard: if the locked lease is Cancelled/Former but ResMan has
+            # an active twin for the same unit+endDate, swap to the twin.
+            twin = _find_active_twin(lease, by_unit.get(unit, []))
+            if twin is not None:
+                print(f"  SWAP {unit}: locked lease {existing_lease_id[:8]}... "
+                      f"({lease.get('leaseStatus')}) -> twin {twin.get('leaseId','')[:8]}... "
+                      f"({twin.get('leaseStatus')})", flush=True)
+                lease = twin
+                lease_id_out = twin.get("leaseId", "")
+                stats["swapped_terminal_twin"] = stats.get("swapped_terminal_twin", 0) + 1
+            else:
+                stats["matched_by_id"] += 1
+                lease_id_out = existing_lease_id
         else:
             unit_variants = [unit]
             if unit.isdigit() and 1 <= len(unit) <= 2:
