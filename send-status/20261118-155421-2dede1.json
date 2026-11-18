@@ -2,10 +2,21 @@
   "runId": "20261118-155421-2dede1",
   "startedAt": "2026-11-18T15:54:59",
   "mode": "live",
-  "status": "running",
+  "status": "complete",
   "total": 1,
-  "sent": [],
+  "sent": [
+    {
+      "property": "EAST",
+      "month": "2027-02",
+      "unit": "15D2",
+      "resident": "Shawna Durolie",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "Eastpointe - Feb 2027 - 15D2.pdf",
+      "at": "2026-11-18T15:55:15"
+    }
+  ],
   "staged": [],
   "failed": [],
-  "completedAt": null
+  "completedAt": "2026-11-18T15:55:15"
 }
