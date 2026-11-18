@@ -4,7 +4,28 @@
   "mode": "live",
   "status": "running",
   "total": 25,
-  "sent": [],
+  "sent": [
+    {
+      "property": "MOC",
+      "month": "2027-02",
+      "unit": "2607",
+      "resident": "Debra Rioseco",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "The Morgan - Feb 2027 - 2607.pdf",
+      "at": "2026-11-18T15:57:02"
+    },
+    {
+      "property": "MOC",
+      "month": "2027-02",
+      "unit": "2803",
+      "resident": "Michael Loaisiga reyes",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "The Morgan - Feb 2027 - 2803.pdf",
+      "at": "2026-11-18T15:57:05"
+    }
+  ],
   "staged": [],
   "failed": [],
   "completedAt": null
