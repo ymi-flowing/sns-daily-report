@@ -45,6 +45,17 @@ from api.get_invoices import (  # noqa: E402
 )
 
 
+GL_ACCOUNTS_PATH = Path(__file__).resolve().parent / "gl_accounts.json"
+
+
+def load_gl_mapping() -> tuple[dict, dict]:
+    try:
+        data = json.loads(GL_ACCOUNTS_PATH.read_text(encoding="utf-8"))
+        return data.get("codes") or {}, data.get("prefixes") or {}
+    except Exception:
+        return {}, {}
+
+
 def fetch_invoices_for_property(property_id: str, since: str) -> list[dict]:
     status, body = partners_get(
         "/Invoices",
@@ -133,6 +144,20 @@ def main() -> int:
     properties = [p for p in properties if p["abbreviation"] in active_abbrevs]
     print(f"Active properties with data: {len(properties)}")
 
+    # Stamp GL account descriptions (and prefix labels) onto each line item.
+    gl_codes, gl_prefixes = load_gl_mapping()
+    for inv in all_invoices:
+        for li in inv.get("lineItems") or []:
+            code = (li.get("glAccountNumber") or "").strip()
+            if not code:
+                continue
+            desc = gl_codes.get(code)
+            if desc:
+                li["glDescription"] = desc
+            prefix = code.split("-")[0] if "-" in code else code
+            li["glPrefix"] = prefix
+            li["glPrefixLabel"] = gl_prefixes.get(prefix) or prefix
+
     total_lines = sum(len(inv.get("lineItems") or []) for inv in all_invoices)
     total_sum = round(
         sum(float(li.get("total") or 0.0) for inv in all_invoices for li in (inv.get("lineItems") or [])),
@@ -147,6 +172,7 @@ def main() -> int:
         "line_item_count": total_lines,
         "moved_out_unit_count": len(all_moved_out),
         "total_sum": total_sum,
+        "gl_accounts": {"codes": gl_codes, "prefixes": gl_prefixes},
         "invoices": all_invoices,
         "moved_out_units": all_moved_out,
     }

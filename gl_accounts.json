@@ -1,0 +1,38 @@
+{
+  "codes": {
+    "6100-0080": "Office Supplies and Equipment",
+    "6600-0100": "Fire Extinguisher Inspections",
+    "6500-0040": "Plumbing Repairs/Supplies",
+    "6500-0050": "Electrical Repairs/Supplies",
+    "7200-0020": "Non-Op General & Administrative",
+    "6100-0060": "Accounting/Tax Services",
+    "1750-0175": "Interior Painting",
+    "6700-0020": "Electricity - Vacant",
+    "6500-0150": "Flooring Repairs",
+    "6500-0200": "Housekeeping/Apt Cleaning",
+    "6500-0180": "Interior Paint",
+    "6100-0140": "Eviction Expense",
+    "6500-0030": "Appliance Supplies/Repairs",
+    "6500-0020": "HVAC Supplies/Repairs",
+    "6600-0020": "Pest Control",
+    "1750-0030": "Appliances",
+    "1750-0210": "Electrical Upgrade/Repairs",
+    "6500-0120": "General Interior Repairs",
+    "6500-0190": "Window & Door Repairs",
+    "1750-0200": "HVAC Replacement"
+  },
+  "prefixes": {
+    "1500": "Operating Reserve",
+    "1550": "Replacement Reserve",
+    "1750": "Make-Readies",
+    "6100": "Admin / Office",
+    "6200": "Marketing",
+    "6250": "Payroll",
+    "6300": "Insurance / Taxes",
+    "6500": "Repairs & Maintenance",
+    "6600": "Grounds",
+    "6700": "Utilities",
+    "7100": "Debt Service",
+    "7200": "Non-Op G&A"
+  }
+}
