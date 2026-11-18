@@ -144,6 +144,56 @@
       "detail": "",
       "attachment": "The Villas - Feb 2027 - T190.pdf",
       "at": "2026-11-18T16:03:24"
+    },
+    {
+      "property": "ORT",
+      "month": "2027-02",
+      "unit": "T068",
+      "resident": "Michael McDowell",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "The Villas - Feb 2027 - T068.pdf",
+      "at": "2026-11-18T16:03:28"
+    },
+    {
+      "property": "ORT",
+      "month": "2027-02",
+      "unit": "T178",
+      "resident": "Anissa Jenkins",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "The Villas - Feb 2027 - T178.pdf",
+      "at": "2026-11-18T16:03:32"
+    },
+    {
+      "property": "ORT",
+      "month": "2027-02",
+      "unit": "C094",
+      "resident": "Caleb Channell",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "The Villas - Feb 2027 - C094.pdf",
+      "at": "2026-11-18T16:03:35"
+    },
+    {
+      "property": "ORT",
+      "month": "2027-02",
+      "unit": "T224",
+      "resident": "Ibrahim Baniowda",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "The Villas - Feb 2027 - T224.pdf",
+      "at": "2026-11-18T16:03:39"
+    },
+    {
+      "property": "ORT",
+      "month": "2027-02",
+      "unit": "C029",
+      "resident": "Tanayrie Laparra",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "The Villas - Feb 2027 - C029.pdf",
+      "at": "2026-11-18T16:03:42"
     }
   ],
   "staged": [],
