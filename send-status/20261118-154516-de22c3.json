@@ -74,6 +74,56 @@
       "detail": "",
       "attachment": "Arbor Place - Feb 2027 - 126.pdf",
       "at": "2026-11-18T15:46:32"
+    },
+    {
+      "property": "AP",
+      "month": "2027-02",
+      "unit": "120",
+      "resident": "Joel Ruiz Reyes",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "Arbor Place - Feb 2027 - 120.pdf",
+      "at": "2026-11-18T15:46:36"
+    },
+    {
+      "property": "AP",
+      "month": "2027-02",
+      "unit": "205",
+      "resident": "Yesenia Lopez",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "Arbor Place - Feb 2027 - 205.pdf",
+      "at": "2026-11-18T15:46:40"
+    },
+    {
+      "property": "AP",
+      "month": "2027-02",
+      "unit": "023",
+      "resident": "ABEL ALAMO SERRA",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "Arbor Place - Feb 2027 - 023.pdf",
+      "at": "2026-11-18T15:46:44"
+    },
+    {
+      "property": "AP",
+      "month": "2027-02",
+      "unit": "074",
+      "resident": "Felipe Espinosa Rodriguez",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "Arbor Place - Feb 2027 - 074.pdf",
+      "at": "2026-11-18T15:46:47"
+    },
+    {
+      "property": "AP",
+      "month": "2027-02",
+      "unit": "079",
+      "resident": "Jonny Canales",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "Arbor Place - Feb 2027 - 079.pdf",
+      "at": "2026-11-18T15:46:51"
     }
   ],
   "staged": [],
