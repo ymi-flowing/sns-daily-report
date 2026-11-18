@@ -2,7 +2,7 @@
   "runId": "20261118-161026-42654f",
   "startedAt": "2026-11-18T16:16:27",
   "mode": "live",
-  "status": "running",
+  "status": "complete",
   "total": 14,
   "sent": [
     {
@@ -104,9 +104,49 @@
       "detail": "",
       "attachment": "San Jose - Feb 2027 - 5443AS.pdf",
       "at": "2026-11-18T16:17:30"
+    },
+    {
+      "property": "SJ",
+      "month": "2027-02",
+      "unit": "5545BS",
+      "resident": "Renee Burton Hyman",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "San Jose - Feb 2027 - 5545BS.pdf",
+      "at": "2026-11-18T16:17:35"
+    },
+    {
+      "property": "SJ",
+      "month": "2027-02",
+      "unit": "5551AS",
+      "resident": "Brittany Vandyke",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "San Jose - Feb 2027 - 5551AS.pdf",
+      "at": "2026-11-18T16:17:39"
+    },
+    {
+      "property": "SJ",
+      "month": "2027-02",
+      "unit": "5635CA",
+      "resident": "Sharon Johnson",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "San Jose - Feb 2027 - 5635CA.pdf",
+      "at": "2026-11-18T16:17:43"
+    },
+    {
+      "property": "SJ",
+      "month": "2027-02",
+      "unit": "5435AS",
+      "resident": "Jeff Norton",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "San Jose - Feb 2027 - 5435AS.pdf",
+      "at": "2026-11-18T16:17:48"
     }
   ],
   "staged": [],
   "failed": [],
-  "completedAt": null
+  "completedAt": "2026-11-18T16:17:48"
 }
