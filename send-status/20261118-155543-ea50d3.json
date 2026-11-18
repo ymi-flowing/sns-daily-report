@@ -194,6 +194,46 @@
       "detail": "",
       "attachment": "The Morgan - Feb 2027 - 905.pdf",
       "at": "2026-11-18T15:58:08"
+    },
+    {
+      "property": "MOC",
+      "month": "2027-02",
+      "unit": "1007",
+      "resident": "Manuel Del Llano",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "The Morgan - Feb 2027 - 1007.pdf",
+      "at": "2026-11-18T15:58:12"
+    },
+    {
+      "property": "MOC",
+      "month": "2027-02",
+      "unit": "803",
+      "resident": "Tacoma Files",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "The Morgan - Feb 2027 - 803.pdf",
+      "at": "2026-11-18T15:58:15"
+    },
+    {
+      "property": "MOC",
+      "month": "2027-02",
+      "unit": "2207",
+      "resident": "Abiyah Scofield",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "The Morgan - Feb 2027 - 2207.pdf",
+      "at": "2026-11-18T15:58:19"
+    },
+    {
+      "property": "MOC",
+      "month": "2027-02",
+      "unit": "301",
+      "resident": "Marcia Lewis",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "The Morgan - Feb 2027 - 301.pdf",
+      "at": "2026-11-18T15:58:23"
     }
   ],
   "staged": [],
