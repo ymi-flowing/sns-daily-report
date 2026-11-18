@@ -54,6 +54,56 @@
       "detail": "",
       "attachment": "The Morgan - Feb 2027 - 1506.pdf",
       "at": "2026-11-18T15:57:17"
+    },
+    {
+      "property": "MOC",
+      "month": "2027-02",
+      "unit": "2802",
+      "resident": "Hector Rivas Torres",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "The Morgan - Feb 2027 - 2802.pdf",
+      "at": "2026-11-18T15:57:22"
+    },
+    {
+      "property": "MOC",
+      "month": "2027-02",
+      "unit": "2211",
+      "resident": "Davi Orona",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "The Morgan - Feb 2027 - 2211.pdf",
+      "at": "2026-11-18T15:57:25"
+    },
+    {
+      "property": "MOC",
+      "month": "2027-02",
+      "unit": "507",
+      "resident": "Zavonnia Hendrix",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "The Morgan - Feb 2027 - 507.pdf",
+      "at": "2026-11-18T15:57:28"
+    },
+    {
+      "property": "MOC",
+      "month": "2027-02",
+      "unit": "1408",
+      "resident": "Zredericka Allen",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "The Morgan - Feb 2027 - 1408.pdf",
+      "at": "2026-11-18T15:57:32"
+    },
+    {
+      "property": "MOC",
+      "month": "2027-02",
+      "unit": "2704",
+      "resident": "Julio Perez",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "The Morgan - Feb 2027 - 2704.pdf",
+      "at": "2026-11-18T15:57:35"
     }
   ],
   "staged": [],
