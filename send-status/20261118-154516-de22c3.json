@@ -34,6 +34,46 @@
       "detail": "",
       "attachment": "Arbor Place - Feb 2027 - 114.pdf",
       "at": "2026-11-18T15:46:19"
+    },
+    {
+      "property": "AP",
+      "month": "2027-02",
+      "unit": "146",
+      "resident": "Nicole Leonguerrero",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "Arbor Place - Feb 2027 - 146.pdf",
+      "at": "2026-11-18T15:46:22"
+    },
+    {
+      "property": "AP",
+      "month": "2027-02",
+      "unit": "165",
+      "resident": "Samantha Little",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "Arbor Place - Feb 2027 - 165.pdf",
+      "at": "2026-11-18T15:46:25"
+    },
+    {
+      "property": "AP",
+      "month": "2027-02",
+      "unit": "131",
+      "resident": "Delcy Cardona",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "Arbor Place - Feb 2027 - 131.pdf",
+      "at": "2026-11-18T15:46:29"
+    },
+    {
+      "property": "AP",
+      "month": "2027-02",
+      "unit": "126",
+      "resident": "Marquis Scott",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "Arbor Place - Feb 2027 - 126.pdf",
+      "at": "2026-11-18T15:46:32"
     }
   ],
   "staged": [],
