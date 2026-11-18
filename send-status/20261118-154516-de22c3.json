@@ -4,7 +4,38 @@
   "mode": "live",
   "status": "running",
   "total": 17,
-  "sent": [],
+  "sent": [
+    {
+      "property": "AP",
+      "month": "2027-02",
+      "unit": "163",
+      "resident": "Kesha Gordon",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "Arbor Place - Feb 2027 - 163.pdf",
+      "at": "2026-11-18T15:46:12"
+    },
+    {
+      "property": "AP",
+      "month": "2027-02",
+      "unit": "199",
+      "resident": "Naylea Mattei",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "Arbor Place - Feb 2027 - 199.pdf",
+      "at": "2026-11-18T15:46:15"
+    },
+    {
+      "property": "AP",
+      "month": "2027-02",
+      "unit": "114",
+      "resident": "Lorna Hernandez",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "Arbor Place - Feb 2027 - 114.pdf",
+      "at": "2026-11-18T15:46:19"
+    }
+  ],
   "staged": [],
   "failed": [],
   "completedAt": null
