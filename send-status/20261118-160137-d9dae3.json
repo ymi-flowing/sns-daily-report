@@ -14,6 +14,46 @@
       "detail": "",
       "attachment": "The Villas - Feb 2027 - T099.pdf",
       "at": "2026-11-18T16:02:33"
+    },
+    {
+      "property": "ORT",
+      "month": "2027-02",
+      "unit": "C115",
+      "resident": "Juliet Potter",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "The Villas - Feb 2027 - C115.pdf",
+      "at": "2026-11-18T16:02:36"
+    },
+    {
+      "property": "ORT",
+      "month": "2027-02",
+      "unit": "T193",
+      "resident": "James Holden",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "The Villas - Feb 2027 - T193.pdf",
+      "at": "2026-11-18T16:02:40"
+    },
+    {
+      "property": "ORT",
+      "month": "2027-02",
+      "unit": "C092",
+      "resident": "Malik Nghi",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "The Villas - Feb 2027 - C092.pdf",
+      "at": "2026-11-18T16:02:46"
+    },
+    {
+      "property": "ORT",
+      "month": "2027-02",
+      "unit": "T188",
+      "resident": "Destine Maul",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "The Villas - Feb 2027 - T188.pdf",
+      "at": "2026-11-18T16:02:50"
     }
   ],
   "staged": [],
