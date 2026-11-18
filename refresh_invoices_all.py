@@ -45,6 +45,9 @@ from api.get_invoices import (  # noqa: E402
 )
 
 
+# Properties excluded from the dashboard by product decision (MP, TRA, AN3).
+EXCLUDED_ABBREVS = {"MP", "TRA", "AN3"}
+
 GL_ACCOUNTS_PATH = Path(__file__).resolve().parent / "gl_accounts.json"
 
 
@@ -90,13 +93,16 @@ def main() -> int:
         raise SystemExit("Failed to call Account/GetProperties")
     raw_props = props_data.get("Properties") or []
 
-    # Keep only the 9 active SNS properties if labeled; otherwise everything returned.
+    # Keep only the active SNS properties; drop the excluded set (MP/TRA/AN3).
     properties = []
     for p in raw_props:
         pid = p.get("PropertyID")
         abbrev = p.get("Abbreviation") or p.get("ShortName") or p.get("Name")
         name = p.get("Name")
         if not (pid and abbrev):
+            continue
+        if abbrev in EXCLUDED_ABBREVS:
+            print(f"  skipping excluded property: {abbrev}")
             continue
         properties.append({"id": pid, "abbreviation": abbrev, "name": name})
 
