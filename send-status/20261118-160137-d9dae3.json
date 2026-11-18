@@ -4,7 +4,18 @@
   "mode": "live",
   "status": "running",
   "total": 30,
-  "sent": [],
+  "sent": [
+    {
+      "property": "ORT",
+      "month": "2027-02",
+      "unit": "T099",
+      "resident": "Zion Clemons",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "The Villas - Feb 2027 - T099.pdf",
+      "at": "2026-11-18T16:02:33"
+    }
+  ],
   "staged": [],
   "failed": [],
   "completedAt": null
