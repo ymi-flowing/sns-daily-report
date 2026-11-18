@@ -34,6 +34,46 @@
       "detail": "",
       "attachment": "Eastpointe - Feb 2027 - 49B1.pdf",
       "at": "2026-11-18T15:49:07"
+    },
+    {
+      "property": "EAST",
+      "month": "2027-02",
+      "unit": "43B1",
+      "resident": "Jimy brand",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "Eastpointe - Feb 2027 - 43B1.pdf",
+      "at": "2026-11-18T15:49:11"
+    },
+    {
+      "property": "EAST",
+      "month": "2027-02",
+      "unit": "67B1",
+      "resident": "Carlos Castillo",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "Eastpointe - Feb 2027 - 67B1.pdf",
+      "at": "2026-11-18T15:49:14"
+    },
+    {
+      "property": "EAST",
+      "month": "2027-02",
+      "unit": "65A1",
+      "resident": "Patricia Jones",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "Eastpointe - Feb 2027 - 65A1.pdf",
+      "at": "2026-11-18T15:49:18"
+    },
+    {
+      "property": "EAST",
+      "month": "2027-02",
+      "unit": "73A1",
+      "resident": "Raquel Brown",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "Eastpointe - Feb 2027 - 73A1.pdf",
+      "at": "2026-11-18T15:49:21"
     }
   ],
   "staged": [],
