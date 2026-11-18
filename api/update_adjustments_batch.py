@@ -4,7 +4,7 @@ sheet rows in a single request.
 
 The Offers popup collects edits locally while in edit mode. When the user
 clicks Save, the whole batch comes here. We group by tab, read each affected
-tab's A1:AJ400 ONCE, then write each individual N{row} cell via set_range.
+tab's A1:AK400 ONCE, then write each individual N{row} cell via set_range.
 This keeps individual edits instant on the client (no network per keystroke)
 and shrinks the sheet round-trips to one read per tab + one write per edit.
 
@@ -44,7 +44,7 @@ SHEETS_WEBHOOK_URL = (
 SHARED_SECRET = os.environ.get("SHARED_SECRET", "")
 
 EDIT_PASSWORD = "Tali124$"
-RANGE_PER_TAB = "A1:AJ400"
+RANGE_PER_TAB = "A1:AK400"
 
 
 def _post_webhook(payload: dict, timeout: int = 45) -> dict:

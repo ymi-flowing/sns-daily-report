@@ -25,8 +25,9 @@ def tab_name_for(abbr: str) -> str:
     return TAB_NAMES.get(abbr, abbr)
 
 
-# The 35 canonical column headers, in order. Floorplan (col D) inserted 2026-09-10.
-# 49thStr adds a 36th col "Lease ID" (col AJ) — sheet is tolerant of trailing missing cells.
+# The 36 canonical column headers, in order. Floorplan (col D) inserted 2026-09-10.
+# Insurance (col AF) inserted 2026-11-18 between Storage and Total Other.
+# 49thStr adds a 37th col "Lease ID" (col AK) — sheet is tolerant of trailing missing cells.
 HEADERS = [
     "Expiring Month", "Unit", "Unit Type", "Floorplan", "Renovated", "Resident Name",
     "Renewal Status", "MI Date", "Exp Date", "Months in Property",
@@ -34,6 +35,6 @@ HEADERS = [
     "Rent A", "Total Offer A", "Delta A", "Delta A %",
     "Actual Renewal", "Actual Delta", "Actual Delta %",
     "Utility", "Valet", "Pest", "Amenity", "Internet",
-    "Pet", "Parking", "WD", "Storage", "Total Other",
+    "Pet", "Parking", "WD", "Storage", "Insurance", "Total Other",
     "Deposit", "R Deposit", "Deposit D",
 ]

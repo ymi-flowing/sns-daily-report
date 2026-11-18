@@ -40,7 +40,7 @@ SHEETS_WEBHOOK_URL = (
 SHARED_SECRET = os.environ.get("SHARED_SECRET", "")
 
 EDIT_PASSWORD = "Tali124$"
-RANGE_PER_TAB = "A1:AJ400"
+RANGE_PER_TAB = "A1:AK400"
 
 
 def _post_webhook(payload: dict, timeout: int = 45) -> dict:

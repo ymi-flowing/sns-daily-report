@@ -139,6 +139,7 @@ def build_charges_rows(row_dict: dict, abbr: str) -> str:
         ("Utility",                  "Utility"),
         ("Valet Trash",              "Valet"),
         ("Pest Control",             "Pest"),
+        ("Risk Protection Fee",      "Insurance"),
         ("Property's Amenities Fee", "Amenity"),
         (z_label,                    "Internet"),
         ("Pet Rent",                 "Pet"),
@@ -243,7 +244,7 @@ def load_month_rows(abbr: str, year: int, month: int) -> tuple[list[dict], dict]
     LETTER_STATUSES. Skip report counts by status for anything filtered out.
     """
     tab = TAB_NAMES.get(abbr, abbr)
-    data = _get_range_with_retry(tab, "A1:AJ500")
+    data = _get_range_with_retry(tab, "A1:AK500")
     values = data.get("values", [])
     if not values:
         return [], {}

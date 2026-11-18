@@ -3,7 +3,7 @@ Renewal Letters - Bulk Renewal Status sync wrapper.
 
 Runs `sync_renewal_status.run_sync()` for every property, in one process
 (no subprocess overhead). Refreshes Renewal Status (col G), Actual Renewal
-(col T), and Lease ID (col AJ) from ResMan into every property tab.
+(col T), and Lease ID (col AK) from ResMan into every property tab.
 
 Usage:
   python sync_all.py                         # all props, write live

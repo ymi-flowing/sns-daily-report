@@ -55,7 +55,7 @@ TAB_TO_PROPERTIES = {
 
 EXTRA_HEADERS = ["NTV Date", "Move Out Date", "Lease End Date", "Renewal Signed Date"]
 
-RANGE_PER_TAB = "A1:AJ400"
+RANGE_PER_TAB = "A1:AK400"
 
 # Repo root (parent of renewals_sync/)
 REPO_ROOT = HERE.parent

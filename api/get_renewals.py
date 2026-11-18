@@ -43,8 +43,8 @@ PROPERTY_TABS = [
 ]
 
 # Max rows per tab. The sheet caps at ~250 rows per property historically.
-# A1:AJ400 is a safe range that covers all 36 columns + plenty of growth.
-RANGE_PER_TAB = "A1:AJ400"
+# A1:AK400 is a safe range that covers all 37 columns + plenty of growth.
+RANGE_PER_TAB = "A1:AK400"
 
 
 def _post_webhook(payload: dict, timeout: int = 45):

@@ -809,7 +809,7 @@ def build_roster_from_sheet(abbr: str, month: str) -> tuple[list[dict], dict]:
     wanted_text = dt.strftime("%B %Y")
 
     tab = SHEET_TAB.get(abbr, abbr)
-    data = _get_range_with_retry(tab, "A1:AJ500")
+    data = _get_range_with_retry(tab, "A1:AK500")
     values = data.get("values", [])
     if not values:
         return [], {"empty_tab": True}

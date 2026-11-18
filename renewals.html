@@ -2191,15 +2191,16 @@ function initRosterResize() {
 // PER-ROW RENEWAL OFFER BREAKDOWN POPOVER
 // =============================================================================
 const OFFER_BREAKDOWN_LINES = [
-    { label: 'Utility',   key: 'Utility'  },
-    { label: 'Valet',     key: 'Valet'    },
-    { label: 'Pest',      key: 'Pest'     },
-    { label: 'Amenity',   key: 'Amenity'  },
-    { label: 'Internet',  key: 'Internet' },
-    { label: 'Pet',       key: 'Pet'      },
-    { label: 'Parking',   key: 'Parking'  },
-    { label: 'WD',        key: 'WD'       },
-    { label: 'Storage',   key: 'Storage'  },
+    { label: 'Utility',   key: 'Utility'   },
+    { label: 'Valet',     key: 'Valet'     },
+    { label: 'Pest',      key: 'Pest'      },
+    { label: 'Insurance', key: 'Insurance' },
+    { label: 'Amenity',   key: 'Amenity'   },
+    { label: 'Internet',  key: 'Internet'  },
+    { label: 'Pet',       key: 'Pet'       },
+    { label: 'Parking',   key: 'Parking'   },
+    { label: 'WD',        key: 'WD'        },
+    { label: 'Storage',   key: 'Storage'   },
 ];
 function moneyOrBlankCell(v) {
     if (v === null || v === undefined || v === '') return '<span class="text-slate-300 dark:text-slate-600">—</span>';
@@ -3189,6 +3190,7 @@ const OFFER_LETTER_CHARGES = [
     { label: 'Utility',                  key: 'Utility' },
     { label: 'Valet Trash',              key: 'Valet' },
     { label: 'Pest Control',             key: 'Pest' },
+    { label: 'Risk Protection Fee',      key: 'Insurance' },
     { label: 'Property\'s Amenities Fee',key: 'Amenity' },
     { label: 'Internet',                 key: 'Internet' },  // relabelled below for TRA-AN3
     { label: 'Pet Rent',                 key: 'Pet' },
@@ -3286,6 +3288,7 @@ const OFFER_COLUMNS = [
     { key: 'Parking',        label: 'Parking',         align: 'center', fmt: moneyOrDash },
     { key: 'WD',             label: 'WD',              align: 'center', fmt: moneyOrDash },
     { key: 'Storage',        label: 'Storage',         align: 'center', fmt: moneyOrDash },
+    { key: 'Insurance',      label: 'Insurance',       align: 'center', fmt: moneyOrDash },
     { key: 'Total Other',    label: 'Total Other',     align: 'center', fmt: moneyOrDash },
     { key: 'totalOfferA',    label: 'Total Offer',     align: 'center', fmt: fmtMoney },
     { key: 'Deposit',        label: 'Deposit',         align: 'center', fmt: moneyOrDash },
@@ -4204,7 +4207,7 @@ function renderOffersFooter(rows, cols, lastFrozenIdx) {
             else break;
         }
     }
-    const sumKeys = new Set(['Base Rent','currentTotal','RnF Rent','Rent A','Utility','Valet','Pest','Amenity','Internet','__totalUtil','Pet','Parking','WD','Storage','Total Other','totalOfferA','Deposit','R Deposit']);
+    const sumKeys = new Set(['Base Rent','currentTotal','RnF Rent','Rent A','Utility','Valet','Pest','Amenity','Internet','__totalUtil','Pet','Parking','WD','Storage','Insurance','Total Other','totalOfferA','Deposit','R Deposit']);
     const signedSumKeys = new Set(['Adjustment','__rentDelta','deltaA','Deposit D']);
     const sum = (key) => rows.reduce((acc, r) => acc + (numOrNull(r[key]) || 0), 0);
     const countNonNull = (key) => rows.reduce((n, r) => n + (numOrNull(r[key]) === null ? 0 : 1), 0);
@@ -4255,7 +4258,7 @@ function renderOffersFooter(rows, cols, lastFrozenIdx) {
 }
 
 // Recompute every value in the row that depends on Adjustment, mirroring the
-// Google Sheet's formulas: P = M+N, Q = P+AF, R = Q-L, S = R/L.
+// Google Sheet's formulas: P = M+N, Q = P+AG, R = Q-L, S = R/L.
 // Updates both the modal-snapshot row AND its __origRef in STATE.rows so the
 // main dashboard reflects the edit immediately.
 function recomputeAfterAdjustment(subsetRow, newAdj) {

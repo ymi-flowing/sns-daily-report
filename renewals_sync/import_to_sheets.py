@@ -119,26 +119,31 @@ def prefetch_rf_full(property_abbr: str) -> dict[str, dict]:
     Utility/Amenity values on 2026-09-07.
     """
     sheet_prop = RF_SHEET_PROP.get(property_abbr, property_abbr)
-    data = sheets_client.get_range("Rent & Fees", "A2:L100")
+    data = sheets_client.get_range("Rent & Fees", "A2:M100")
     result: dict[str, dict] = {}
-    z_fee_col = 11 if sheet_prop == "TRA" else 10  # Landscaping vs Internet
+    # R&F layout after Insurance insertion (2026-11-18): A Prop, B Sqft, C Type,
+    # D No, E PR, F Yes, G Utility, H Valet, I Insurance, J Pest, K Amenity,
+    # L Internet, M Landscaping. Internet/Landscaping still live in the same
+    # (Internet | Landscaping) alternation — now at cols L/M instead of K/L.
+    z_fee_col = 12 if sheet_prop == "TRA" else 11  # Landscaping (M) vs Internet (L)
     for row in data.get("values", []):
-        r = list(row) + [""] * 12
+        r = list(row) + [""] * 13
         if str(r[0]).strip() != sheet_prop:
             continue
         sqft = str(r[1]).strip()
         if not sqft:
             continue
         result[sqft] = {
-            "type":    str(r[2]).strip(),
-            "No":      _rf_num(r[3]),
-            "PR":      _rf_num(r[4]),
-            "Yes":     _rf_num(r[5]),
-            "utility": _rf_num(r[6]),
-            "valet":   _rf_num(r[7]),
-            "pest":    _rf_num(r[8]),
-            "amenity": _rf_num(r[9]),
-            "z_fee":   _rf_num(r[z_fee_col]),
+            "type":      str(r[2]).strip(),
+            "No":        _rf_num(r[3]),
+            "PR":        _rf_num(r[4]),
+            "Yes":       _rf_num(r[5]),
+            "utility":   _rf_num(r[6]),
+            "valet":     _rf_num(r[7]),
+            "insurance": _rf_num(r[8]),
+            "pest":      _rf_num(r[9]),
+            "amenity":   _rf_num(r[10]),
+            "z_fee":     _rf_num(r[z_fee_col]),
         }
     return result
 
@@ -163,22 +168,23 @@ def months_between(mi_iso: str, exp_iso: str) -> int | str:
         return ""
 
 
-# Sheet columns: 34 core + 1 Floorplan (col D) + 1 Lease ID (col AJ) = 36 total.
+# Sheet columns: 34 core + 1 Floorplan (col D) + 1 Insurance (col AF) + 1 Lease ID (col AK) = 37 total.
 # If a tab has fewer cols, Sheets ignores trailing cells.
-SHEET_COLS = 36
+SHEET_COLS = 37
 # Formula columns: (col_letter, header, template with {r})
 # T ("Actual Renewal") intentionally omitted — filled by sync_renewal_status.py from
 # ResMan history[]. U formula matches user's 2026-09-07 update (blank when T is empty).
+# Insurance (AF) inserted 2026-11-18 — Total Other shifted to AG, deposit cols to AH/AI/AJ, Lease ID to AK.
 FORMULAS = [
     ("P",  "Rent A",           "=M{r}+N{r}"),
-    ("Q",  "Total Offer A",    "=P{r}+AF{r}"),
+    ("Q",  "Total Offer A",    "=P{r}+AG{r}"),
     ("R",  "Delta A",          "=Q{r}-L{r}"),
     ("S",  "Delta A %",        "=R{r}/L{r}"),
     ("U",  "Actual Delta",     '=IF(T{r}>0, T{r}-L{r}, "")'),
     ("V",  "Actual Delta %",   "=U{r}/L{r}"),
-    ("AF", "Total Other",      "=SUM(W{r}:AE{r})"),
-    ("AH", "R Deposit",        "=if(AG{r}>499, AG{r}, 499)"),
-    ("AI", "Deposit D",        "=AH{r}-AG{r}"),
+    ("AG", "Total Other",      "=SUM(W{r}:AF{r})"),
+    ("AI", "R Deposit",        "=if(AH{r}>499, AH{r}, 499)"),
+    ("AJ", "Deposit D",        "=AI{r}-AH{r}"),
 ]
 
 
@@ -215,10 +221,11 @@ def build_row(lease, sqft_str, renov_idx, rf, charges, deposit_amount, expiring_
     row[28] = charges.get("parking", "") or ""                  # AC Parking
     row[29] = charges.get("wd", "") or ""                       # AD WD
     row[30] = charges.get("storage", "") or ""                  # AE Storage
-    # AF formula (skip)
-    row[32] = deposit_amount or ""                              # AG Deposit
-    # AH, AI formulas (skip)
-    row[35] = lease.get("leaseId", "")                          # AJ Lease ID (parent record UUID)
+    row[31] = rf.get("insurance", "") if rf else ""             # AF Insurance (from R&F tab col M)
+    # AG formula (skip)
+    row[33] = deposit_amount or ""                              # AH Deposit
+    # AI, AJ formulas (skip)
+    row[36] = lease.get("leaseId", "")                          # AK Lease ID (parent record UUID)
     return row
 
 
