@@ -4,7 +4,38 @@
   "mode": "live",
   "status": "running",
   "total": 14,
-  "sent": [],
+  "sent": [
+    {
+      "property": "EAST",
+      "month": "2027-02",
+      "unit": "03B1",
+      "resident": "Nickeisha Bailey-Sullivan",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "Eastpointe - Feb 2027 - 03B1.pdf",
+      "at": "2026-11-18T15:49:00"
+    },
+    {
+      "property": "EAST",
+      "month": "2027-02",
+      "unit": "11A2",
+      "resident": "Magda Corneille",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "Eastpointe - Feb 2027 - 11A2.pdf",
+      "at": "2026-11-18T15:49:03"
+    },
+    {
+      "property": "EAST",
+      "month": "2027-02",
+      "unit": "49B1",
+      "resident": "Eliezer Klug Soares",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "Eastpointe - Feb 2027 - 49B1.pdf",
+      "at": "2026-11-18T15:49:07"
+    }
+  ],
   "staged": [],
   "failed": [],
   "completedAt": null
