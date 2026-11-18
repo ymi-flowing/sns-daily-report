@@ -552,6 +552,8 @@ async function loadData() {
 function flatten() {
     const rows = [];
     const codeMap = (STATE.data.gl_accounts && STATE.data.gl_accounts.codes) || {};
+    const idByAbbrev = {};
+    for (const p of (STATE.data.properties || [])) idByAbbrev[p.abbreviation] = p.id;
     for (const inv of STATE.data.invoices || []) {
         const lineItems = inv.lineItems || [];
         for (const li of lineItems) {
@@ -560,6 +562,7 @@ function flatten() {
             rows.push({
                 propertyAbbreviation: inv.propertyAbbreviation,
                 propertyName: inv.propertyName,
+                propertyId: idByAbbrev[inv.propertyAbbreviation] || li.propertyId || '',
                 invoiceId: inv.invoiceId,
                 invoiceNumber: inv.number,
                 accountingDate: (inv.accountingDate || '').slice(0, 10),
@@ -1065,45 +1068,91 @@ function closeChartExpand() {
 }
 
 // ============================================================================
-// Drill-down modal (shared across all chart clicks)
+// Drill-down modal (shared across all chart clicks) with sortable columns
 // ============================================================================
+const DRILL_COLS = [
+    { key: 'accountingDate', label: 'Date', align: 'left',
+      fmt: r => formatDateUS(r.accountingDate) },
+    { key: 'propertyAbbreviation', label: 'Property', align: 'left',
+      fmt: r => escapeHtml(r.propertyAbbreviation || '') },
+    { key: 'location', label: 'Unit / Bldg', align: 'left',
+      fmt: r => escapeHtml(r.location || (r.locationType ? '' : 'Common')) },
+    { key: 'invoiceNumber', label: 'Invoice', align: 'left',
+      fmt: r => escapeHtml(r.invoiceNumber || '') },
+    { key: 'vendor', label: 'Vendor', align: 'left',
+      fmt: r => escapeHtml(r.vendor || '') },
+    { key: 'glAccountNumber', label: 'GL', align: 'left',
+      cls: 'font-mono text-xs',
+      fmt: r => r.glAccountNumber + (r.glName ? ' <span class="text-slate-400">· ' + escapeHtml(r.glName) + '</span>' : '') },
+    { key: 'description', label: 'Description', align: 'left',
+      fmt: r => escapeHtml(r.description || '') },
+    { key: 'total', label: 'Amount', align: 'right',
+      cls: 'num',
+      fmt: r => '$' + formatMoney(r.total) },
+    { key: 'imageUrl', label: 'PDF', align: 'left', sortable: false,
+      fmt: r => pdfLink(r) },
+];
+
+let DRILL_STATE = { title: '', rows: [], sort: { col: 'accountingDate', dir: 'desc' } };
+
 function openDrillModal(title, rows) {
-    const sorted = [...rows].sort((a, b) => (a.accountingDate < b.accountingDate ? 1 : -1));
+    DRILL_STATE = {
+        title,
+        rows: rows.slice(),
+        sort: { col: 'accountingDate', dir: 'desc' },
+    };
+    renderDrillModal();
+    document.getElementById('detail-modal').classList.remove('hidden');
+}
+
+function renderDrillModal() {
+    const { title, rows, sort } = DRILL_STATE;
+    const sign = sort.dir === 'asc' ? 1 : -1;
+    const sorted = [...rows].sort((a, b) => {
+        const av = a[sort.col], bv = b[sort.col];
+        if (av == null && bv == null) return 0;
+        if (av == null) return 1;
+        if (bv == null) return -1;
+        if (typeof av === 'number' && typeof bv === 'number') return (av - bv) * sign;
+        return String(av).localeCompare(String(bv)) * sign;
+    });
     const total = sorted.reduce((s, r) => s + r.total, 0);
     const invCount = new Set(sorted.map(r => r.invoiceId)).size;
-    const html = [
-        '<table class="w-full text-xs">',
-        '<thead class="text-slate-500 dark:text-slate-400"><tr>',
-        '<th class="py-2 pr-3 text-left">Date</th>',
-        '<th class="py-2 pr-3 text-left">Property</th>',
-        '<th class="py-2 pr-3 text-left">Unit / Bldg</th>',
-        '<th class="py-2 pr-3 text-left">Invoice</th>',
-        '<th class="py-2 pr-3 text-left">Vendor</th>',
-        '<th class="py-2 pr-3 text-left">GL</th>',
-        '<th class="py-2 pr-3 text-left">Description</th>',
-        '<th class="py-2 pr-3 num">Amount</th>',
-        '<th class="py-2 pr-3">PDF</th>',
-        '</tr></thead><tbody>',
-    ];
-    for (const r of sorted) {
-        const glCell = r.glAccountNumber + (r.glName ? ' <span class="text-slate-400">· ' + escapeHtml(r.glName) + '</span>' : '');
-        html.push('<tr class="border-t border-slate-100 dark:border-slate-700">');
-        html.push('<td class="py-1.5 pr-3">' + formatDateUS(r.accountingDate) + '</td>');
-        html.push('<td class="py-1.5 pr-3">' + escapeHtml(r.propertyAbbreviation || '') + '</td>');
-        html.push('<td class="py-1.5 pr-3">' + escapeHtml(r.location || (r.locationType ? '' : 'Common')) + '</td>');
-        html.push('<td class="py-1.5 pr-3">' + escapeHtml(r.invoiceNumber || '') + '</td>');
-        html.push('<td class="py-1.5 pr-3">' + escapeHtml(r.vendor || '') + '</td>');
-        html.push('<td class="py-1.5 pr-3 font-mono text-xs">' + glCell + '</td>');
-        html.push('<td class="py-1.5 pr-3">' + escapeHtml(r.description || '') + '</td>');
-        html.push('<td class="py-1.5 pr-3 num">$' + formatMoney(r.total) + '</td>');
-        html.push('<td class="py-1.5 pr-3">' + (r.imageUrl ? '<a href="' + escapeAttr(r.imageUrl) + '" target="_blank" class="text-cyan-500 hover:underline">PDF</a>' : '') + '</td>');
-        html.push('</tr>');
-    }
-    html.push('</tbody></table>');
+
+    const headCells = DRILL_COLS.map(c => {
+        const alignCls = c.align === 'right' ? 'text-right' : 'text-left';
+        const sortable = c.sortable !== false;
+        const arrow = sortable && sort.col === c.key ? (sort.dir === 'asc' ? ' ↑' : ' ↓') : '';
+        const cls = ['py-2', 'pr-3', alignCls, (c.cls || ''), sortable ? 'cursor-pointer select-none hover:text-cyan-600 dark:hover:text-cyan-400' : ''].join(' ');
+        const attr = sortable ? (' data-drill-col="' + c.key + '"') : '';
+        return '<th class="' + cls + '"' + attr + '>' + c.label + arrow + '</th>';
+    }).join('');
+
+    const bodyRows = sorted.map(r => {
+        return '<tr class="border-t border-slate-100 dark:border-slate-700">'
+            + DRILL_COLS.map(c => {
+                const alignCls = c.align === 'right' ? 'num' : '';
+                const cls = ['py-1.5', 'pr-3', alignCls, (c.cls || '')].join(' ');
+                return '<td class="' + cls + '">' + c.fmt(r) + '</td>';
+            }).join('')
+            + '</tr>';
+    }).join('');
+
     document.getElementById('detail-modal-title').textContent =
         title + ' — $' + formatMoney0(total) + ' · ' + invCount + ' invoices · ' + sorted.length + ' lines';
-    document.getElementById('detail-modal-body').innerHTML = html.join('');
-    document.getElementById('detail-modal').classList.remove('hidden');
+    document.getElementById('detail-modal-body').innerHTML =
+        '<table class="w-full text-xs"><thead class="text-slate-500 dark:text-slate-400"><tr>'
+        + headCells
+        + '</tr></thead><tbody>' + bodyRows + '</tbody></table>';
+
+    document.querySelectorAll('#detail-modal-body th[data-drill-col]').forEach(th => {
+        th.addEventListener('click', () => {
+            const k = th.dataset.drillCol;
+            if (DRILL_STATE.sort.col === k) DRILL_STATE.sort.dir = DRILL_STATE.sort.dir === 'asc' ? 'desc' : 'asc';
+            else { DRILL_STATE.sort = { col: k, dir: 'asc' }; }
+            renderDrillModal();
+        });
+    });
 }
 
 function closeDetailModal() {
@@ -1124,7 +1173,7 @@ const ROSTER_COLS = [
     { key: 'description', label: 'Description' },
     { key: 'total', label: 'Amount', cls: 'num', fmt: v => '$' + formatMoney(v) },
     { key: 'invoiceNumber', label: 'Invoice' },
-    { key: 'imageUrl', label: 'PDF', fmt: (v) => v ? '<a href="' + escapeAttr(v) + '" target="_blank" class="text-cyan-500 hover:underline">PDF</a>' : '' },
+    { key: 'imageUrl', label: 'PDF', fmt: (_v, r) => pdfLink(r) },
 ];
 
 function renderRoster(rows) {
@@ -1255,7 +1304,7 @@ function renderRosterGrouped(rows) {
                     '<td class="py-1.5 pr-3 font-mono text-xs">' + glCell + '</td>',
                     '<td class="py-1.5 pr-3">' + escapeHtml(r.description || '') + '</td>',
                     '<td class="py-1.5 pr-3 num">$' + formatMoney(r.total) + '</td>',
-                    '<td class="py-1.5 pr-3">' + (r.imageUrl ? '<a href="' + escapeAttr(r.imageUrl) + '" target="_blank" class="text-cyan-500 hover:underline">PDF</a>' : '') + '</td>',
+                    '<td class="py-1.5 pr-3">' + pdfLink(r) + '</td>',
                     '</tr>'
                 );
             }
@@ -1388,6 +1437,15 @@ function escapeHtml(s) {
 }
 function escapeAttr(s) {
     return String(s == null ? '' : s).replace(/"/g, '&quot;').replace(/&/g, '&amp;');
+}
+
+function pdfLink(r) {
+    // Baked signed URLs expire in ~30 min — route through the proxy that mints
+    // a fresh one on every click.
+    if (!r || !r.invoiceId || !r.propertyId) return '';
+    const url = '/api/invoice_pdf?propertyId=' + encodeURIComponent(r.propertyId)
+              + '&invoiceId=' + encodeURIComponent(r.invoiceId);
+    return '<a href="' + escapeAttr(url) + '" target="_blank" rel="noopener" class="text-cyan-500 hover:underline">PDF</a>';
 }
 
 // ============================================================================
