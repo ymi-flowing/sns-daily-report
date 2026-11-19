@@ -12,10 +12,6 @@
       "firstSeen": "2026-11-19",
       "lastMsg": "Past Move-Out Date"
     },
-    "49thStr|vacantNotReadyList|26dfa6a4-1ed1-4c12-8ad8-6c59c9306dd4": {
-      "firstSeen": "2026-11-19",
-      "lastMsg": "Past Available Date"
-    },
     "AP|insufficientNoticeList|41cac442-5af6-47f5-9a6c-0a47caa74f38": {
       "firstSeen": "2026-11-16",
       "lastMsg": "Lease ends in 55d \u2014 renewal not signed"
@@ -43,14 +39,6 @@
     "EAST|insufficientNoticeList|5a57c287-335d-4f86-9b60-12223bccbb4c": {
       "firstSeen": "2026-11-11",
       "lastMsg": "Lease ends in 51d \u2014 renewal not signed"
-    },
-    "EAST|ntvList|645711a1-0cd0-4f23-907b-22eed7c92c9b": {
-      "firstSeen": "2026-11-19",
-      "lastMsg": "6 business days to get ready"
-    },
-    "EAST|vacantLeasedList|d460363e-0a46-4168-9e9f-3b876818afd4": {
-      "firstSeen": "2026-11-19",
-      "lastMsg": "Past Move-In Date"
     },
     "EAST|vacantNotReadyList|af98c8c0-4ca8-4f3b-baf3-3f90bda781f0": {
       "firstSeen": "2026-11-19",
