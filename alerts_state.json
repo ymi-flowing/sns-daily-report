@@ -10,7 +10,7 @@
     },
     "49thStr|ntvList|92a2a00e-f714-4417-81a2-cfd9a640dcb3": {
       "firstSeen": "2026-11-19",
-      "lastMsg": "Past Move-Out Date"
+      "lastMsg": "9 business days to get ready"
     },
     "AP|insufficientNoticeList|41cac442-5af6-47f5-9a6c-0a47caa74f38": {
       "firstSeen": "2026-11-16",
@@ -75,6 +75,10 @@
     "ORT|ntvList|8ade63b6-7330-413f-9ba2-22f57eeedf8a": {
       "firstSeen": "2026-11-18",
       "lastMsg": "Past Move-Out Date"
+    },
+    "ORT|pendingInRealUnitList|88542817-d5f3-4c2f-a3e3-82a0606e5c55": {
+      "firstSeen": "2026-11-19",
+      "lastMsg": "Pending applicant in a real unit"
     },
     "ORT|vacantLeasedList|5c5b816f-8475-478a-a7fa-052add410759": {
       "firstSeen": "2026-11-18",
