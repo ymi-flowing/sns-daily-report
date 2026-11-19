@@ -8,6 +8,10 @@
       "firstSeen": "2026-11-18",
       "lastMsg": "Lease ends in 58d \u2014 no NTV filed"
     },
+    "49thStr|ntvList|faa97e89-0bc9-4d51-9153-cb6e72466040": {
+      "firstSeen": "2026-11-19",
+      "lastMsg": "6 business days to get ready"
+    },
     "AP|insufficientNoticeList|41cac442-5af6-47f5-9a6c-0a47caa74f38": {
       "firstSeen": "2026-11-16",
       "lastMsg": "Lease ends in 55d \u2014 renewal not signed"
@@ -15,10 +19,6 @@
     "AP|insufficientNoticeList|d8a7d113-a1f0-4c2e-a029-7395dadded6c": {
       "firstSeen": "2026-11-16",
       "lastMsg": "Lease ends in 40d \u2014 renewal not signed"
-    },
-    "AP|vacantNotReadyList|a41a986f-8c75-4b55-863f-2855ffb5d3ac": {
-      "firstSeen": "2026-11-18",
-      "lastMsg": "Past Available Date"
     },
     "EAST|insufficientNoticeList|0647d184-d219-4557-be26-16214e08719e": {
       "firstSeen": "2026-11-17",
@@ -48,10 +48,6 @@
       "firstSeen": "2026-11-11",
       "lastMsg": "Lease ends in 51d \u2014 no NTV filed"
     },
-    "MOC|vacantNotReadyList|7b3d47ee-fa6d-438a-9653-16547a9a363e": {
-      "firstSeen": "2026-11-19",
-      "lastMsg": "Past Available Date"
-    },
     "MUSO|insufficientNoticeList|a3edb3ce-5021-4a02-8881-f5715508f559": {
       "firstSeen": "2026-11-13",
       "lastMsg": "Lease ends in 53d \u2014 no NTV filed"
@@ -70,23 +66,11 @@
     },
     "ORT|ntvList|8ade63b6-7330-413f-9ba2-22f57eeedf8a": {
       "firstSeen": "2026-11-18",
-      "lastMsg": "Past Move-Out Date"
-    },
-    "ORT|pendingInRealUnitList|88542817-d5f3-4c2f-a3e3-82a0606e5c55": {
-      "firstSeen": "2026-11-19",
-      "lastMsg": "Pending applicant in a real unit"
-    },
-    "ORT|vacantLeasedList|5c5b816f-8475-478a-a7fa-052add410759": {
-      "firstSeen": "2026-11-18",
-      "lastMsg": "Past Move-In Date"
+      "lastMsg": "8 business days to get ready"
     },
     "ROP|insufficientNoticeList|093b6503-b05a-46af-84f2-a4660a3b4c91": {
       "firstSeen": "2026-11-18",
       "lastMsg": "Lease ends in 58d \u2014 no NTV filed"
-    },
-    "SJ|vacantNotReadyList|8ee520c9-f652-4d69-b5cd-6db0e32f688e": {
-      "firstSeen": "2026-11-19",
-      "lastMsg": "Past Available Date"
     },
     "TV|insufficientNoticeList|ff0f3610-ade6-44b8-90db-2889f37a247b": {
       "firstSeen": "2026-11-17",
