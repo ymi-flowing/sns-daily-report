@@ -48,9 +48,9 @@
       "firstSeen": "2026-11-13",
       "lastMsg": "Lease ends in 52d \u2014 no NTV filed"
     },
-    "MUSO|vacantNotReadyList|e0087fc0-ae08-4c96-8ce3-039ca3257c75": {
+    "MUSO|pendingInRealUnitList|eb967a37-7c79-43c3-a3e1-62adf30cdcc1": {
       "firstSeen": "2026-11-20",
-      "lastMsg": "Past Available Date"
+      "lastMsg": "Pending applicant in a real unit"
     },
     "ORT|insufficientNoticeList|0312d506-954a-42fa-a7a8-dd2b83b12ee3": {
       "firstSeen": "2026-11-18",
@@ -62,7 +62,7 @@
     },
     "ORT|ntvList|8ade63b6-7330-413f-9ba2-22f57eeedf8a": {
       "firstSeen": "2026-11-20",
-      "lastMsg": "Past Move-Out Date"
+      "lastMsg": "9 business days to get ready"
     },
     "ROP|insufficientNoticeList|093b6503-b05a-46af-84f2-a4660a3b4c91": {
       "firstSeen": "2026-11-18",
