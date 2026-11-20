@@ -2,10 +2,21 @@
   "runId": "20261120-123018-37bdd3",
   "startedAt": "2026-11-20T12:33:41",
   "mode": "live",
-  "status": "running",
+  "status": "complete",
   "total": 1,
-  "sent": [],
+  "sent": [
+    {
+      "property": "SJ",
+      "month": "2027-02",
+      "unit": "5551BA",
+      "resident": "Mary Hurt",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "San Jose - Feb 2027 - 5551BA.pdf",
+      "at": "2026-11-20T12:33:58"
+    }
+  ],
   "staged": [],
   "failed": [],
-  "completedAt": null
+  "completedAt": "2026-11-20T12:33:58"
 }
