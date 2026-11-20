@@ -2,10 +2,41 @@
   "runId": "20261120-140704-7c0bda",
   "startedAt": "2026-11-20T14:07:37",
   "mode": "live",
-  "status": "running",
+  "status": "complete",
   "total": 3,
-  "sent": [],
+  "sent": [
+    {
+      "property": "ROP",
+      "month": "2027-02",
+      "unit": "110",
+      "resident": "Andre Filson",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "Riverside - Feb 2027 - 110.pdf",
+      "at": "2026-11-20T14:07:54"
+    },
+    {
+      "property": "ROP",
+      "month": "2027-02",
+      "unit": "301",
+      "resident": "Quavaughn Watts",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "Riverside - Feb 2027 - 301.pdf",
+      "at": "2026-11-20T14:07:58"
+    },
+    {
+      "property": "ROP",
+      "month": "2027-02",
+      "unit": "408",
+      "resident": "Devaughn Davis",
+      "status": "SENT",
+      "detail": "",
+      "attachment": "Riverside - Feb 2027 - 408.pdf",
+      "at": "2026-11-20T14:08:01"
+    }
+  ],
   "staged": [],
   "failed": [],
-  "completedAt": null
+  "completedAt": "2026-11-20T14:08:01"
 }
