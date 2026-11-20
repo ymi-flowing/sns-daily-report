@@ -4612,11 +4612,39 @@ function fmtMDY(d) {
     const dd = String(d.getDate()).padStart(2, '0');
     return `${mm}/${dd}/${d.getFullYear()}`;
 }
+// Mirror of generate_letters.py:parse_sheet_date. Apps Script runs in
+// Argentina (UTC-3) locale, so date-typed Exp Date cells get DD/MM-flipped
+// when the written day is <= 12. Correct by matching the parsed month
+// against the row's Expiring Month cycle. Falls back to the live ResMan
+// Lease End Date if Exp Date is unparseable (e.g. a raw Sheets serial).
+function parseExpDateForLetter(row) {
+    const raw = row['Exp Date'];
+    const emKey = row.expMonthKey || parseExpMonth(row['Expiring Month']);
+    const expectedMonth = emKey ? parseInt(emKey.split('-')[1], 10) : null;
+    if (raw !== null && raw !== undefined && String(raw).trim() !== '') {
+        const s = String(raw).trim();
+        const us = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+        if (us) {
+            const d = new Date(+us[3], +us[1] - 1, +us[2]);
+            if (!isNaN(d)) return d;
+        }
+        const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+        if (iso) {
+            let y = +iso[1], m = +iso[2], dd = +iso[3];
+            if (expectedMonth && m !== expectedMonth && dd === expectedMonth) {
+                [m, dd] = [dd, m];
+            }
+            const d = new Date(y, m - 1, dd);
+            if (!isNaN(d)) return d;
+        }
+    }
+    return parseAnyDate(row['Lease End Date']);
+}
 function buildLetterContext(row) {
     const prop = row.property;
     const propertyName = PROPERTY_LETTER_NAMES[prop] || prop;
     const resident = (row['Resident Name'] || '').toString().trim();
-    const expDate = parseAnyDate(row['Exp Date']);
+    const expDate = parseExpDateForLetter(row);
     const leaseStart = expDate ? new Date(expDate.getTime() + 86400000) : null;
     return {
         logo_url:      window.location.origin + '/SNS-letter-logo.jpg',
