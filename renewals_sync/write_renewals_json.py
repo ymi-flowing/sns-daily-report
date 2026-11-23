@@ -37,10 +37,13 @@ from sync_renewal_status import find_expiring_and_renewal, lease_has_ended, pars
 
 PROPERTY_TABS = [
     "49thStr", "ORT", "AP", "TV", "MOC", "MUSO",
-    "SJ", "ROP", "EAST", "TRA-AN3",
+    "SJ", "ROP", "EAST",
 ]
 
 # Which ResMan property abbreviation(s) feed each sheet tab.
+# TRA-AN3 is intentionally excluded here: the building is on hold from the
+# renewal-management flow (see Renewal Letters dec-2026 send: "144/144 across
+# 9 properties, TRA+AN3 held"). Keep it out of the dashboard view too.
 TAB_TO_PROPERTIES = {
     "49thStr":  ["49thStr"],
     "ORT":      ["ORT"],
@@ -51,7 +54,6 @@ TAB_TO_PROPERTIES = {
     "SJ":       ["SJ"],
     "ROP":      ["ROP"],
     "EAST":     ["EAST"],
-    "TRA-AN3":  ["TRA", "AN3"],
 }
 
 EXTRA_HEADERS = ["NTV Date", "Move Out Date", "Lease End Date", "Renewal Signed Date"]
