@@ -494,6 +494,17 @@ def run_sync(abbr: str, dry_run: bool = False, limit: int | None = None) -> int:
             print(f"    row {i:>3} unit={unit:<6} {name[:25]:<25}  F={s[0]!r:<15}  S={sr[0]!r:<10}  ID={lid[0][:8]!r}")
         return 0
 
+    # Guard against the ResMan empty-response trap. When /Leasing/Leases
+    # silently returns 0 leases for an active property (seen on 49thStr /
+    # MUSO / ROP in the 2026-11-23 run), writing the all-blank arrays would
+    # wipe every Renewal Status / Actual Renewal / Lease ID cell on the tab.
+    # Skip the write and let the next run try again — existing sheet data
+    # is preserved so the dashboard keeps working on stale-but-correct data.
+    if not leases:
+        print(f"\n  WARNING: ResMan returned 0 leases for {abbr}. "
+              f"Skipping sheet writes to preserve existing data.")
+        return 3
+
     def a1_col(idx: int) -> str:
         # Handles up to column ZZ. idx is 0-based.
         s = ""

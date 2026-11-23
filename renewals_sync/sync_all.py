@@ -59,13 +59,20 @@ def main() -> int:
     print("                              SUMMARY")
     print(bar)
     for prop, rc in results.items():
-        flag = "OK" if rc == 0 else f"FAIL (rc={rc})"
+        if rc == 0:
+            flag = "OK"
+        elif rc == 3:
+            flag = "SKIPPED (ResMan returned 0 leases — existing data preserved)"
+        else:
+            flag = f"FAIL (rc={rc})"
         print(f"  {prop:<10} {flag}")
     print(bar)
     print(f"Finished: {end:%Y-%m-%d %H:%M:%S}  (duration: {end - start})")
     print(bar)
 
-    return 0 if all(rc == 0 for rc in results.values()) else 1
+    # rc=3 (ResMan empty-response skip) is a warning, not a failure:
+    # the sheet still has its last-good data and the bake step should run.
+    return 0 if all(rc in (0, 3) for rc in results.values()) else 1
 
 
 if __name__ == "__main__":

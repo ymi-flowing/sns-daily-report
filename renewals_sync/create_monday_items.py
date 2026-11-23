@@ -237,8 +237,14 @@ def get_property_id(abbreviation):
     return None
 
 
-def fetch_leases(property_id):
-    """Fetch leases from ResMan Partners API"""
+def fetch_leases(property_id, max_attempts=3):
+    """Fetch leases from ResMan Partners API.
+
+    Retries up to `max_attempts` when ResMan returns a non-200 status OR
+    a 200 with an empty leases array — the latter is a known transient
+    failure mode that silently wipes active properties if written back.
+    """
+    import time
     headers = {
         "ResMan-Account-Id": RESMAN_ACCOUNT_ID,
         "Accept": "application/json",
@@ -249,15 +255,29 @@ def fetch_leases(property_id):
         "includeLeaseHistory": "true",
         "modifiedSince": since_date
     }
-    resp = requests.get(
-        f"{RESMAN_PARTNERS_URL}/Leasing/Leases",
-        headers=headers,
-        params=params,
-        auth=HTTPBasicAuth(RESMAN_PARTNER_ID, RESMAN_API_KEY),
-        timeout=60
-    )
-    if resp.ok:
-        return resp.json().get("leases", [])
+    for attempt in range(1, max_attempts + 1):
+        try:
+            resp = requests.get(
+                f"{RESMAN_PARTNERS_URL}/Leasing/Leases",
+                headers=headers,
+                params=params,
+                auth=HTTPBasicAuth(RESMAN_PARTNER_ID, RESMAN_API_KEY),
+                timeout=60
+            )
+        except requests.RequestException as e:
+            print(f"  fetch_leases: {type(e).__name__} on attempt {attempt}/{max_attempts}: {e}")
+            if attempt < max_attempts:
+                time.sleep(2 ** attempt)
+            continue
+        if resp.ok:
+            leases = resp.json().get("leases", [])
+            if leases or attempt == max_attempts:
+                return leases
+            print(f"  fetch_leases: 0 leases on attempt {attempt}/{max_attempts}; retrying")
+        else:
+            print(f"  fetch_leases: HTTP {resp.status_code} on attempt {attempt}/{max_attempts}")
+        if attempt < max_attempts:
+            time.sleep(2 ** attempt)
     return []
 
 
