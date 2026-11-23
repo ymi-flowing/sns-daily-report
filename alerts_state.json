@@ -2,15 +2,15 @@
   "alerts": {
     "49thStr|insufficientNoticeList|d859066d-cd92-4e45-a427-1ef9b0e1a0d2": {
       "firstSeen": "2026-11-04",
-      "lastMsg": "Lease ends in 13d \u2014 renewal not signed"
+      "lastMsg": "Lease ends in 12d \u2014 renewal not signed"
     },
     "AP|insufficientNoticeList|41cac442-5af6-47f5-9a6c-0a47caa74f38": {
       "firstSeen": "2026-11-16",
-      "lastMsg": "Lease ends in 52d \u2014 renewal not signed"
+      "lastMsg": "Lease ends in 51d \u2014 renewal not signed"
     },
     "AP|insufficientNoticeList|d8a7d113-a1f0-4c2e-a029-7395dadded6c": {
       "firstSeen": "2026-11-16",
-      "lastMsg": "Lease ends in 37d \u2014 renewal not signed"
+      "lastMsg": "Lease ends in 36d \u2014 renewal not signed"
     },
     "AP|vacantNotReadyList|a41a986f-8c75-4b55-863f-2855ffb5d3ac": {
       "firstSeen": "2026-11-21",
@@ -22,19 +22,19 @@
     },
     "EAST|insufficientNoticeList|0647d184-d219-4557-be26-16214e08719e": {
       "firstSeen": "2026-11-17",
-      "lastMsg": "Lease ends in 54d \u2014 no NTV filed"
+      "lastMsg": "Lease ends in 53d \u2014 no NTV filed"
     },
     "EAST|insufficientNoticeList|4b8e208b-7751-486c-98b9-cffdb4285ae6": {
       "firstSeen": "2026-11-18",
-      "lastMsg": "Lease ends in 55d \u2014 renewal not signed"
+      "lastMsg": "Lease ends in 54d \u2014 renewal not signed"
     },
     "EAST|insufficientNoticeList|5a57c287-335d-4f86-9b60-12223bccbb4c": {
       "firstSeen": "2026-11-11",
-      "lastMsg": "Lease ends in 48d \u2014 renewal not signed"
+      "lastMsg": "Lease ends in 47d \u2014 renewal not signed"
     },
     "EAST|insufficientNoticeList|84c4df7e-405c-42bf-81a0-6c315d01de23": {
       "firstSeen": "2026-11-21",
-      "lastMsg": "Lease ends in 58d \u2014 no NTV filed"
+      "lastMsg": "Lease ends in 57d \u2014 no NTV filed"
     },
     "EAST|vacantNotReadyList|af98c8c0-4ca8-4f3b-baf3-3f90bda781f0": {
       "firstSeen": "2026-11-22",
@@ -42,11 +42,11 @@
     },
     "MOC|insufficientNoticeList|89a235b4-9cf0-4446-a74a-a98ebe377195": {
       "firstSeen": "2026-11-15",
-      "lastMsg": "Lease ends in 52d \u2014 renewal not signed"
+      "lastMsg": "Lease ends in 51d \u2014 renewal not signed"
     },
     "MOC|insufficientNoticeList|9e759533-d8c0-4831-b379-4e7f9c40c492": {
       "firstSeen": "2026-11-11",
-      "lastMsg": "Lease ends in 48d \u2014 no NTV filed"
+      "lastMsg": "Lease ends in 47d \u2014 no NTV filed"
     },
     "MOC|vacantNotReadyList|7b3d47ee-fa6d-438a-9653-16547a9a363e": {
       "firstSeen": "2026-11-22",
@@ -54,19 +54,15 @@
     },
     "MUSO|insufficientNoticeList|a3edb3ce-5021-4a02-8881-f5715508f559": {
       "firstSeen": "2026-11-13",
-      "lastMsg": "Lease ends in 50d \u2014 no NTV filed"
-    },
-    "MUSO|vacantLeasedList|5abbbe33-2f0f-4c5a-b68f-9146a3ad28dc": {
-      "firstSeen": "2026-11-21",
-      "lastMsg": "Past Move-In Date"
+      "lastMsg": "Lease ends in 49d \u2014 no NTV filed"
     },
     "ORT|insufficientNoticeList|0312d506-954a-42fa-a7a8-dd2b83b12ee3": {
       "firstSeen": "2026-11-18",
-      "lastMsg": "Lease ends in 55d \u2014 renewal not signed"
+      "lastMsg": "Lease ends in 54d \u2014 renewal not signed"
     },
     "ORT|insufficientNoticeList|3bc14216-5d25-419d-89f2-485a8f9498c5": {
       "firstSeen": "2026-11-18",
-      "lastMsg": "Lease ends in 52d \u2014 no NTV filed"
+      "lastMsg": "Lease ends in 51d \u2014 no NTV filed"
     },
     "ORT|vacantNotReadyList|ac64a779-7524-4bca-9a35-27f9ac500a8b": {
       "firstSeen": "2026-11-22",
@@ -74,11 +70,7 @@
     },
     "ROP|insufficientNoticeList|093b6503-b05a-46af-84f2-a4660a3b4c91": {
       "firstSeen": "2026-11-18",
-      "lastMsg": "Lease ends in 55d \u2014 no NTV filed"
-    },
-    "SJ|vacantNotReadyList|1155a9cf-c203-4fb2-8018-69d7f19e759d": {
-      "firstSeen": "2026-11-22",
-      "lastMsg": "Past Available Date"
+      "lastMsg": "Lease ends in 54d \u2014 no NTV filed"
     },
     "TV|pendingInRealUnitList|0404ceb3-94f6-49ad-a0ff-5c9738f983a2": {
       "firstSeen": "2026-11-22",
@@ -89,5 +81,5 @@
       "lastMsg": "Past Move-In Date"
     }
   },
-  "updated": "2026-11-22"
+  "updated": "2026-11-23"
 }
