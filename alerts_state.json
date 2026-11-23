@@ -48,6 +48,10 @@
       "firstSeen": "2026-11-13",
       "lastMsg": "Lease ends in 49d \u2014 no NTV filed"
     },
+    "MUSO|pendingInRealUnitList|0e096909-adfc-4ea7-93ab-fbe2627eb6be": {
+      "firstSeen": "2026-11-23",
+      "lastMsg": "Pending applicant in a real unit"
+    },
     "ORT|insufficientNoticeList|0312d506-954a-42fa-a7a8-dd2b83b12ee3": {
       "firstSeen": "2026-11-18",
       "lastMsg": "Lease ends in 54d \u2014 renewal not signed"
@@ -63,10 +67,6 @@
     "ROP|insufficientNoticeList|093b6503-b05a-46af-84f2-a4660a3b4c91": {
       "firstSeen": "2026-11-18",
       "lastMsg": "Lease ends in 54d \u2014 no NTV filed"
-    },
-    "SJ|ntvList|5973571d-c23e-4444-8cb6-cd7ca0406588": {
-      "firstSeen": "2026-11-23",
-      "lastMsg": "6 business days to get ready"
     }
   },
   "updated": "2026-11-23"
