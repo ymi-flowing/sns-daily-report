@@ -44,6 +44,10 @@
       "firstSeen": "2026-11-21",
       "lastMsg": "Lease ends in 56d \u2014 no NTV filed"
     },
+    "EAST|pendingInRealUnitList|1dd8b049-5d20-4438-92e2-5f27be859a02": {
+      "firstSeen": "2026-11-24",
+      "lastMsg": "Pending applicant in a real unit"
+    },
     "EAST|pendingInRealUnitList|d9fae18e-1008-4924-8edc-a76d0811c3c3": {
       "firstSeen": "2026-11-24",
       "lastMsg": "Pending applicant in a real unit"
