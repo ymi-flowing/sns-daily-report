@@ -2,10 +2,10 @@
 Pull ResMan /Invoices + move-out units for EVERY SNS property and write
 a single merged `invoices_data.json` for the Invoices.html dashboard.
 
-Window: first day of (current_month - 3) at 00:00:00 -> today.
-    Nov 2026 -> 2026-08-01
-    Dec 2026 -> 2026-09-01
-    Jan 2027 -> 2026-10-01
+Window: first day of (current_month - 6) at 00:00:00 -> today.
+    Nov 2026 -> 2026-05-01
+    Dec 2026 -> 2026-06-01
+    Jan 2027 -> 2026-07-01
 
 Output shape:
 {

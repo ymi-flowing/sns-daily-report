@@ -157,18 +157,37 @@
         .group-row.open .group-chevron { transform: rotate(90deg); color: #06b6d4; }
         .dark .group-row.open .group-chevron { color: #22d3ee; }
 
-        /* Sticky totals footer for the roster table */
+        /* Sticky 2-row totals footer for the roster table.
+           Row 1 (tfoot-sum) sits above row 2 (tfoot-avg) at the bottom. */
         #roster-table tfoot td {
-            position: sticky; bottom: 0; z-index: 2;
+            position: sticky; z-index: 2;
             background-color: #f1f5f9;
-            font-weight: 700;
-            border-top: 2px solid rgba(100, 116, 139, 0.3);
             padding: 10px 12px;
         }
-        .dark #roster-table tfoot td {
-            background-color: #0f172a;
-            border-top-color: rgba(148, 163, 184, 0.3);
+        .dark #roster-table tfoot td { background-color: #0f172a; }
+        #roster-table tfoot tr.tfoot-sum td {
+            bottom: 32px;
+            font-weight: 700;
+            border-top: 2px solid rgba(100, 116, 139, 0.3);
         }
+        .dark #roster-table tfoot tr.tfoot-sum td { border-top-color: rgba(148, 163, 184, 0.3); }
+        #roster-table tfoot tr.tfoot-avg td {
+            bottom: 0;
+            background-color: #f8fafc;
+            border-top: 1px dashed rgba(100, 116, 139, 0.25);
+            font-weight: 600;
+            padding: 6px 12px;
+        }
+        .dark #roster-table tfoot tr.tfoot-avg td {
+            background-color: #0b1220;
+            border-top-color: rgba(148, 163, 184, 0.2);
+        }
+
+        /* Roster scroll container — height is driven inline by JS (default ~15 rows),
+           with a drag handle below (ported from renewals.html pattern). */
+        #roster-scroll { height: 500px; }
+        #roster-resize:active { background-color: #e2e8f0; }
+        .dark #roster-resize:active { background-color: #1e293b; }
 
         /* --- Charts --- */
         .chart-card {
@@ -340,7 +359,8 @@
     <div class="flex flex-wrap items-end justify-between gap-3 bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
         <div class="flex items-center gap-3">
             <div class="w-10 h-10 sm:w-14 sm:h-14 flex items-center justify-center">
-                <img src="/sns-logo.png" alt="SNS Logo" class="w-10 h-10 sm:w-14 sm:h-14 object-contain dark:brightness-[1.8]">
+                <img src="/sns-logo-light.png" alt="SNS Logo" class="w-10 h-10 sm:w-14 sm:h-14 object-contain dark:hidden">
+                <img src="/sns-logo-dark.png" alt="SNS Logo" class="w-10 h-10 sm:w-14 sm:h-14 object-contain hidden dark:block">
             </div>
             <div>
                 <h1 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">Invoices Dashboard</h1>
@@ -398,6 +418,18 @@
                 </div>
             </div>
 
+            <div class="multi-wrap" id="filter-moDate">
+                <button class="multi-trigger" data-key="moDate" title="Only line items for units that moved out in the selected month(s)">
+                    <span class="label">MO Month</span>
+                    <span class="count-badge hidden">0</span>
+                    <svg class="w-3 h-3 ml-auto" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg>
+                </button>
+                <div class="multi-panel hidden">
+                    <div class="multi-actions"><button data-action="all">All</button><button data-action="none">None</button></div>
+                    <div class="multi-list"></div>
+                </div>
+            </div>
+
             <div class="multi-wrap" id="filter-glGroup">
                 <button class="multi-trigger" data-key="glGroup">
                     <span class="label">GL Group</span>
@@ -425,7 +457,7 @@
 
             <button id="toggle-moveouts" class="toggle-filter">
                 <span class="toggle-box"></span>
-                <span>Move-outs last 3 months only</span>
+                <span>Moved-out units only</span>
             </button>
 
             <button id="toggle-group" class="toggle-filter">
@@ -450,23 +482,29 @@
                 <div class="text-xs text-slate-500 dark:text-slate-400" id="roster-sum">—</div>
             </div>
         </div>
-        <div class="overflow-auto" style="max-height: 70vh">
+        <div id="roster-scroll" class="overflow-auto">
             <table id="roster-table" class="w-full text-sm">
                 <thead class="sticky top-0 z-10"><tr id="roster-thead"></tr></thead>
                 <tbody id="roster-tbody"></tbody>
-                <tfoot><tr id="roster-tfoot"></tr></tfoot>
+                <tfoot></tfoot>
             </table>
+        </div>
+        <div id="roster-resize" role="separator" aria-label="Resize table" tabindex="0"
+             class="flex items-center justify-center py-1.5 cursor-ns-resize bg-slate-50 dark:bg-slate-900/60 border-t border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 touch-none select-none"
+             title="Drag to resize">
+            <div class="w-10 h-1 bg-slate-300 dark:bg-slate-600 rounded-full"></div>
         </div>
     </div>
 
     <!-- KPI STRIP -->
-    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
         <div class="kpi-card"><div class="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">Total Spend</div><div id="kpi-total" class="text-2xl font-bold text-slate-800 dark:text-slate-100 mt-1">—</div><div id="kpi-total-sub" class="text-xs text-slate-500 dark:text-slate-400 mt-0.5"> </div></div>
         <div class="kpi-card"><div class="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">Invoices</div><div id="kpi-invoices" class="text-2xl font-bold text-slate-800 dark:text-slate-100 mt-1">—</div><div id="kpi-invoices-sub" class="text-xs text-slate-500 dark:text-slate-400 mt-0.5"> </div></div>
         <div class="kpi-card"><div class="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">Line Items</div><div id="kpi-lines" class="text-2xl font-bold text-slate-800 dark:text-slate-100 mt-1">—</div><div id="kpi-lines-sub" class="text-xs text-slate-500 dark:text-slate-400 mt-0.5"> </div></div>
         <div class="kpi-card"><div class="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">Vendors</div><div id="kpi-vendors" class="text-2xl font-bold text-slate-800 dark:text-slate-100 mt-1">—</div><div id="kpi-vendors-sub" class="text-xs text-slate-500 dark:text-slate-400 mt-0.5"> </div></div>
         <div class="kpi-card"><div class="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">Move-Out Units</div><div id="kpi-mo-units" class="text-2xl font-bold text-slate-800 dark:text-slate-100 mt-1">—</div><div id="kpi-mo-units-sub" class="text-xs text-slate-500 dark:text-slate-400 mt-0.5"> </div></div>
         <div class="kpi-card"><div class="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">Move-Out Spend</div><div id="kpi-mo-spend" class="text-2xl font-bold text-slate-800 dark:text-slate-100 mt-1">—</div><div id="kpi-mo-spend-sub" class="text-xs text-slate-500 dark:text-slate-400 mt-0.5"> </div></div>
+        <div class="kpi-card"><div class="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">Avg / MO Unit</div><div id="kpi-mo-avg" class="text-2xl font-bold text-slate-800 dark:text-slate-100 mt-1">—</div><div id="kpi-mo-avg-sub" class="text-xs text-slate-500 dark:text-slate-400 mt-0.5"> </div></div>
     </div>
 
     <!-- CHART GRID -->
@@ -548,7 +586,8 @@ const STATE = {
     movedOutUnitIds: null,   // Set<string> of unitIds that moved out in the window
     filters: {
         property: new Set(),  // empty = all selected
-        month: new Set(),
+        month: new Set(),     // invoice accounting month (YYYY-MM)
+        moDate: new Set(),    // move-out month (YYYY-MM); non-empty → implies Unit+movedOut
         glGroup: new Set(),   // first segment of GL code (e.g. "6500")
         gl: new Set(),        // full code (e.g. "6500-0040")
         movedOutOnly: false,
@@ -648,7 +687,7 @@ function flatten() {
 }
 
 // Render the Unit/Bldg cell with a trailing "· MO: MM/DD/YYYY" when the
-// unit is in the trailing-3-month move-out set.
+// unit is in the move-out set within the data window.
 function unitCellHtml(r) {
     const baseText = r.location || (r.locationType ? '' : 'Common');
     const base = escapeHtml(baseText);
@@ -704,7 +743,7 @@ function initFilters() {
     }));
     buildMultiList('filter-property', properties);
 
-    // Month options (distinct months sorted ascending)
+    // Month options (distinct accounting months sorted ascending)
     const monthSet = new Set();
     STATE.lineItems.forEach(r => { if (r.month) monthSet.add(r.month); });
     const months = [...monthSet].sort().map(m => ({
@@ -712,6 +751,19 @@ function initFilters() {
         label: formatMonth(m),
     }));
     buildMultiList('filter-month', months);
+
+    // MO Month options — distinct move-out months from moved_out_units, sorted descending
+    // (newest first — matches how the user thinks about turnover).
+    const moMonthSet = new Set();
+    for (const u of (STATE.data.moved_out_units || [])) {
+        const mo = (u.moveOutDate || '').slice(0, 7);
+        if (mo) moMonthSet.add(mo);
+    }
+    const moMonths = [...moMonthSet].sort().reverse().map(m => ({
+        value: m,
+        label: formatMonth(m),
+    }));
+    buildMultiList('filter-moDate', moMonths);
 
     // GL Group (first segment) options — sorted ascending, labeled with prefix name
     const groupMap = new Map();
@@ -744,11 +796,10 @@ function initFilters() {
         }));
     buildMultiList('filter-gl', gls);
 
-    // Move-outs toggle
+    // Move-outs toggle (chart-moveout-card visibility is synced in renderAll via moScopeActive)
     document.getElementById('toggle-moveouts').addEventListener('click', () => {
         STATE.filters.movedOutOnly = !STATE.filters.movedOutOnly;
         document.getElementById('toggle-moveouts').classList.toggle('active', STATE.filters.movedOutOnly);
-        document.getElementById('chart-moveout-card').classList.toggle('hidden', !STATE.filters.movedOutOnly);
         renderAll();
     });
 
@@ -821,10 +872,10 @@ function initFilters() {
             const key = wrap.id.replace('filter-', '');
             const checkboxes = panel.querySelectorAll('.multi-list input[type="checkbox"]');
             if (action === 'all') {
+                checkboxes.forEach(cb => { cb.checked = true; STATE.filters[key].add(cb.value); });
+            } else {
                 checkboxes.forEach(cb => cb.checked = false);
                 STATE.filters[key].clear();
-            } else {
-                checkboxes.forEach(cb => { cb.checked = true; STATE.filters[key].add(cb.value); });
             }
             updateMultiTriggerLabel(wrap.querySelector('.multi-trigger'));
             renderAll();
@@ -881,15 +932,20 @@ function updateMultiTriggerLabel(trigger) {
 // Filtering + rendering
 // ============================================================================
 function getFilteredRows() {
-    const { property, month, glGroup, gl, movedOutOnly } = STATE.filters;
+    const { property, month, moDate, glGroup, gl, movedOutOnly } = STATE.filters;
+    const moScope = movedOutOnly || moDate.size > 0;
     return STATE.lineItems.filter(r => {
         if (property.size && !property.has(r.propertyAbbreviation)) return false;
         if (month.size && !month.has(r.month)) return false;
         if (glGroup.size && !glGroup.has(r.glPrefix)) return false;
         if (gl.size && !gl.has(r.glAccountNumber)) return false;
-        if (movedOutOnly) {
+        if (moScope) {
             if (r.locationType !== 'Unit') return false;
             if (!STATE.movedOutUnitIds.has(r.locationId)) return false;
+            if (moDate.size) {
+                const mo = (STATE.moveOutByUnitId.get(r.locationId) || '').slice(0, 7);
+                if (!moDate.has(mo)) return false;
+            }
         }
         return true;
     });
@@ -905,8 +961,13 @@ function groupKeysOf(rows) {
     return [...new Set(rows.map(groupKeyFor))];
 }
 
+function moScopeActive() {
+    return STATE.filters.movedOutOnly || STATE.filters.moDate.size > 0;
+}
+
 function renderAll() {
     const rows = getFilteredRows();
+    document.getElementById('chart-moveout-card').classList.toggle('hidden', !moScopeActive());
     renderKpis(rows);
     renderCharts(rows);
     renderRoster(rows);
@@ -923,17 +984,21 @@ function renderKpis(rows) {
         return true;
     });
 
+    const moAvg = moUnits.length > 0 ? moSpend / moUnits.length : 0;
+
     set('kpi-total', '$' + formatMoney0(total));
     set('kpi-invoices', invSet.size.toLocaleString());
     set('kpi-lines', rows.length.toLocaleString());
     set('kpi-vendors', vendorSet.size.toLocaleString());
     set('kpi-mo-units', moUnits.length.toLocaleString());
     set('kpi-mo-spend', '$' + formatMoney0(moSpend));
+    set('kpi-mo-avg', '$' + formatMoney0(moAvg));
 
     const pct = total > 0 ? Math.round(moSpend / total * 100) : 0;
     document.getElementById('kpi-mo-spend-sub').textContent = pct + '% of total';
     document.getElementById('kpi-total-sub').textContent = rows.length + ' line items';
     document.getElementById('kpi-mo-units-sub').textContent = 'in the window';
+    document.getElementById('kpi-mo-avg-sub').textContent = 'spend ÷ units';
 }
 
 function set(id, txt) { document.getElementById(id).textContent = txt; }
@@ -967,7 +1032,7 @@ function renderCharts(rowsArg) {
     renderGlChart(rows, p);
     renderVendorChart(rows, p);
     renderBucketChart(rows, p);
-    if (STATE.filters.movedOutOnly) renderMoveoutChart(rows, p);
+    if (moScopeActive()) renderMoveoutChart(rows, p);
 }
 
 function groupSum(rows, keyFn) {
@@ -1299,13 +1364,26 @@ function renderRosterFlat(rows) {
     const amountIdx = ROSTER_COLS.findIndex(c => c.key === 'total');
     const leftSpan = amountIdx;
     const rightSpan = ROSTER_COLS.length - amountIdx - 1;
-    const tfoot = document.getElementById('roster-tfoot');
-    tfoot.innerHTML =
-        '<td colspan="' + leftSpan + '" class="text-right text-xs text-slate-500 dark:text-slate-400">'
-            + 'Totals · ' + rows.length.toLocaleString() + ' line items · ' + invoiceCount.toLocaleString() + ' invoices'
-        + '</td>'
-        + '<td class="num text-slate-800 dark:text-slate-100">$' + formatMoney(total) + '</td>'
-        + (rightSpan > 0 ? '<td colspan="' + rightSpan + '"></td>' : '');
+    const avgPerLine = rows.length > 0 ? total / rows.length : 0;
+    const avgPerInv = invoiceCount > 0 ? total / invoiceCount : 0;
+    const vendorCount = new Set(rows.map(r => r.vendor).filter(Boolean)).size;
+    const rightPadCell = rightSpan > 0 ? '<td colspan="' + rightSpan + '"></td>' : '';
+    const tfootEl = document.querySelector('#roster-table tfoot');
+    tfootEl.innerHTML =
+        '<tr class="tfoot-sum">'
+            + '<td colspan="' + leftSpan + '" class="text-right text-xs text-slate-500 dark:text-slate-400">'
+                + 'Sum · ' + rows.length.toLocaleString() + ' line items · ' + invoiceCount.toLocaleString() + ' invoices · ' + vendorCount.toLocaleString() + ' vendors'
+            + '</td>'
+            + '<td class="num text-slate-800 dark:text-slate-100">$' + formatMoney(total) + '</td>'
+            + rightPadCell
+        + '</tr>'
+        + '<tr class="tfoot-avg">'
+            + '<td colspan="' + leftSpan + '" class="text-right text-xs text-slate-500 dark:text-slate-400">'
+                + 'Avg · $' + formatMoney(avgPerLine) + ' / line · $' + formatMoney(avgPerInv) + ' / invoice'
+            + '</td>'
+            + '<td class="num text-slate-700 dark:text-slate-200">$' + formatMoney(avgPerLine) + '</td>'
+            + rightPadCell
+        + '</tr>';
 }
 
 function renderRosterGrouped(rows) {
@@ -1323,19 +1401,21 @@ function renderRosterGrouped(rows) {
                 rows: [],
                 sum: 0,
                 invoiceIds: new Set(),
+                glSet: new Set(),
             });
         }
         const g = groups.get(k);
         g.rows.push(r);
         g.sum += r.total;
         if (r.invoiceId) g.invoiceIds.add(r.invoiceId);
+        if (r.glAccountNumber) g.glSet.add(r.glAccountNumber);
     }
-    // Grouped mode uses the same 5 columns as flat mode: Property, Date,
-    // Location, Invoice, Amount (+ a leading chevron column).
+    // Grouped mode: chevron + Property, Date, Location, GL, Invoice, Amount.
     const GROUP_COLS = [
         { key: 'propertyAbbreviation', label: 'Property', align: 'left' },
         { key: 'date', label: 'Date', align: 'left', accessor: g => g.rows[0] ? g.rows[0].accountingDate : '' },
         { key: 'location', label: 'Location', align: 'left' },
+        { key: 'gl', label: 'GL', align: 'left', accessor: g => (g.glSet.size === 1 ? [...g.glSet][0] : ('Mixed (' + g.glSet.size + ')')) },
         { key: 'invoiceCount', label: 'Invoice', align: 'left', accessor: g => g.invoiceIds.size },
         { key: 'sum', label: 'Amount', align: 'right' },
     ];
@@ -1373,6 +1453,10 @@ function renderRosterGrouped(rows) {
 
     for (const g of arr) {
         const open = STATE.expandedGroups.has(g.key);
+        const glCount = g.glSet.size;
+        const glHeader = glCount === 1
+            ? '<span class="font-mono text-xs">' + escapeHtml([...g.glSet][0]) + '</span>'
+            : '<span class="text-slate-400 dark:text-slate-500 text-xs italic">Mixed (' + glCount + ')</span>';
         // Group header row: aggregates.
         html.push(
             '<tr class="group-row cursor-pointer' + (open ? ' open' : '') + '" data-group="' + escapeAttr(g.key) + '">',
@@ -1380,22 +1464,26 @@ function renderRosterGrouped(rows) {
             '<td class="px-3 py-1.5 font-medium text-slate-800 dark:text-slate-100">' + escapeHtml(g.propertyAbbreviation) + '</td>',
             '<td class="px-3 py-1.5 text-slate-400">—</td>',
             '<td class="px-3 py-1.5">' + groupUnitCellHtml(g) + '</td>',
+            '<td class="px-3 py-1.5">' + glHeader + '</td>',
             '<td class="px-3 py-1.5 text-slate-500 dark:text-slate-400">' + g.invoiceIds.size + ' invoices · ' + g.rows.length + ' lines</td>',
             '<td class="px-3 py-1.5 num font-semibold">$' + formatMoney(g.sum) + '</td>',
             '</tr>'
         );
         if (open) {
-            // Child rows = individual invoice line items. Same 5-col layout,
-            // dimmed Property/Location cells (inherited from the group) and
-            // a cyan vertical-rail border on the left to show containment.
+            // Child rows = individual invoice line items.
             const sorted = [...g.rows].sort((a, b) => (a.accountingDate < b.accountingDate ? 1 : -1));
             for (const r of sorted) {
+                const childGl = r.glAccountNumber
+                    ? '<span class="font-mono text-xs text-slate-600 dark:text-slate-300">' + escapeHtml(r.glAccountNumber) + '</span>'
+                      + (r.glName ? ' <span class="text-slate-400 text-xs">· ' + escapeHtml(r.glName) + '</span>' : '')
+                    : '';
                 html.push(
                     '<tr class="child-row">',
                     '<td class="px-3 py-1 child-rail"></td>',
                     '<td class="px-3 py-1 text-slate-300 dark:text-slate-600 text-xs">↳</td>',
                     '<td class="px-3 py-1 text-slate-700 dark:text-slate-200">' + formatDateUS(r.accountingDate) + '</td>',
                     '<td class="px-3 py-1 text-slate-400 dark:text-slate-500 text-xs truncate" title="' + escapeAttr((r.vendor || '') + ' · ' + (r.description || '')) + '">' + escapeHtml((r.description || r.vendor || '').slice(0, 42)) + '</td>',
+                    '<td class="px-3 py-1">' + childGl + '</td>',
                     '<td class="px-3 py-1">' + invoiceNumberLink(r) + '</td>',
                     '<td class="px-3 py-1 num text-slate-800 dark:text-slate-100">$' + formatMoney(r.total) + '</td>',
                     '</tr>'
@@ -1419,14 +1507,27 @@ function renderRosterGrouped(rows) {
         arr.length + ' locations · ' + rows.length.toLocaleString() + ' line items';
     document.getElementById('roster-sum').textContent = 'Sum: $' + formatMoney(total);
 
-    // Sticky totals row. Group table has 6 cells (chevron + 5 data cols).
-    const tfoot = document.getElementById('roster-tfoot');
-    tfoot.innerHTML =
-        '<td colspan="4" class="text-right text-xs text-slate-500 dark:text-slate-400">'
-            + 'Totals · ' + arr.length + ' locations · ' + rows.length.toLocaleString() + ' line items'
-        + '</td>'
-        + '<td class="text-slate-500 dark:text-slate-400">' + invoiceCount.toLocaleString() + ' invoices</td>'
-        + '<td class="num text-slate-800 dark:text-slate-100">$' + formatMoney(total) + '</td>';
+    // Sticky 2-row totals footer. Group table has 7 cells
+    // (chevron + Property + Date + Location + GL + Invoice + Amount).
+    const avgPerLoc  = arr.length      > 0 ? total / arr.length      : 0;
+    const avgPerLine = rows.length     > 0 ? total / rows.length     : 0;
+    const avgPerInv  = invoiceCount    > 0 ? total / invoiceCount    : 0;
+    const tfootEl = document.querySelector('#roster-table tfoot');
+    tfootEl.innerHTML =
+        '<tr class="tfoot-sum">'
+            + '<td colspan="5" class="text-right text-xs text-slate-500 dark:text-slate-400">'
+                + 'Sum · ' + arr.length + ' locations · ' + rows.length.toLocaleString() + ' line items'
+            + '</td>'
+            + '<td class="text-slate-500 dark:text-slate-400">' + invoiceCount.toLocaleString() + ' invoices</td>'
+            + '<td class="num text-slate-800 dark:text-slate-100">$' + formatMoney(total) + '</td>'
+        + '</tr>'
+        + '<tr class="tfoot-avg">'
+            + '<td colspan="5" class="text-right text-xs text-slate-500 dark:text-slate-400">'
+                + 'Avg · $' + formatMoney(avgPerLoc) + ' / location · $' + formatMoney(avgPerLine) + ' / line'
+            + '</td>'
+            + '<td class="text-slate-600 dark:text-slate-300">$' + formatMoney(avgPerInv) + ' / inv</td>'
+            + '<td class="num text-slate-700 dark:text-slate-200">$' + formatMoney(avgPerLoc) + '</td>'
+        + '</tr>';
 }
 
 // ============================================================================
@@ -1592,10 +1693,68 @@ function submitGate(e) {
 }
 
 function boot() {
+    initRosterResize();
     loadData().catch(err => {
         console.error(err);
         document.getElementById('kpi-total').textContent = 'Error';
         alert('Failed to load invoices_data.json. Run a Refresh or check the file.');
+    });
+}
+
+// =============================================================================
+// ROSTER TABLE HEIGHT — default ~15 rows + bottom drag handle, persists to LS
+// (ported from renewals.html pattern)
+// =============================================================================
+const ROSTER_HEIGHT_KEY = 'invoices.roster.scrollHeight';
+const ROSTER_HEIGHT_DEFAULT = 500;
+const ROSTER_HEIGHT_MIN = 180;
+function applyRosterHeight(px) {
+    const el = document.getElementById('roster-scroll');
+    if (!el) return;
+    const vp = Math.max(240, window.innerHeight - 120);
+    const clamped = Math.max(ROSTER_HEIGHT_MIN, Math.min(vp, Math.round(px)));
+    el.style.height = clamped + 'px';
+}
+function initRosterResize() {
+    const scroll = document.getElementById('roster-scroll');
+    const handle = document.getElementById('roster-resize');
+    if (!scroll || !handle) return;
+    const saved = parseInt(localStorage.getItem(ROSTER_HEIGHT_KEY) || '', 10);
+    applyRosterHeight(Number.isFinite(saved) && saved > 0 ? saved : ROSTER_HEIGHT_DEFAULT);
+
+    let startY = 0, startH = 0, dragging = false, pid = null;
+    const onDown = (e) => {
+        dragging = true;
+        startY = (e.touches ? e.touches[0].clientY : e.clientY);
+        startH = scroll.getBoundingClientRect().height;
+        if (e.pointerId !== undefined) { pid = e.pointerId; handle.setPointerCapture(pid); }
+        document.body.style.userSelect = 'none';
+        e.preventDefault();
+    };
+    const onMove = (e) => {
+        if (!dragging) return;
+        const y = (e.touches ? e.touches[0].clientY : e.clientY);
+        applyRosterHeight(startH + (y - startY));
+        e.preventDefault();
+    };
+    const onUp = () => {
+        if (!dragging) return;
+        dragging = false;
+        document.body.style.userSelect = '';
+        const h = Math.round(scroll.getBoundingClientRect().height);
+        try { localStorage.setItem(ROSTER_HEIGHT_KEY, String(h)); } catch(_) {}
+        if (pid !== null) { try { handle.releasePointerCapture(pid); } catch(_){} pid = null; }
+    };
+    handle.addEventListener('pointerdown', onDown);
+    handle.addEventListener('pointermove', onMove);
+    handle.addEventListener('pointerup', onUp);
+    handle.addEventListener('pointercancel', onUp);
+    handle.addEventListener('keydown', e => {
+        if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+        const h = scroll.getBoundingClientRect().height + (e.key === 'ArrowUp' ? -40 : 40);
+        applyRosterHeight(h);
+        try { localStorage.setItem(ROSTER_HEIGHT_KEY, String(Math.round(scroll.getBoundingClientRect().height))); } catch(_) {}
+        e.preventDefault();
     });
 }
 

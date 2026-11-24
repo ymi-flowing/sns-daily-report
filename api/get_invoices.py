@@ -249,14 +249,14 @@ def filter_invoices_by_units(invoices: list[dict], unit_ids: set[str]) -> list[d
 
 def default_window_since(now: datetime | None = None) -> str:
     """
-    Return the first day of (current_month - 3) at 00:00:00.
+    Return the first day of (current_month - 6) at 00:00:00.
 
-    "Last 3 full months including the current" → in Nov 2026 the window starts
-    on 2026-08-01; in Dec 2026 on 2026-09-01; in Jan 2027 on 2026-10-01.
+    "Last 6 full months including the current" → in Nov 2026 the window starts
+    on 2026-05-01; in Dec 2026 on 2026-06-01; in Jan 2027 on 2026-07-01.
     """
     now = now or datetime.now()
     year = now.year
-    month = now.month - 3
+    month = now.month - 6
     while month <= 0:
         month += 12
         year -= 1
@@ -287,7 +287,7 @@ def main() -> int:
     parser.add_argument(
         "--since",
         default=None,
-        help="YYYY-MM-DD or YYYY-MM-DD HH:MM:SS. Defaults to first day of (current month - 3).",
+        help="YYYY-MM-DD or YYYY-MM-DD HH:MM:SS. Defaults to first day of (current month - 6).",
     )
     parser.add_argument("--out", default="invoices.json", help="Output JSON path.")
     parser.add_argument(
