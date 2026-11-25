@@ -1,9 +1,5 @@
 {
   "alerts": {
-    "AP|insufficientNoticeList|41cac442-5af6-47f5-9a6c-0a47caa74f38": {
-      "firstSeen": "2026-11-16",
-      "lastMsg": "Lease ends in 49d \u2014 renewal not signed"
-    },
     "AP|insufficientNoticeList|d8a7d113-a1f0-4c2e-a029-7395dadded6c": {
       "firstSeen": "2026-11-16",
       "lastMsg": "Lease ends in 34d \u2014 renewal not signed"
@@ -39,6 +35,10 @@
     "ROP|insufficientNoticeList|093b6503-b05a-46af-84f2-a4660a3b4c91": {
       "firstSeen": "2026-11-18",
       "lastMsg": "Lease ends in 52d \u2014 no NTV filed"
+    },
+    "TV|pendingInRealUnitList|debdb7ff-749c-49e3-80fd-e3ad0656c190": {
+      "firstSeen": "2026-11-25",
+      "lastMsg": "Pending applicant in a real unit"
     }
   },
   "updated": "2026-11-25"

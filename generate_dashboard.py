@@ -1847,6 +1847,58 @@ def get_property_data(property_id, property_name, units_availability=None, lease
                 "alertMsg": msg,
             })
 
+    # Pending MO Reconciliation — vacant units whose latest Former lease carries no
+    # moveOutReconciliationDate. Field is populated by ResMan on the lease object
+    # returned by /Leasing/Leases.
+    vacant_unit_ids = set()
+    for row in detailed_lists["vacantReadyList"] + detailed_lists["vacantNotReadyList"]:
+        uid = row.get("unitId")
+        if uid:
+            vacant_unit_ids.add(uid)
+    latest_former_by_unit_id = {}
+    for _L in leases:
+        if (_L.get("leaseStatus") or "") != "Former":
+            continue
+        _mo = (_L.get("moveOutDate") or "")[:10]
+        if not _mo:
+            continue
+        _uid = _L.get("unitId")
+        if not _uid:
+            continue
+        _prev = latest_former_by_unit_id.get(_uid)
+        if not _prev or (_prev.get("moveOutDate") or "")[:10] < _mo:
+            latest_former_by_unit_id[_uid] = _L
+    pending_mo_reco_list = []
+    for _uid, _L in latest_former_by_unit_id.items():
+        if _uid not in vacant_unit_ids:
+            continue
+        if _L.get("moveOutReconciliationDate"):
+            continue
+        _mo_date = (_L.get("moveOutDate") or "")[:10]
+        try:
+            _days_since = (today - datetime.strptime(_mo_date, "%Y-%m-%d").date()).days
+        except (ValueError, TypeError):
+            _days_since = None
+        _people = _L.get("people") or []
+        _name = ""
+        if _people:
+            _p0 = _people[0] if isinstance(_people[0], dict) else {}
+            _name = f"{(_p0.get('firstName') or '').strip()} {(_p0.get('lastName') or '').strip()}".strip()
+        _has_alert = bool(_days_since is not None and _days_since > 2)
+        pending_mo_reco_list.append({
+            "unit": _L.get("unitNumber") or "",
+            "unitId": _uid,
+            "resident": _name,
+            "leaseId": _L.get("leaseId") or "",
+            "moDate": _mo_date,
+            "daysSinceMO": _days_since,
+            "hasAlert": _has_alert,
+            "alertMsg": (f"No reconciliation {_days_since}d after move-out" if _has_alert else ""),
+        })
+    pending_mo_reco_list.sort(
+        key=lambda r: (r.get("daysSinceMO") is None, -(r.get("daysSinceMO") or 0), r.get("unit") or "")
+    )
+
     # Total units excludes Down/Abated (they were skipped in the loop above)
     # Only count main categories, not subsets (Vacant Leased, NTV Leased are subsets)
     total_units = (
@@ -1874,6 +1926,7 @@ def get_property_data(property_id, property_name, units_availability=None, lease
         "ntvList": sorted(detailed_lists["ntvList"], key=lambda x: x["unit"]),
         "evictionList": sorted(detailed_lists["evictionList"], key=lambda x: x["unit"]),
         "offMarketList": sorted(detailed_lists["offMarketList"], key=lambda x: x["unit"]),
+        "pendingMoRecoList": pending_mo_reco_list,
         "holdingOverListedList": sorted(holding_over_listed_list, key=lambda x: x["unit"]),
         "holdingOverListedCounts": bucket_counts,
     }
@@ -2021,6 +2074,8 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
         vnr_alerts = sum(1 for x in data.get("vacantNotReadyList", []) if x.get("hasAlert"))
         ntv_alerts = sum(1 for x in data.get("ntvList", []) if x.get("hasAlert"))
         vl_alerts = sum(1 for x in vacant_leased_list if x.get("hasAlert"))
+        pending_mo_reco_list = data.get("pendingMoRecoList", [])
+        pending_mo_reco_alerts = sum(1 for x in pending_mo_reco_list if x.get("hasAlert"))
         over_listed_counts = data.get("holdingOverListedCounts", {})
 
         table_data[abbr] = {
@@ -2035,6 +2090,8 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
             "ntvLeased": len(ntv_leased_list),  # Subset: matches popup list
             "eviction": sb.get("Under Eviction", 0),
             "offMarket": data.get("off_market", 0),  # Units not available for online marketing
+            "pendingMoReco": len(pending_mo_reco_list),
+            "pendingMoRecoAlerts": pending_mo_reco_alerts,
             "occupancy": data["occupancy_rate"],
             "futureMI": future_mi_count,  # From Vacant Leased + NTV Leased with move-in in current month
             "futureMO": future_moves.get("future_mo", 0),
@@ -2053,6 +2110,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
             "ntvList": data.get("ntvList", []),
             "evictionList": data.get("evictionList", []),
             "offMarketList": data.get("offMarketList", []),
+            "pendingMoRecoList": pending_mo_reco_list,
             "vacantLeasedList": vacant_leased_list,
             "ntvLeasedList": ntv_leased_list,
             "futureMIList": future_mi_list_sorted,
@@ -2892,6 +2950,16 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
                     ];
                     titleText = `${{abbr}} - Off Market (${{data.length}})`;
                     break;
+                case 'pendingMoReco':
+                    data = p.pendingMoRecoList || [];
+                    columns = [
+                        {{key: 'unit', label: 'Unit'}},
+                        {{key: 'resident', label: 'Resident'}},
+                        {{key: 'moDate', label: 'MO Date'}},
+                        {{key: 'daysSinceMO', label: 'Days Ago'}}
+                    ];
+                    titleText = `${{abbr}} - Pending MO Reco. (${{data.length}})`;
+                    break;
                 case 'futureMI':
                     data = p.futureMIList || [];
                     columns = [
@@ -3277,7 +3345,8 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
             insufficientNoticeList: 'Insufficient Notice',
             pendingInRealUnitList: 'Pending – Real Unit',
             approvedPaidInHoldingList: 'Approved + Paid in Holding',
-            holdingOverListedList: 'Listed with Applicants'
+            holdingOverListedList: 'Listed with Applicants',
+            pendingMoRecoList: 'Pending MO Reco.'
         }};
 
         const ALERTS_COLUMNS = [
@@ -3599,7 +3668,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
 
         const opsAlerts = createAlertsPopup({{
             varName: 'opsAlerts',
-            keys: ['vacantNotReadyList', 'ntvList', 'vacantLeasedList'],
+            keys: ['vacantNotReadyList', 'ntvList', 'vacantLeasedList', 'pendingMoRecoList'],
             badgeId: 'alerts-badge',
             modalId: 'alerts-modal',
             theadId: 'alerts-thead',
@@ -3665,7 +3734,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
             }});
 
             // Calculate totals
-            let totals = {{ total: 0, occupied: 0, vacantReady: 0, vacantNotReady: 0, vacantLeased: 0, ntv: 0, ntvLeased: 0, eviction: 0, offMarket: 0, futureMI: 0, futureMO: 0 }};
+            let totals = {{ total: 0, occupied: 0, vacantReady: 0, vacantNotReady: 0, vacantLeased: 0, ntv: 0, ntvLeased: 0, eviction: 0, offMarket: 0, pendingMoReco: 0, futureMI: 0, futureMO: 0 }};
             let futureMovesMonth = '';
             allProps.forEach(p => {{
                 totals.total += p.total || 0;
@@ -3677,6 +3746,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
                 totals.ntvLeased += p.ntvLeased || 0;
                 totals.eviction += p.eviction || 0;
                 totals.offMarket += p.offMarket || 0;
+                totals.pendingMoReco += p.pendingMoReco || 0;
                 totals.futureMI += p.futureMI || 0;
                 totals.futureMO += p.futureMO || 0;
                 if (p.futureMovesMonth) futureMovesMonth = p.futureMovesMonth;
@@ -3729,6 +3799,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
                 {{ key: 'ntvLeased', label: 'NTV Leased', color: 'text-orange-600 dark:text-orange-400', getValue: p => p.ntvLeased, clickable: true }},
                 {{ key: 'availableForRent', label: 'Rentable Units' + tip('Vacant + NTV minus pre-leased'), color: 'text-blue-700 dark:text-blue-300 font-semibold', getValue: p => ((p.vacantReady || 0) + (p.vacantNotReady || 0) + (p.ntv || 0)) - ((p.vacantLeased || 0) + (p.ntvLeased || 0)) }},
                 {{ key: 'offMarket', label: 'Off the Market' + tip('Available units not listed online'), color: 'text-pink-600 dark:text-pink-400', getValue: p => p.offMarket, clickable: true }},
+                {{ key: 'pendingMoReco', label: 'Pending MO Reco.' + tip('Vacant units whose last Former lease has no moveOutReconciliationDate in ResMan'), color: 'text-rose-600 dark:text-rose-400', getValue: p => p.pendingMoReco || 0, clickable: true }},
                 {{ key: 'occRented', label: 'Occupancy Rented' + tip('Physical + pre-leased vacant units'), color: '', getValue: p => ((p.total - (p.vacantReady || 0) - (p.vacantNotReady || 0) + (p.vacantLeased || 0)) / p.total * 100).toFixed(2), isOccupancy: true }},
                 {{ key: 'divider2', label: '', color: '', getValue: () => '', isDivider: true }},
                 {{ key: 'futureMI', label: `Future MI (${{futureMovesMonth}})` + tip('Signed pending leases moving in this month'), color: 'text-emerald-600 dark:text-emerald-400', getValue: p => p.futureMI || 0, clickable: true }},
@@ -3775,6 +3846,8 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
                                 hasAlert = true;
                             }} else if (row.key === 'vacantLeased' && p.vacantLeasedAlerts > 0) {{
                                 hasAlert = true;
+                            }} else if (row.key === 'pendingMoReco' && (p.pendingMoRecoAlerts || 0) > 0) {{
+                                hasAlert = true;
                             }}
 
                             const alertBg = hasAlert ? 'bg-red-100 dark:bg-blue-900/40' : '';
@@ -3799,6 +3872,7 @@ def generate_html(properties_data, traffic_data, leases_data, financial_data,
                 else if (row.key === 'ntvLeased') totalVal = totals.ntvLeased;
                 else if (row.key === 'eviction') totalVal = totals.eviction;
                 else if (row.key === 'offMarket') totalVal = totals.offMarket;
+                else if (row.key === 'pendingMoReco') totalVal = totals.pendingMoReco;
                 else if (row.key === 'availableForRent') totalVal = (totals.vacantReady + totals.vacantNotReady + totals.ntv) - (totals.vacantLeased + totals.ntvLeased);
                 else if (row.key === 'occPhysical') totalVal = ((totals.total - totals.vacantReady - totals.vacantNotReady) / totals.total * 100).toFixed(2) + '%';
                 else if (row.key === 'occRented') totalVal = ((totals.total - totals.vacantReady - totals.vacantNotReady + totals.vacantLeased) / totals.total * 100).toFixed(2) + '%';

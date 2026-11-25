@@ -779,22 +779,8 @@ function initFilters() {
         }));
     buildMultiList('filter-glGroup', glGroups);
 
-    // Full GL options — label "<code> — <description>", sorted ascending by code
-    const glMap = new Map();
-    STATE.lineItems.forEach(r => {
-        if (!r.glAccountNumber) return;
-        if (!glMap.has(r.glAccountNumber)) {
-            glMap.set(r.glAccountNumber, { total: 0, name: r.glName || '' });
-        }
-        glMap.get(r.glAccountNumber).total += r.total;
-    });
-    const gls = [...glMap.entries()]
-        .sort((a, b) => a[0].localeCompare(b[0]))
-        .map(([code, info]) => ({
-            value: code,
-            label: info.name ? (code + ' — ' + info.name) : code,
-        }));
-    buildMultiList('filter-gl', gls);
+    // Full GL options — scoped by current GL Group selection (see rebuildGlAccountFilter).
+    rebuildGlAccountFilter();
 
     // Move-outs toggle (chart-moveout-card visibility is synced in renderAll via moScopeActive)
     document.getElementById('toggle-moveouts').addEventListener('click', () => {
@@ -838,6 +824,7 @@ function initFilters() {
         document.getElementById('roster-heading').textContent = 'Line items';
         document.querySelectorAll('.multi-list input[type="checkbox"]').forEach(cb => cb.checked = false);
         document.querySelectorAll('.multi-trigger').forEach(t => updateMultiTriggerLabel(t));
+        rebuildGlAccountFilter();
         renderAll();
     });
 
@@ -878,6 +865,7 @@ function initFilters() {
                 STATE.filters[key].clear();
             }
             updateMultiTriggerLabel(wrap.querySelector('.multi-trigger'));
+            if (key === 'glGroup') rebuildGlAccountFilter();
             renderAll();
         });
     });
@@ -899,21 +887,61 @@ function initFilters() {
 function buildMultiList(wrapId, options) {
     const list = document.querySelector('#' + wrapId + ' .multi-list');
     const key = wrapId.replace('filter-', '');
+    const selected = STATE.filters[key];
     list.innerHTML = '';
     options.forEach(opt => {
         const row = document.createElement('label');
         row.className = 'multi-item';
-        row.innerHTML = '<input type="checkbox" value="' + escapeAttr(opt.value) + '"><span>' + escapeHtml(opt.label) + '</span>';
+        const isChecked = selected && typeof selected.has === 'function' && selected.has(opt.value);
+        row.innerHTML = '<input type="checkbox"' + (isChecked ? ' checked' : '') + ' value="' + escapeAttr(opt.value) + '"><span>' + escapeHtml(opt.label) + '</span>';
         list.appendChild(row);
         row.querySelector('input').addEventListener('change', e => {
             e.stopPropagation();
             if (e.target.checked) STATE.filters[key].add(opt.value);
             else STATE.filters[key].delete(opt.value);
             updateMultiTriggerLabel(document.querySelector('#' + wrapId + ' .multi-trigger'));
+            if (key === 'glGroup') rebuildGlAccountFilter();
             renderAll();
         });
     });
     updateMultiTriggerLabel(document.querySelector('#' + wrapId + ' .multi-trigger'));
+}
+
+// GL Account list is scoped to the current GL Group selection: pick one or
+// more groups → the GL Account dropdown only shows accounts whose prefix
+// matches. Stale GL Account selections (no longer in the scoped list) are
+// dropped. Preserves still-valid selections via buildMultiList's check sync.
+function rebuildGlAccountFilter() {
+    const groupSet = STATE.filters.glGroup;
+    const glMap = new Map();
+    STATE.lineItems.forEach(r => {
+        if (!r.glAccountNumber) return;
+        if (groupSet.size && !groupSet.has(r.glPrefix)) return;
+        if (!glMap.has(r.glAccountNumber)) {
+            glMap.set(r.glAccountNumber, { total: 0, name: r.glName || '' });
+        }
+        glMap.get(r.glAccountNumber).total += r.total;
+    });
+    const gls = [...glMap.entries()]
+        .sort((a, b) => a[0].localeCompare(b[0]))
+        .map(([code, info]) => ({
+            value: code,
+            label: info.name ? (code + ' — ' + info.name) : code,
+        }));
+    // Prune stale selections that are no longer in the scoped list.
+    const validCodes = new Set(gls.map(o => o.value));
+    for (const code of [...STATE.filters.gl]) {
+        if (!validCodes.has(code)) STATE.filters.gl.delete(code);
+    }
+    buildMultiList('filter-gl', gls);
+    // Re-apply the search filter if the user had typed something.
+    const glSearch = document.querySelector('#filter-gl .multi-search');
+    if (glSearch && glSearch.value) {
+        const q = glSearch.value.toLowerCase();
+        document.querySelectorAll('#filter-gl .multi-item').forEach(item => {
+            item.style.display = item.textContent.toLowerCase().includes(q) ? '' : 'none';
+        });
+    }
 }
 
 function updateMultiTriggerLabel(trigger) {
@@ -1306,6 +1334,10 @@ const ROSTER_COLS = [
     { key: 'propertyAbbreviation', label: 'Property' },
     { key: 'accountingDate', label: 'Date', fmt: v => formatDateUS(v) },
     { key: 'location', label: 'Location', fmt: (_v, r) => locationFullHtml(r) },
+    { key: 'glAccountNumber', label: 'GL', fmt: (_v, r) => (r.glAccountNumber
+        ? '<span class="font-mono text-xs text-slate-600 dark:text-slate-300">' + escapeHtml(r.glAccountNumber) + '</span>'
+          + (r.glName ? ' <span class="text-slate-400 text-xs">· ' + escapeHtml(r.glName) + '</span>' : '')
+        : '') },
     { key: 'invoiceNumber', label: 'Invoice', fmt: (_v, r) => invoiceNumberLink(r) },
     { key: 'total', label: 'Amount', cls: 'num', fmt: v => '$' + formatMoney(v) },
 ];
