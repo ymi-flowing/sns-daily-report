@@ -192,6 +192,7 @@ def _write_unit_status(ws, row, properties_data):
     vac_leased = per(lambda p: sb(p, "Vacant Leased"))
     ntv_leased = per(lambda p: sb(p, "NTV Leased"))
     off_market = per(lambda p: int(p.get("off_market", 0) or 0))
+    pending_mo_reco = per(lambda p: len(p.get("pendingMoRecoList") or []))
 
     def phys_occ(p):
         t = int(p.get("total_units", 0) or 0)
@@ -234,6 +235,7 @@ def _write_unit_status(ws, row, properties_data):
         ("NTV Leased", ntv_leased, None, None),
         ("Rentable Units", rentable_units, None, None),
         ("Off the Market", off_market, None, None),
+        ("Pending MO Reco.", pending_mo_reco, None, None),
         ("Occupancy Rented %", rented, "0.00", portfolio_rented),
     ]
     for label, values, fmt, total in rows:

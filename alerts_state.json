@@ -32,13 +32,13 @@
       "firstSeen": "2026-11-18",
       "lastMsg": "Lease ends in 49d \u2014 no NTV filed"
     },
+    "ORT|ntvList|6315fd37-261d-4543-adb7-dd5156c05e3b": {
+      "firstSeen": "2026-11-25",
+      "lastMsg": "4 business days to get ready"
+    },
     "ROP|insufficientNoticeList|093b6503-b05a-46af-84f2-a4660a3b4c91": {
       "firstSeen": "2026-11-18",
       "lastMsg": "Lease ends in 52d \u2014 no NTV filed"
-    },
-    "TV|pendingInRealUnitList|debdb7ff-749c-49e3-80fd-e3ad0656c190": {
-      "firstSeen": "2026-11-25",
-      "lastMsg": "Pending applicant in a real unit"
     }
   },
   "updated": "2026-11-25"
