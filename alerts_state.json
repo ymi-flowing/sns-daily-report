@@ -1,13 +1,5 @@
 {
   "alerts": {
-    "49thStr|vacantNotReadyList|07594c72-6157-44b0-9747-e748ddd61ada": {
-      "firstSeen": "2026-11-25",
-      "lastMsg": "Past Available Date"
-    },
-    "49thStr|vacantNotReadyList|7ebef7d3-94e9-453e-a92d-e6b01ad50181": {
-      "firstSeen": "2026-11-25",
-      "lastMsg": "Past Available Date"
-    },
     "AP|insufficientNoticeList|41cac442-5af6-47f5-9a6c-0a47caa74f38": {
       "firstSeen": "2026-11-16",
       "lastMsg": "Lease ends in 49d \u2014 renewal not signed"
@@ -31,10 +23,6 @@
     "MOC|insufficientNoticeList|9e759533-d8c0-4831-b379-4e7f9c40c492": {
       "firstSeen": "2026-11-11",
       "lastMsg": "Lease ends in 45d \u2014 no NTV filed"
-    },
-    "MOC|ntvList|b15bb9c5-3517-4822-85ea-5ad3a2fac955": {
-      "firstSeen": "2026-11-24",
-      "lastMsg": "5 business days to get ready"
     },
     "MUSO|insufficientNoticeList|a3edb3ce-5021-4a02-8881-f5715508f559": {
       "firstSeen": "2026-11-13",
