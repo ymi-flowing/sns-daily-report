@@ -56,11 +56,15 @@
       "firstSeen": "2026-11-18",
       "lastMsg": "Lease ends in 48d \u2014 no NTV filed"
     },
-    "ROP|ntvList|093b6503-b05a-46af-84f2-a4660a3b4c91": {
+    "ROP|insufficientNoticeList|e893b571-bdb4-4bca-9be6-542d203a1a87": {
       "firstSeen": "2026-11-26",
-      "lastMsg": "5 business days to get ready"
+      "lastMsg": "Lease ends in 51d \u2014 renewal not signed"
     },
     "SJ|vacantNotReadyList|1155a9cf-c203-4fb2-8018-69d7f19e759d": {
+      "firstSeen": "2026-11-26",
+      "lastMsg": "Past Available Date"
+    },
+    "TV|vacantNotReadyList|9a7f317d-9445-4ae4-9204-63256822c82c": {
       "firstSeen": "2026-11-26",
       "lastMsg": "Past Available Date"
     }
