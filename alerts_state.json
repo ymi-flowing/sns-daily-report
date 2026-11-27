@@ -16,18 +16,6 @@
       "firstSeen": "2026-11-16",
       "lastMsg": "Lease ends in 32d \u2014 renewal not signed"
     },
-    "AP|vacantNotReadyList|911388bd-a2ac-4b66-aeb3-1d356be7045b": {
-      "firstSeen": "2026-11-26",
-      "lastMsg": "Past Available Date"
-    },
-    "AP|vacantNotReadyList|9a2c0100-1dbe-4d74-a9df-dd690142883e": {
-      "firstSeen": "2026-11-26",
-      "lastMsg": "Past Available Date"
-    },
-    "AP|vacantNotReadyList|dc4d0f3f-3d14-49b5-9182-9c970c5c2ba2": {
-      "firstSeen": "2026-11-22",
-      "lastMsg": "Past Available Date"
-    },
     "EAST|insufficientNoticeList|4b8e208b-7751-486c-98b9-cffdb4285ae6": {
       "firstSeen": "2026-11-18",
       "lastMsg": "Lease ends in 50d \u2014 renewal not signed"
@@ -76,10 +64,6 @@
       "firstSeen": "2026-11-27",
       "lastMsg": "Lease ends in 59d \u2014 renewal not signed"
     },
-    "ROP|insufficientNoticeList|e893b571-bdb4-4bca-9be6-542d203a1a87": {
-      "firstSeen": "2026-11-26",
-      "lastMsg": "Lease ends in 50d \u2014 renewal not signed"
-    },
     "SJ|pendingMoRecoList|c1448ca1-4448-413e-a0df-ffd37cc36a71": {
       "firstSeen": "2026-11-27",
       "lastMsg": "No reconciliation 3d after move-out"
@@ -90,10 +74,6 @@
     },
     "SJ|vacantNotReadyList|8ee520c9-f652-4d69-b5cd-6db0e32f688e": {
       "firstSeen": "2026-11-27",
-      "lastMsg": "Past Available Date"
-    },
-    "TV|vacantNotReadyList|9a7f317d-9445-4ae4-9204-63256822c82c": {
-      "firstSeen": "2026-11-26",
       "lastMsg": "Past Available Date"
     }
   },
