@@ -28,9 +28,9 @@
       "firstSeen": "2026-11-21",
       "lastMsg": "Lease ends in 52d \u2014 no NTV filed"
     },
-    "EAST|ntvList|b94d7041-712f-43b9-8d7e-0e9376404a21": {
+    "EAST|pendingInRealUnitList|6653ca01-9390-4064-a1a3-6a079b2c15e1": {
       "firstSeen": "2026-11-28",
-      "lastMsg": "5 business days to get ready"
+      "lastMsg": "Pending applicant in a real unit"
     },
     "EAST|vacantNotReadyList|41fdb9fd-5d32-45fc-ba14-f7f0fa4b5e11": {
       "firstSeen": "2026-11-27",
